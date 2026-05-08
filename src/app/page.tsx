@@ -21,7 +21,7 @@ export default function Home() {
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.6, ease: "easeOut" }
+      transition: { duration: 0.6 }
     }
   };
 
@@ -34,13 +34,13 @@ export default function Home() {
         <motion.div 
           initial={{ opacity: 0, scale: 0.5 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1.5, ease: "easeOut" }}
+          transition={{ duration: 1.5 }}
           className="absolute top-40 -right-20 w-72 h-72 bg-secondary/10 rounded-full blur-3xl -z-10"
         />
         <motion.div 
           initial={{ opacity: 0, scale: 0.5 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1.5, ease: "easeOut", delay: 0.3 }}
+          transition={{ duration: 1.5, delay: 0.3 }}
           className="absolute -bottom-20 -left-20 w-72 h-72 bg-primary/10 rounded-full blur-3xl -z-10"
         />
 
