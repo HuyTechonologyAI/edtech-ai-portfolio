@@ -32,6 +32,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ reply: text });
   } catch (error) {
     console.error("Chat API Error:", error);
-    return NextResponse.json({ reply: "Xin lỗi, hiện tại tôi đang quá tải. Bạn vui lòng thử lại sau giây lát hoặc sang trang Liên hệ nhé!" }, { status: 500 });
+    return NextResponse.json({ reply: `Lỗi kết nối Gemini: ${error instanceof Error ? error.message : String(error)}` }, { status: 500 });
   }
 }
