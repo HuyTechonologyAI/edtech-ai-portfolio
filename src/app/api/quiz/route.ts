@@ -10,7 +10,7 @@ export async function GET() {
     }
 
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
+      model: "gemini-2.5-flash",
       systemInstruction: `Bạn là một chuyên gia ra đề thi trắc nghiệm về AI và Automation.`,
       generationConfig: {
         responseMimeType: "application/json",
