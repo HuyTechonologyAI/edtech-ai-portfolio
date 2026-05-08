@@ -10,7 +10,8 @@ export async function GET() {
     }
 
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
+      model: "gemini-1.5-flash-latest",
+      systemInstruction: `Bạn là một chuyên gia ra đề thi trắc nghiệm về lĩnh vực AI (ChatGPT, Midjourney) và Automation (n8n, Zapier, Make).`,
       generationConfig: {
         responseMimeType: "application/json",
         responseSchema: {
