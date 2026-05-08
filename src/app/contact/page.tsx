@@ -57,7 +57,7 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <div className="font-bold mb-1">Email chuyên gia</div>
-                    <a href="mailto:hello@automationexpert.vn" className="text-foreground/70 hover:text-secondary transition-colors">hello@automationexpert.vn</a>
+                    <a href="mailto:huytechnologyai2025@gmail.com" className="text-foreground/70 hover:text-secondary transition-colors">huytechnologyai2025@gmail.com</a>
                   </div>
                 </div>
 
@@ -67,7 +67,7 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <div className="font-bold mb-1">Hotline tư vấn</div>
-                    <a href="tel:+84987654321" className="text-foreground/70 hover:text-secondary transition-colors">+84 987 654 321</a>
+                    <a href="tel:0961364600" className="text-foreground/70 hover:text-secondary transition-colors">096.136.4600</a>
                   </div>
                 </div>
 
@@ -77,7 +77,7 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <div className="font-bold mb-1">Văn phòng</div>
-                    <div className="text-foreground/70">Khu công nghệ cao Hòa Lạc, Thạch Thất, Hà Nội</div>
+                    <div className="text-foreground/70">K6A, Tổ 15D, Khu phố 30, Phường Tam Hiệp, Thành phố Biên Hòa, Đồng Nai</div>
                   </div>
                 </div>
               </div>

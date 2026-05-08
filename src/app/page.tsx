@@ -129,6 +129,91 @@ export default function Home() {
           </div>
         </motion.div>
       </section>
+
+      {/* About Me Section */}
+      <section className="w-full py-24 relative overflow-hidden">
+        {/* Background blobs */}
+        <div className="absolute top-40 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[100px] -z-10" />
+        
+        <div className="container px-4 md:px-6 max-w-6xl mx-auto">
+          <div className="flex flex-col lg:flex-row gap-12 items-center">
+            <motion.div 
+              initial={{ opacity: 0, x: -50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: "-100px" }}
+              transition={{ duration: 0.8 }}
+              className="w-full lg:w-5/12 relative"
+            >
+              <div className="aspect-[4/5] rounded-3xl overflow-hidden border border-border shadow-2xl relative group">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img 
+                  src="https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=800&auto=format&fit=crop" 
+                  alt="Ngô Quốc Huy" 
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+                <div className="absolute bottom-6 left-6 right-6 z-20">
+                  <h3 className="text-3xl font-bold text-white mb-1">Ngô Quốc Huy</h3>
+                  <p className="text-secondary font-medium text-lg">CEO Vạn Hoả Long Technology</p>
+                </div>
+              </div>
+              
+              {/* Decorative elements */}
+              <div className="absolute -top-6 -left-6 w-32 h-32 bg-primary/20 rounded-full blur-2xl -z-10" />
+              <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-secondary/20 rounded-full blur-2xl -z-10" />
+            </motion.div>
+
+            <motion.div 
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-100px" }}
+              variants={containerVariants}
+              className="w-full lg:w-7/12 space-y-6"
+            >
+              <motion.div variants={itemVariants}>
+                <h2 className="text-3xl md:text-4xl font-bold mb-4">Về Chuyên Gia</h2>
+                <div className="w-20 h-1.5 bg-secondary rounded-full mb-8 shadow-[0_0_10px_rgba(0,229,122,0.5)]"></div>
+              </motion.div>
+
+              <motion.p variants={itemVariants} className="text-foreground/80 leading-relaxed text-lg text-justify">
+                Là Kỹ sư Cơ khí Chế tạo (ĐH Sư Phạm Kỹ Thuật TP.HCM) và nhà giáo dục, tôi kết hợp giữa chuyên môn kỹ thuật sâu rộng và niềm đam mê truyền đạt kiến thức. Chuyển mình từ giảng viên sang vai trò người sáng lập kiêm CEO của <strong className="text-foreground">Công ty TNHH Giải Pháp Công Nghệ Vạn Hoả Long</strong>, tôi luôn khát khao nâng tầm ngành công nghiệp Việt Nam bằng những giải pháp công nghệ và tự động hóa tiên tiến nhất.
+              </motion.p>
+              
+              <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6">
+                <div className="p-6 rounded-2xl bg-surface border border-border shadow-sm hover:shadow-md transition-shadow">
+                  <div className="text-4xl mb-4">🏆</div>
+                  <h4 className="font-bold text-lg mb-3">Thành Tựu Nổi Bật</h4>
+                  <ul className="text-sm text-foreground/70 space-y-2.5">
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary mt-0.5">•</span> 
+                      <span>Danh hiệu <strong>"Người thợ trẻ giỏi toàn quốc" (2020)</strong> do TW Đoàn TNCS Hồ Chí Minh trao tặng.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary mt-0.5">•</span> 
+                      <span>Giải Nhất <strong>"Khởi nghiệp ĐMST OCOP"</strong> tỉnh Đồng Nai (2020).</span>
+                    </li>
+                  </ul>
+                </div>
+                
+                <div className="p-6 rounded-2xl bg-surface border border-border shadow-sm hover:shadow-md transition-shadow">
+                  <div className="text-4xl mb-4">🚀</div>
+                  <h4 className="font-bold text-lg mb-3">Tầm Nhìn & Sứ Mệnh</h4>
+                  <ul className="text-sm text-foreground/70 space-y-2.5">
+                    <li className="flex items-start gap-2">
+                      <span className="text-secondary mt-0.5">•</span> 
+                      <span>Phát triển bản thân không ngừng và tạo ra giá trị bền vững cho xã hội.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-secondary mt-0.5">•</span> 
+                      <span>Nâng tầm con người Việt Nam thông qua tư duy làm chủ và ứng dụng công nghệ hiện đại.</span>
+                    </li>
+                  </ul>
+                </div>
+              </motion.div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
     </main>
   );
 }
