@@ -148,7 +148,7 @@ export default function Home() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10" />
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img 
-                  src="https://drive.google.com/uc?export=view&id=17UyWgh4GjJ2dVYMKnIHYdMO7wD993oJC" 
+                  src="/profile.jpg" 
                   alt="Ngô Quốc Huy" 
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
