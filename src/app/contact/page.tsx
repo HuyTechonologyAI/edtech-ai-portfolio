@@ -77,7 +77,7 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <div className="font-bold mb-1">Văn phòng</div>
-                    <div className="text-foreground/70">K6A, Tổ 15D, Khu phố 30, Phường Tam Hiệp, Thành phố Biên Hòa, Đồng Nai</div>
+                    <div className="text-foreground/70">K6A, Tổ 15D, Khu phố 30, Phường Tam Hiệp, Thành phố Đồng Nai</div>
                   </div>
                 </div>
               </div>
