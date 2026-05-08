@@ -10,33 +10,16 @@ export async function GET() {
     }
 
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
-      systemInstruction: `Bạn là một chuyên gia ra đề thi trắc nghiệm về lĩnh vực AI (ChatGPT, Midjourney) và Automation (n8n, Zapier, Make).`,
-      generationConfig: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: SchemaType.ARRAY,
-          items: {
-            type: SchemaType.OBJECT,
-            properties: {
-              id: { type: SchemaType.NUMBER },
-              question: { type: SchemaType.STRING },
-              options: {
-                type: SchemaType.ARRAY,
-                items: { type: SchemaType.STRING }
-              },
-              correctAnswer: { type: SchemaType.NUMBER, description: "Index of the correct option (0-3)" },
-            },
-            required: ["id", "question", "options", "correctAnswer"]
-          }
-        }
-      }
+      model: "gemini-pro"
     });
 
-    const prompt = "Hãy tạo 5 câu hỏi trắc nghiệm (mỗi câu có đúng 4 đáp án, chỉ có 1 đáp án đúng) về chủ đề Trí Tuệ Nhân Tạo (AI) và Tự động hóa doanh nghiệp (Automation, n8n, Make, Zapier, ChatGPT). Trả về đúng định dạng JSON Array.";
+    const prompt = "Bạn là một chuyên gia ra đề thi trắc nghiệm về AI và Automation. Hãy tạo 5 câu hỏi trắc nghiệm (mỗi câu có đúng 4 đáp án, chỉ có 1 đáp án đúng) về chủ đề Trí Tuệ Nhân Tạo (AI) và Tự động hóa doanh nghiệp (n8n, Make, Zapier, ChatGPT). \nYÊU CẦU BẮT BUỘC: Trả về ĐÚNG 1 mảng JSON hợp lệ, KHÔNG chứa markdown block (như ```json), KHÔNG chứa bất kỳ văn bản nào khác. Định dạng mẫu: [{\"id\": 1, \"question\": \"...\", \"options\": [\"A\", \"B\", \"C\", \"D\"], \"correctAnswer\": 0}]";
 
     const result = await model.generateContent(prompt);
-    const text = result.response.text();
+    let text = result.response.text();
+    
+    // Clean markdown if AI still outputs it
+    text = text.replace(/```json/g, "").replace(/```/g, "").trim();
     
     const questions = JSON.parse(text);
 

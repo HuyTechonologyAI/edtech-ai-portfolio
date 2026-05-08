@@ -12,8 +12,7 @@ export async function POST(req: Request) {
     const { message, history } = await req.json();
 
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
-      systemInstruction: "Bạn là trợ lý ảo AI của Chuyên gia Đào tạo AI & Automation. Tên của bạn là AutoBot. Bạn trả lời ngắn gọn, thân thiện và rất chuyên nghiệp. Nhiệm vụ của bạn là giải đáp thắc mắc cơ bản về ứng dụng AI (ChatGPT, Claude) và Automation (n8n, Make, Zapier). Nếu khách hàng có vấn đề phức tạp hoặc cần tư vấn lộ trình, hãy khuyến khích họ để lại thông tin liên hệ ngay trong khung chat để chuyên gia gọi lại. Hãy trả lời cực kỳ súc tích, dưới 80 chữ."
+      model: "gemini-pro",
     });
 
     // Chuyển đổi history format
@@ -22,11 +21,20 @@ export async function POST(req: Request) {
       parts: [{ text: msg.content }],
     }));
 
+    const systemInstruction = "Bạn là trợ lý ảo AI AutoBot của Chuyên gia Đào tạo AI & Automation. Bạn trả lời ngắn gọn, thân thiện và rất chuyên nghiệp. Nếu khách hàng cần tư vấn sâu, hãy khuyến khích họ để lại thông tin trong khung chat. Trả lời dưới 80 chữ.\n\nCâu hỏi: ";
+    
+    let finalMessage = message;
+    if (formattedHistory.length === 0) {
+      finalMessage = systemInstruction + message;
+    } else if (formattedHistory[0] && formattedHistory[0].role === "user") {
+      formattedHistory[0].parts[0].text = systemInstruction + formattedHistory[0].parts[0].text;
+    }
+
     const chat = model.startChat({
       history: formattedHistory,
     });
 
-    const result = await chat.sendMessage(message);
+    const result = await chat.sendMessage(finalMessage);
     const text = result.response.text();
 
     return NextResponse.json({ reply: text });
