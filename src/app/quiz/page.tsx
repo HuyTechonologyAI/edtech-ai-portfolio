@@ -93,7 +93,7 @@ export default function QuizPage() {
                 </div>
                 <h2 className="text-3xl font-bold mb-4">Sẵn sàng thử thách?</h2>
                 <p className="text-foreground/70 max-w-md mb-8">
-                  AI đang chờ lệnh để "chế" ra 5 câu hỏi ngẫu nhiên kiểm tra trình độ AI & Automation của bạn.
+                  AI đang chờ lệnh để &apos;chế&apos; ra 5 câu hỏi ngẫu nhiên kiểm tra trình độ AI & Automation của bạn.
                 </p>
                 <button onClick={startQuiz} className="flex items-center gap-2 px-10 py-4 rounded-xl bg-secondary text-surface font-bold text-lg hover:bg-secondary/90 transition-all hover:scale-105 shadow-[0_0_20px_rgba(0,229,122,0.4)]">
                   Bắt đầu ngay <ArrowRight className="w-5 h-5" />

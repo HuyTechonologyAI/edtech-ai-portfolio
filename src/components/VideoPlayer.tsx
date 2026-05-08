@@ -5,12 +5,14 @@ import { useState, useEffect } from "react";
 import { Play } from "lucide-react";
 
 // Use dynamic import to prevent server-side rendering issues with ReactPlayer
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const ReactPlayer = dynamic(() => import("react-player"), { ssr: false }) as any;
 
 export function VideoPlayer({ url, playing = false, controls = true }: { url: string, playing?: boolean, controls?: boolean }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 

@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     });
 
     // Chuyển đổi history format
-    const formattedHistory = (history || []).map((msg: any) => ({
+    const formattedHistory = (history || []).map((msg: {role: string, content: string}) => ({
       role: msg.role === "user" ? "user" : "model",
       parts: [{ text: msg.content }],
     }));

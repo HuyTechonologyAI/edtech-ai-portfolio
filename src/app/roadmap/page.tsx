@@ -1,4 +1,4 @@
-import { CheckCircle2, Circle, ChevronDown } from "lucide-react";
+import { CheckCircle2, Circle } from "lucide-react";
 
 export default function RoadmapPage() {
   const steps = [

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { MessageSquare, X, Send, Bot, User, CheckCircle2 } from "lucide-react";
+import { MessageSquare, X, Send, Bot, CheckCircle2 } from "lucide-react";
 import { submitContact } from "@/actions/contact";
 
 type Message = {

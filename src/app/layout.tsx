@@ -7,6 +7,7 @@ import { AIChatbot } from "@/components/AIChatbot";
 
 import { GoogleAnalytics } from "@next/third-parties/google";
 import Script from "next/script";
+import Link from "next/link";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -82,16 +83,16 @@ export default function RootLayout({
             <div className="container mx-auto px-4 h-16 flex items-center justify-between">
               <div className="font-bold text-xl tracking-tight">AI & Auto<span className="text-secondary">Expert</span></div>
               <nav className="hidden md:flex gap-6 items-center">
-                <a href="/" className="text-sm font-medium hover:text-secondary transition-colors">Trang chủ</a>
-                <a href="/roadmap" className="text-sm font-medium hover:text-secondary transition-colors">Lộ trình</a>
-                <a href="/resources" className="text-sm font-medium hover:text-secondary transition-colors">Tài liệu</a>
-                <a href="/videos" className="text-sm font-medium hover:text-secondary transition-colors">Videos</a>
+                <Link href="/" className="text-sm font-medium hover:text-secondary transition-colors">Trang chủ</Link>
+                <Link href="/roadmap" className="text-sm font-medium hover:text-secondary transition-colors">Lộ trình</Link>
+                <Link href="/resources" className="text-sm font-medium hover:text-secondary transition-colors">Tài liệu</Link>
+                <Link href="/videos" className="text-sm font-medium hover:text-secondary transition-colors">Videos</Link>
               </nav>
               <div className="flex items-center gap-4">
                 <ThemeToggle />
-                <a href="/contact" className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors hidden sm:block">
+                <Link href="/contact" className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors hidden sm:block">
                   Liên hệ
-                </a>
+                </Link>
               </div>
             </div>
           </header>
