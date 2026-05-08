@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { Play } from "lucide-react";
 
 // Use dynamic import to prevent server-side rendering issues with ReactPlayer
-const ReactPlayer = dynamic(() => import("react-player"), { ssr: false });
+const ReactPlayer = dynamic(() => import("react-player"), { ssr: false }) as any;
 
 export function VideoPlayer({ url, playing = false, controls = true }: { url: string, playing?: boolean, controls?: boolean }) {
   const [mounted, setMounted] = useState(false);
