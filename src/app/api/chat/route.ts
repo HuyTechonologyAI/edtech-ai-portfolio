@@ -32,6 +32,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ reply: text });
   } catch (error) {
     console.error("Chat API Error:", error);
-    return NextResponse.json({ reply: `Lỗi kết nối Gemini: ${error instanceof Error ? error.message : String(error)}` }, { status: 500 });
+    try {
+      // Tự động dò tìm các model được hỗ trợ nếu model hiện tại bị lỗi
+      const modelsRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${process.env.GEMINI_API_KEY}`);
+      const modelsData = await modelsRes.json();
+      const availableModels = modelsData.models?.map((m: any) => m.name.replace('models/', '')).join(", ") || "Không có model nào";
+      return NextResponse.json({ reply: `API Key của bạn chỉ hỗ trợ các Model sau: ${availableModels}. Vui lòng báo cho lập trình viên để cập nhật lại tên Model. Lỗi gốc: ${error instanceof Error ? error.message : String(error)}` }, { status: 500 });
+    } catch (fetchError) {
+      return NextResponse.json({ reply: `Lỗi kết nối Gemini: ${error instanceof Error ? error.message : String(error)}` }, { status: 500 });
+    }
   }
 }
