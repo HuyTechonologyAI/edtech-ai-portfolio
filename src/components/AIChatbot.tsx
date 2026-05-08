@@ -36,7 +36,9 @@ export function AIChatbot() {
     setIsLoading(true);
 
     try {
-      const history = messages.map(m => ({ role: m.role, content: m.content }));
+      const history = messages
+        .filter(m => m.id !== "1")
+        .map(m => ({ role: m.role, content: m.content }));
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
