@@ -2,22 +2,23 @@
 
 @variant dark (&:where(.dark, .dark *));
 
+/* ZentraTech Dark Mode Force */
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
-  --primary: #0a2540;
-  --secondary: #00e57a;
-  --surface: #ffffff;
-  --border: #e2e8f0;
+  --background: #0d0d0d;
+  --foreground: #f0f0f0;
+  --primary: #1a1a1a;
+  --secondary: #00ff85;
+  --surface: #141414;
+  --border: #262626;
 }
 
 :root.dark {
-  --background: #020617;
-  --foreground: #f8fafc;
-  --primary: #1e3a8a;
-  --secondary: #00ff88;
-  --surface: #0f172a;
-  --border: #1e293b;
+  --background: #0d0d0d;
+  --foreground: #f0f0f0;
+  --primary: #1a1a1a;
+  --secondary: #00ff85;
+  --surface: #141414;
+  --border: #262626;
 }
 
 @theme inline {
@@ -36,11 +37,47 @@ body {
   color: var(--foreground);
 }
 
+/* Custom Selection */
+::selection {
+  background: var(--secondary);
+  color: #000;
+}
+
+/* Base Body Styles */
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
 /* Micro-animations and Utilities */
 .glass-panel {
-  @apply bg-surface/80 backdrop-blur-md border border-border/50;
+  @apply bg-surface/40 backdrop-blur-2xl border border-white/5;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
 .hover-glow {
-  @apply transition-all duration-300 hover:shadow-[0_0_15px_rgba(0,229,122,0.4)];
+  @apply transition-all duration-300;
+}
+.hover-glow:hover {
+  box-shadow: 0 0 40px rgba(0, 255, 133, 0.6), inset 0 0 15px rgba(0, 255, 133, 0.4);
+  transform: translateY(-2px);
+}
+
+.neon-glow-text {
+  text-shadow: 0 0 10px rgba(0, 255, 133, 0.8), 0 0 20px rgba(0, 255, 133, 0.6), 0 0 40px rgba(0, 255, 133, 0.4);
+}
+
+/* Headers should use the mono/space font for a more geometric look */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-geist-mono), sans-serif;
+  letter-spacing: -0.03em;
+}
+
+/* Hide scrollbar for clean look */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

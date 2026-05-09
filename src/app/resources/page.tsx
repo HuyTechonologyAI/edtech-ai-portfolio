@@ -47,16 +47,16 @@ export default function ResourcesPage() {
 
         {/* Categories Tabs - Placeholder */}
         <div className="flex gap-2 overflow-x-auto pb-4 mb-6 scrollbar-hide">
-          <button className="px-4 py-2 rounded-full bg-primary text-white text-sm font-medium whitespace-nowrap">
+          <button className="px-4 py-2 rounded-full bg-secondary text-black text-sm font-bold whitespace-nowrap shadow-[0_0_15px_rgba(0,255,133,0.2)]">
             Tất cả
           </button>
-          <button className="px-4 py-2 rounded-full bg-surface border border-border hover:bg-border/50 text-foreground text-sm font-medium whitespace-nowrap transition-colors">
+          <button className="px-4 py-2 rounded-full bg-surface border border-white/10 hover:border-secondary/50 hover:text-secondary text-foreground text-sm font-medium whitespace-nowrap transition-all">
             Slide Bài Giảng (PPT)
           </button>
-          <button className="px-4 py-2 rounded-full bg-surface border border-border hover:bg-border/50 text-foreground text-sm font-medium whitespace-nowrap transition-colors">
+          <button className="px-4 py-2 rounded-full bg-surface border border-white/10 hover:border-secondary/50 hover:text-secondary text-foreground text-sm font-medium whitespace-nowrap transition-all">
             Ebook (PDF)
           </button>
-          <button className="px-4 py-2 rounded-full bg-surface border border-border hover:bg-border/50 text-foreground text-sm font-medium whitespace-nowrap transition-colors">
+          <button className="px-4 py-2 rounded-full bg-surface border border-white/10 hover:border-secondary/50 hover:text-secondary text-foreground text-sm font-medium whitespace-nowrap transition-all">
             Templates
           </button>
         </div>
@@ -66,9 +66,9 @@ export default function ResourcesPage() {
           {/* Item 1 */}
           <TiltCard>
             <div className="glass-panel h-full rounded-2xl overflow-hidden flex flex-col group shadow-lg">
-              <div className="h-48 bg-primary/5 flex items-center justify-center relative">
-                <FileText className="h-16 w-16 text-primary/20 group-hover:scale-110 transition-transform duration-500" />
-                <div className="absolute top-4 right-4 bg-white/90 dark:bg-black/90 text-xs font-bold px-2 py-1 rounded shadow-sm">
+              <div className="h-48 bg-secondary/5 flex items-center justify-center relative border-b border-white/5">
+                <FileText className="h-16 w-16 text-secondary/40 group-hover:text-secondary drop-shadow-[0_0_10px_rgba(0,255,133,0.2)] group-hover:drop-shadow-[0_0_20px_rgba(0,255,133,0.6)] group-hover:scale-110 transition-all duration-500" />
+                <div className="absolute top-4 right-4 bg-black/80 border border-secondary/30 text-secondary text-xs font-bold px-3 py-1 rounded-full shadow-sm">
                   PDF
                 </div>
               </div>
@@ -81,13 +81,13 @@ export default function ResourcesPage() {
                 </p>
                 <div className="flex items-center gap-3 mt-auto relative z-10">
                   <button 
-                    onClick={() => openViewer("https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf", "Cẩm nang ứng dụng ChatGPT cho Marketing")}
-                    className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-surface border border-border hover:bg-border/50 transition-colors text-sm font-medium hover-glow"
+                    onClick={() => openViewer("https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf", "Tài liệu")}
+                    className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-transparent border border-white/10 hover:border-secondary/50 hover:text-secondary transition-all text-sm font-bold"
                   >
                     <Eye className="h-4 w-4" />
                     Xem trước
                   </button>
-                  <a href="https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" download className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors text-sm font-medium hover-glow">
+                  <a href="https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" download className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-secondary text-black hover:bg-secondary/90 transition-all text-sm font-bold hover-glow">
                     <Download className="h-4 w-4" />
                     Tải về
                   </a>
@@ -99,9 +99,9 @@ export default function ResourcesPage() {
           {/* Item 2 */}
           <TiltCard>
             <div className="glass-panel h-full rounded-2xl overflow-hidden flex flex-col group shadow-lg">
-              <div className="h-48 bg-primary/5 flex items-center justify-center relative">
-                <FileDown className="h-16 w-16 text-blue-500/20 group-hover:scale-110 transition-transform duration-500" />
-                <div className="absolute top-4 right-4 bg-white/90 dark:bg-black/90 text-xs font-bold px-2 py-1 rounded shadow-sm">
+              <div className="h-48 bg-blue-500/5 flex items-center justify-center relative border-b border-white/5">
+                <FileDown className="h-16 w-16 text-blue-500/40 group-hover:text-blue-400 drop-shadow-[0_0_10px_rgba(59,130,246,0.2)] group-hover:drop-shadow-[0_0_20px_rgba(59,130,246,0.6)] group-hover:scale-110 transition-all duration-500" />
+                <div className="absolute top-4 right-4 bg-black/80 border border-blue-500/30 text-blue-400 text-xs font-bold px-3 py-1 rounded-full shadow-sm">
                   PPTX
                 </div>
               </div>
@@ -115,12 +115,12 @@ export default function ResourcesPage() {
                 <div className="flex items-center gap-3 mt-auto relative z-10">
                   <button 
                     onClick={() => openViewer("https://scholar.harvard.edu/files/tshoag/files/sample.pptx", "Slide Khóa học Business Automation Core")}
-                    className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-surface border border-border hover:bg-border/50 transition-colors text-sm font-medium hover-glow"
+                    className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-transparent border border-white/10 hover:border-secondary/50 hover:text-secondary transition-all text-sm font-bold"
                   >
                     <Eye className="h-4 w-4" />
                     Xem trước
                   </button>
-                  <a href="https://scholar.harvard.edu/files/tshoag/files/sample.pptx" download className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors text-sm font-medium hover-glow">
+                  <a href="https://scholar.harvard.edu/files/tshoag/files/sample.pptx" download className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-secondary text-black hover:bg-secondary/90 transition-all text-sm font-bold hover-glow">
                     <Download className="h-4 w-4" />
                     Tải về
                   </a>
@@ -132,9 +132,9 @@ export default function ResourcesPage() {
            {/* Item 3 */}
            <TiltCard>
             <div className="glass-panel h-full rounded-2xl overflow-hidden flex flex-col group shadow-lg">
-              <div className="h-48 bg-primary/5 flex items-center justify-center relative">
-                <FileText className="h-16 w-16 text-primary/20 group-hover:scale-110 transition-transform duration-500" />
-                <div className="absolute top-4 right-4 bg-white/90 dark:bg-black/90 text-xs font-bold px-2 py-1 rounded shadow-sm">
+              <div className="h-48 bg-secondary/5 flex items-center justify-center relative border-b border-white/5">
+                <FileText className="h-16 w-16 text-secondary/40 group-hover:text-secondary drop-shadow-[0_0_10px_rgba(0,255,133,0.2)] group-hover:drop-shadow-[0_0_20px_rgba(0,255,133,0.6)] group-hover:scale-110 transition-all duration-500" />
+                <div className="absolute top-4 right-4 bg-black/80 border border-secondary/30 text-secondary text-xs font-bold px-3 py-1 rounded-full shadow-sm">
                   PDF
                 </div>
               </div>

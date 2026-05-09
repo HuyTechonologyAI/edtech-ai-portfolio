@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Bot, Zap, BookOpen } from "lucide-react";
+import { ArrowRight, Bot, Zap, BookOpen, Brain } from "lucide-react";
 import { motion, Variants } from "framer-motion";
 import { TiltCard } from "@/components/TiltCard";
 
@@ -30,18 +30,12 @@ export default function Home() {
       {/* Hero Section */}
       <section className="relative w-full py-20 lg:py-32 flex items-center justify-center min-h-[80vh]">
         {/* Background Decorative Elements */}
-        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-primary/5 via-background to-background -z-10"></div>
+        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-secondary/10 via-background to-background -z-10"></div>
         <motion.div 
           initial={{ opacity: 0, scale: 0.5 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1.5 }}
-          className="absolute top-40 -right-20 w-72 h-72 bg-secondary/10 rounded-full blur-3xl -z-10"
-        />
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.5 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1.5, delay: 0.3 }}
-          className="absolute -bottom-20 -left-20 w-72 h-72 bg-primary/10 rounded-full blur-3xl -z-10"
+          className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-secondary/30 rounded-full blur-[120px] -z-10"
         />
 
         <motion.div 
@@ -55,25 +49,39 @@ export default function Home() {
             Chuyên gia Đào tạo AI & Automation
           </motion.div>
           
-          <motion.h1 variants={itemVariants} className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6 max-w-4xl text-balance">
-            Làm Chủ <span className="text-transparent bg-clip-text bg-gradient-to-r from-secondary to-blue-400">Trí Tuệ Nhân Tạo</span> & Tự Động Hóa
+          <motion.h1 
+            variants={itemVariants} 
+            className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6 max-w-4xl text-balance"
+            style={{ perspective: 1000 }}
+          >
+            <motion.span
+              initial={{ rotateX: 90, opacity: 0 }}
+              animate={{ rotateX: 0, opacity: 1 }}
+              transition={{ duration: 0.8, delay: 0.2, type: "spring" }}
+              className="inline-block"
+            >
+              Làm Chủ <span className="text-secondary neon-glow-text">Trí Tuệ Nhân Tạo</span> & Tự Động Hóa
+            </motion.span>
           </motion.h1>
           
-          <motion.p variants={itemVariants} className="text-lg md:text-xl text-foreground/70 mb-10 max-w-2xl">
+          <motion.p 
+            variants={itemVariants} 
+            className="text-lg md:text-xl text-foreground/70 mb-10 max-w-2xl"
+          >
             Tối ưu hóa quy trình, x10 hiệu suất làm việc và bứt phá doanh thu với các giải pháp ứng dụng AI & Automation thực chiến.
           </motion.p>
           
-          <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+          <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-6 w-full sm:w-auto mt-4">
             <Link 
               href="/roadmap" 
-              className="inline-flex items-center justify-center px-8 py-4 rounded-lg bg-primary text-white font-medium hover:bg-primary/90 hover-glow transition-all"
+              className="inline-flex items-center justify-center px-8 py-4 rounded-full bg-secondary text-black font-bold hover:bg-secondary/90 hover-glow transition-all"
             >
               Xem Lộ Trình Học
               <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
             <Link 
               href="/contact" 
-              className="inline-flex items-center justify-center px-8 py-4 rounded-lg border border-border bg-surface text-foreground font-medium hover:bg-surface/80 transition-all"
+              className="inline-flex items-center justify-center px-8 py-4 rounded-full border border-secondary/30 bg-transparent text-secondary font-bold hover:border-secondary hover:shadow-[0_0_15px_rgba(0,255,133,0.2)] transition-all"
             >
               Nhận Tư Vấn Doanh Nghiệp
             </Link>
@@ -82,7 +90,8 @@ export default function Home() {
       </section>
 
       {/* Feature/Highlights Section */}
-      <section className="w-full py-16 bg-surface border-y border-border">
+      <section className="w-full py-16 bg-transparent relative">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-secondary/5 to-transparent -z-10"></div>
         <motion.div 
           initial="hidden"
           whileInView="visible"
@@ -90,41 +99,71 @@ export default function Home() {
           variants={containerVariants}
           className="container px-4 md:px-6 max-w-6xl mx-auto"
         >
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <motion.div variants={itemVariants} className="h-full">
               <TiltCard>
-                <div className="glass-panel h-full p-8 rounded-2xl flex flex-col items-start text-left shadow-lg">
-                  <div className="p-4 rounded-xl bg-primary/10 text-primary mb-5">
-                    <Bot className="h-8 w-8" />
+                <div className="glass-panel h-full p-8 rounded-3xl flex flex-col items-start text-left shadow-2xl relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-secondary/10 rounded-full blur-3xl -z-10 group-hover:bg-secondary/20 transition-all"></div>
+                  <div 
+                    className="p-4 rounded-2xl bg-secondary/10 text-secondary mb-6 border border-secondary/20 shadow-[0_0_15px_rgba(0,255,133,0.3)] transition-transform duration-300"
+                    style={{ transform: "translateZ(60px)" }}
+                  >
+                    <Bot className="h-8 w-8 drop-shadow-[0_0_8px_rgba(0,255,133,0.8)]" />
                   </div>
-                  <h3 className="text-xl font-bold mb-3">AI Mastery</h3>
-                  <p className="text-foreground/70">Ứng dụng ChatGPT, Claude, Midjourney và các công cụ AI tạo sinh vào công việc hàng ngày một cách hiệu quả.</p>
+                  <h3 className="text-xl font-bold mb-3" style={{ transform: "translateZ(40px)" }}>AI Mastery</h3>
+                  <p className="text-foreground/70" style={{ transform: "translateZ(20px)" }}>Ứng dụng ChatGPT, Claude, Midjourney và các công cụ AI tạo sinh vào công việc hàng ngày một cách hiệu quả.</p>
                 </div>
               </TiltCard>
             </motion.div>
             
             <motion.div variants={itemVariants} className="h-full">
               <TiltCard>
-                <div className="glass-panel h-full p-8 rounded-2xl flex flex-col items-start text-left shadow-lg">
-                  <div className="p-4 rounded-xl bg-secondary/10 text-secondary mb-5">
-                    <Zap className="h-8 w-8" />
+                <div className="glass-panel h-full p-8 rounded-3xl flex flex-col items-start text-left shadow-2xl relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-secondary/10 rounded-full blur-3xl -z-10 group-hover:bg-secondary/20 transition-all"></div>
+                  <div 
+                    className="p-4 rounded-2xl bg-secondary/10 text-secondary mb-6 border border-secondary/20 shadow-[0_0_15px_rgba(0,255,133,0.3)] transition-transform duration-300"
+                    style={{ transform: "translateZ(60px)" }}
+                  >
+                    <Zap className="h-8 w-8 drop-shadow-[0_0_8px_rgba(0,255,133,0.8)]" />
                   </div>
-                  <h3 className="text-xl font-bold mb-3">Business Automation</h3>
-                  <p className="text-foreground/70">Xây dựng hệ thống tự động hóa Marketing, Sales, CSKH với các nền tảng Make, Zapier, n8n.</p>
+                  <h3 className="text-xl font-bold mb-3" style={{ transform: "translateZ(40px)" }}>Business Automation</h3>
+                  <p className="text-foreground/70" style={{ transform: "translateZ(20px)" }}>Xây dựng hệ thống tự động hóa Marketing, Sales, CSKH với các nền tảng Make, Zapier, n8n.</p>
                 </div>
               </TiltCard>
             </motion.div>
             
             <motion.div variants={itemVariants} className="h-full">
               <TiltCard>
-                <div className="glass-panel h-full p-8 rounded-2xl flex flex-col items-start text-left shadow-lg">
-                  <div className="p-4 rounded-xl bg-blue-500/10 text-blue-500 mb-5">
-                    <BookOpen className="h-8 w-8" />
+                <div className="glass-panel h-full p-8 rounded-3xl flex flex-col items-start text-left shadow-2xl relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-secondary/10 rounded-full blur-3xl -z-10 group-hover:bg-secondary/20 transition-all"></div>
+                  <div 
+                    className="p-4 rounded-2xl bg-secondary/10 text-secondary mb-6 border border-secondary/20 shadow-[0_0_15px_rgba(0,255,133,0.3)] transition-transform duration-300"
+                    style={{ transform: "translateZ(60px)" }}
+                  >
+                    <BookOpen className="h-8 w-8 drop-shadow-[0_0_8px_rgba(0,255,133,0.8)]" />
                   </div>
-                  <h3 className="text-xl font-bold mb-3">Thực Chiến & Ứng Dụng</h3>
-                  <p className="text-foreground/70">Không lý thuyết suông. Mọi kiến thức và tài liệu đều được đúc kết từ các dự án tư vấn thực tế.</p>
+                  <h3 className="text-xl font-bold mb-3" style={{ transform: "translateZ(40px)" }}>Thực Chiến & Ứng Dụng</h3>
+                  <p className="text-foreground/70" style={{ transform: "translateZ(20px)" }}>Không lý thuyết suông. Mọi kiến thức và tài liệu đều được đúc kết từ các dự án tư vấn thực tế.</p>
                 </div>
               </TiltCard>
+            </motion.div>
+
+            <motion.div variants={itemVariants} className="h-full cursor-pointer">
+              <Link href="/quiz" className="block h-full">
+                <TiltCard>
+                  <div className="glass-panel h-full p-8 rounded-3xl flex flex-col items-start text-left shadow-2xl relative overflow-hidden group border-secondary/30 hover:border-secondary transition-colors">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-secondary/20 rounded-full blur-3xl -z-10 group-hover:bg-secondary/40 transition-all"></div>
+                    <div 
+                      className="p-4 rounded-2xl bg-secondary/20 text-secondary mb-6 border border-secondary/40 shadow-[0_0_20px_rgba(0,255,133,0.5)] transition-transform duration-300"
+                      style={{ transform: "translateZ(60px)" }}
+                    >
+                      <Brain className="h-8 w-8 drop-shadow-[0_0_12px_rgba(0,255,133,1)] animate-pulse" />
+                    </div>
+                    <h3 className="text-xl font-bold mb-3 neon-glow-text" style={{ transform: "translateZ(40px)" }}>AI Dynamic Quiz</h3>
+                    <p className="text-foreground/70" style={{ transform: "translateZ(20px)" }}>Kiểm tra ngay trình độ của bạn với hệ thống trắc nghiệm thông minh sinh tự động bởi Google Gemini AI.</p>
+                  </div>
+                </TiltCard>
+              </Link>
             </motion.div>
           </div>
         </motion.div>
@@ -133,7 +172,7 @@ export default function Home() {
       {/* About Me Section */}
       <section className="w-full py-24 relative overflow-hidden">
         {/* Background blobs */}
-        <div className="absolute top-40 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[100px] -z-10" />
+        <div className="absolute top-40 right-0 w-[500px] h-[500px] bg-secondary/5 rounded-full blur-[120px] -z-10" />
         
         <div className="container px-4 md:px-6 max-w-6xl mx-auto">
           <div className="flex flex-col lg:flex-row gap-12 items-center">
@@ -144,23 +183,23 @@ export default function Home() {
               transition={{ duration: 0.8 }}
               className="w-full lg:w-5/12 relative"
             >
-              <div className="aspect-[4/5] rounded-3xl overflow-hidden border border-border shadow-2xl relative group">
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10" />
+              <TiltCard className="aspect-[4/5] rounded-3xl overflow-hidden border border-white/10 shadow-[0_0_30px_rgba(0,0,0,0.8)] relative group">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent z-10" style={{ transform: "translateZ(30px)" }} />
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img 
                   src="/profile.jpg" 
                   alt="Ngô Quốc Huy" 
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 />
-                <div className="absolute bottom-6 left-6 right-6 z-20">
-                  <h3 className="text-3xl font-bold text-white mb-1">Ngô Quốc Huy</h3>
-                  <p className="text-secondary font-medium text-lg">CEO Vạn Hoả Long Technology</p>
+                <div className="absolute bottom-8 left-6 right-6 z-20" style={{ transform: "translateZ(80px)" }}>
+                  <h3 className="text-4xl font-bold text-white mb-2 drop-shadow-lg">Ngô Quốc Huy</h3>
+                  <p className="text-secondary font-medium text-xl neon-glow-text">CEO Vạn Hoả Long Technology</p>
                 </div>
-              </div>
+              </TiltCard>
               
               {/* Decorative elements */}
-              <div className="absolute -top-6 -left-6 w-32 h-32 bg-primary/20 rounded-full blur-2xl -z-10" />
-              <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-secondary/20 rounded-full blur-2xl -z-10" />
+              <div className="absolute -top-6 -left-6 w-32 h-32 bg-secondary/20 rounded-full blur-2xl -z-10" />
+              <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-secondary/10 rounded-full blur-2xl -z-10" />
             </motion.div>
 
             <motion.div 
@@ -185,11 +224,11 @@ export default function Home() {
                   <h4 className="font-bold text-lg mb-3">Thành Tựu Nổi Bật</h4>
                   <ul className="text-sm text-foreground/70 space-y-2.5">
                     <li className="flex items-start gap-2">
-                      <span className="text-primary mt-0.5">•</span> 
+                      <span className="text-secondary mt-0.5">•</span> 
                       <span>Danh hiệu <strong>"Người thợ trẻ giỏi toàn quốc" (2020)</strong> do TW Đoàn TNCS Hồ Chí Minh trao tặng.</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <span className="text-primary mt-0.5">•</span> 
+                      <span className="text-secondary mt-0.5">•</span> 
                       <span>Giải Nhất <strong>"Khởi nghiệp ĐMST OCOP"</strong> tỉnh Đồng Nai (2020).</span>
                     </li>
                   </ul>

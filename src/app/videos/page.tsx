@@ -7,7 +7,7 @@ export default function VideosPage() {
       <div className="container px-4 md:px-6 max-w-6xl mx-auto">
         <div className="mb-12 text-center md:text-left">
           <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">
-            Video Bài Giảng & <span className="text-secondary">Case Study</span>
+            Video Bài Giảng & <span className="text-secondary neon-glow-text">Case Study</span>
           </h1>
           <p className="text-lg text-foreground/70 max-w-2xl">
             Các hướng dẫn thực hành từng bước, phân tích dự án thực tế và chia sẻ tư duy ứng dụng AI & Automation.
@@ -17,7 +17,7 @@ export default function VideosPage() {
         {/* Featured Video */}
         <div className="mb-16">
           <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-            <PlayCircle className="h-6 w-6 text-primary" />
+            <PlayCircle className="h-6 w-6 text-secondary drop-shadow-[0_0_8px_rgba(0,255,133,0.5)]" />
             Video Nổi Bật
           </h2>
           <div className="glass-panel rounded-3xl overflow-hidden shadow-2xl border border-secondary/20">
@@ -49,7 +49,7 @@ export default function VideosPage() {
         <div className="mb-10">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold">Thực Hành AI</h2>
-            <button className="text-sm font-medium text-primary hover:text-secondary transition-colors">
+            <button className="text-sm font-bold text-secondary hover:text-white transition-colors">
               Xem tất cả &rarr;
             </button>
           </div>
@@ -60,7 +60,7 @@ export default function VideosPage() {
               <div className="aspect-video rounded-xl overflow-hidden mb-4 relative bg-surface border border-border shadow-md">
                 <VideoPlayer url="https://www.youtube.com/watch?v=jGwO_UgTS7I" />
               </div>
-              <h3 className="text-lg font-bold mb-2 group-hover:text-primary transition-colors line-clamp-2">
+              <h3 className="text-lg font-bold mb-2 group-hover:text-secondary transition-colors line-clamp-2">
                 Tạo Landing Page chuẩn SEO với ChatGPT và Claude 3.5 Sonnet
               </h3>
               <div className="flex items-center gap-3 text-xs text-foreground/50 mt-auto">
@@ -75,7 +75,7 @@ export default function VideosPage() {
               <div className="aspect-video rounded-xl overflow-hidden mb-4 relative bg-surface border border-border shadow-md">
                 <VideoPlayer url="https://www.youtube.com/watch?v=1bvwM8oMofI" />
               </div>
-              <h3 className="text-lg font-bold mb-2 group-hover:text-primary transition-colors line-clamp-2">
+              <h3 className="text-lg font-bold mb-2 group-hover:text-secondary transition-colors line-clamp-2">
                 Make.com cơ bản: Tự động hóa quy trình CSKH trên Zalo
               </h3>
               <div className="flex items-center gap-3 text-xs text-foreground/50 mt-auto">
@@ -90,7 +90,7 @@ export default function VideosPage() {
               <div className="aspect-video rounded-xl overflow-hidden mb-4 relative bg-surface border border-border shadow-md">
                 <VideoPlayer url="https://www.youtube.com/watch?v=dQw4w9WgXcQ" />
               </div>
-              <h3 className="text-lg font-bold mb-2 group-hover:text-primary transition-colors line-clamp-2">
+              <h3 className="text-lg font-bold mb-2 group-hover:text-secondary transition-colors line-clamp-2">
                 Phân tích dữ liệu kinh doanh với ChatGPT Advanced Data Analysis
               </h3>
               <div className="flex items-center gap-3 text-xs text-foreground/50 mt-auto">

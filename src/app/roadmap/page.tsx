@@ -34,7 +34,7 @@ export default function RoadmapPage() {
       <div className="container px-4 md:px-6 max-w-4xl mx-auto">
         <div className="text-center mb-16">
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">
-            Lộ trình <span className="text-secondary">Master AI & Automation</span>
+            Lộ trình <span className="text-secondary neon-glow-text">Master AI & Automation</span>
           </h1>
           <p className="text-lg text-foreground/70 max-w-2xl mx-auto">
             Hành trình từng bước từ người mới bắt đầu đến chuyên gia ứng dụng AI và Tự động hóa vào doanh nghiệp thực chiến.
@@ -47,7 +47,7 @@ export default function RoadmapPage() {
               {/* Icon / Marker */}
               <div className="absolute -left-[33px] md:left-1/2 md:-translate-x-1/2 flex items-center justify-center w-16 h-16 rounded-full bg-background border-4 border-surface shadow-sm z-10">
                 {step.status === "completed" ? (
-                  <CheckCircle2 className="w-8 h-8 text-primary" />
+                  <CheckCircle2 className="w-8 h-8 text-secondary drop-shadow-[0_0_8px_rgba(0,255,133,0.5)]" />
                 ) : step.status === "current" ? (
                   <div className="relative flex h-8 w-8 items-center justify-center">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
@@ -59,8 +59,8 @@ export default function RoadmapPage() {
               </div>
 
               {/* Content Box */}
-              <div className={`ml-12 md:ml-0 w-full md:w-5/12 p-6 glass-panel rounded-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-lg ${step.status === 'current' ? 'border-secondary/50 shadow-[0_0_15px_rgba(0,229,122,0.1)]' : ''}`}>
-                <div className={`text-sm font-bold uppercase tracking-wider mb-2 ${step.status === 'completed' ? 'text-primary' : step.status === 'current' ? 'text-secondary' : 'text-foreground/50'}`}>
+              <div className={`ml-12 md:ml-0 w-full md:w-5/12 p-6 glass-panel rounded-3xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(0,255,133,0.1)] ${step.status === 'current' ? 'border-secondary/50 shadow-[0_0_20px_rgba(0,255,133,0.3)]' : ''}`}>
+                <div className={`text-sm font-bold uppercase tracking-wider mb-2 ${step.status === 'completed' ? 'text-secondary/70' : step.status === 'current' ? 'text-secondary neon-glow-text' : 'text-foreground/50'}`}>
                   {step.status === 'completed' ? 'Đã hoàn thành' : step.status === 'current' ? 'Đang học' : 'Sắp tới'}
                 </div>
                 <h3 className="text-xl font-bold mb-3">{step.title}</h3>
@@ -71,7 +71,7 @@ export default function RoadmapPage() {
         </div>
 
         <div className="mt-20 text-center">
-          <button className="inline-flex items-center justify-center px-8 py-4 rounded-lg bg-primary text-white font-medium hover:bg-primary/90 transition-all hover:shadow-lg">
+          <button className="inline-flex items-center justify-center px-8 py-4 rounded-full bg-secondary text-black font-bold hover:bg-secondary/90 hover-glow transition-all">
             Đăng ký học ngay
           </button>
         </div>

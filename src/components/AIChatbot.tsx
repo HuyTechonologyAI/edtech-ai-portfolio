@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { MessageSquare, X, Send, Bot, CheckCircle2 } from "lucide-react";
 import { submitContact } from "@/actions/contact";
+import { motion, AnimatePresence } from "framer-motion";
 
 type Message = {
   id: string;
@@ -79,44 +80,60 @@ export function AIChatbot() {
       {/* Floating Button */}
       <button
         onClick={() => setIsOpen(true)}
-        className={`fixed bottom-6 right-6 w-14 h-14 bg-secondary text-surface rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(0,229,122,0.4)] hover:scale-110 transition-transform z-50 ${isOpen ? "hidden" : "flex"}`}
+        className={`fixed bottom-6 right-6 w-14 h-14 bg-secondary text-black rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(0,255,133,0.4)] hover:scale-110 hover:shadow-[0_0_30px_rgba(0,255,133,0.6)] transition-all z-50 ${isOpen ? "hidden" : "flex"}`}
         aria-label="Open AI Chatbot"
       >
         <MessageSquare className="w-6 h-6" />
       </button>
 
       {/* Chat Window */}
+      <AnimatePresence>
       {isOpen && (
-        <div className="fixed bottom-6 right-6 w-[90vw] sm:w-[380px] h-[600px] max-h-[85vh] bg-surface border border-border rounded-2xl shadow-2xl flex flex-col z-50 overflow-hidden animate-in slide-in-from-bottom-5">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.8, y: 50, rotateX: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0, rotateX: 0 }}
+          exit={{ opacity: 0, scale: 0.8, y: 50, rotateX: 20 }}
+          transition={{ type: "spring", stiffness: 300, damping: 25 }}
+          style={{ transformOrigin: "bottom right" }}
+          className="fixed bottom-6 right-6 w-[90vw] sm:w-[380px] h-[600px] max-h-[85vh] bg-surface/90 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-[0_0_30px_rgba(0,0,0,0.8)] flex flex-col z-50 overflow-hidden"
+        >
           {/* Header */}
-          <div className="bg-primary px-4 py-3 flex items-center justify-between text-white">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-                <Bot className="w-5 h-5" />
+          <div className="bg-background/80 backdrop-blur-md px-4 py-4 flex items-center justify-between text-foreground border-b border-white/5 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-secondary/10 rounded-full blur-2xl -z-10"></div>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-secondary/10 text-secondary border border-secondary/20 rounded-full flex items-center justify-center">
+                <Bot className="w-5 h-5 drop-shadow-[0_0_5px_rgba(0,255,133,0.5)]" />
               </div>
               <div>
                 <h3 className="font-bold text-sm">AutoBot AI</h3>
-                <div className="text-xs text-white/70 flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-secondary inline-block animate-pulse"></span>
+                <div className="text-xs text-foreground/70 flex items-center gap-1.5 mt-0.5">
+                  <span className="w-2 h-2 rounded-full bg-secondary inline-block animate-pulse shadow-[0_0_5px_rgba(0,255,133,0.8)]"></span>
                   Online
                 </div>
               </div>
             </div>
-            <button onClick={() => setIsOpen(false)} className="text-white/70 hover:text-white p-1">
+            <button onClick={() => setIsOpen(false)} className="text-foreground/50 hover:text-secondary transition-colors p-1">
               <X className="w-5 h-5" />
             </button>
           </div>
 
           {/* Messages Area */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-background/50">
+            <AnimatePresence initial={false}>
             {messages.map((msg) => (
-              <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                <div className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm ${msg.role === "user" ? "bg-primary text-white rounded-br-sm" : "bg-surface border border-border text-foreground rounded-bl-sm shadow-sm"}`}>
+              <motion.div 
+                key={msg.id} 
+                initial={{ opacity: 0, x: msg.role === "user" ? 20 : -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+              >
+                <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${msg.role === "user" ? "bg-secondary text-black font-medium rounded-br-sm shadow-[0_0_10px_rgba(0,255,133,0.2)]" : "bg-surface border border-white/5 text-foreground rounded-bl-sm shadow-sm"}`}>
                   {msg.role === "assistant" && <Bot className="w-4 h-4 mb-1 text-secondary inline-block mr-1" />}
                   {msg.content}
                 </div>
-              </div>
+              </motion.div>
             ))}
+            </AnimatePresence>
             
             {isLoading && (
               <div className="flex justify-start">
@@ -144,7 +161,7 @@ export function AIChatbot() {
                     <input type="text" name="name" required placeholder="Họ và Tên *" className="w-full text-sm px-3 py-2 rounded-lg border border-border bg-background focus:ring-1 focus:ring-secondary/50 outline-none" />
                     <input type="email" name="email" required placeholder="Email liên hệ *" className="w-full text-sm px-3 py-2 rounded-lg border border-border bg-background focus:ring-1 focus:ring-secondary/50 outline-none" />
                     <input type="text" name="company" placeholder="Tên Công ty" className="w-full text-sm px-3 py-2 rounded-lg border border-border bg-background focus:ring-1 focus:ring-secondary/50 outline-none" />
-                    <button type="submit" disabled={formState.pending} className="w-full bg-secondary text-surface font-bold py-2 rounded-lg text-sm hover:bg-secondary/90 transition-colors disabled:opacity-50">
+                    <button type="submit" disabled={formState.pending} className="w-full bg-secondary text-black font-bold py-2 rounded-lg text-sm hover:bg-secondary/90 transition-colors disabled:opacity-50 shadow-[0_0_10px_rgba(0,255,133,0.2)]">
                       {formState.pending ? "Đang gửi..." : "Gửi yêu cầu"}
                     </button>
                     <button type="button" onClick={() => setShowLeadForm(false)} className="w-full text-xs text-foreground/50 hover:text-foreground">Hủy bỏ</button>
@@ -159,10 +176,10 @@ export function AIChatbot() {
           {/* Quick Actions */}
           {!showLeadForm && (
             <div className="px-4 py-2 bg-background/50 border-t border-border flex gap-2 overflow-x-auto scrollbar-hide">
-              <button onClick={() => setShowLeadForm(true)} className="whitespace-nowrap text-xs bg-secondary/10 text-secondary border border-secondary/20 px-3 py-1.5 rounded-full hover:bg-secondary hover:text-surface transition-colors font-medium">
+              <button onClick={() => setShowLeadForm(true)} className="whitespace-nowrap text-xs bg-secondary/10 text-secondary border border-secondary/20 px-4 py-2 rounded-full hover:bg-secondary hover:text-black transition-colors font-bold shadow-[0_0_10px_rgba(0,255,133,0.1)]">
                 🎯 Nhận tư vấn sâu
               </button>
-              <button onClick={() => setInput("Giải pháp tự động hóa Zalo?")} className="whitespace-nowrap text-xs bg-surface border border-border px-3 py-1.5 rounded-full hover:bg-border/50 transition-colors">
+              <button onClick={() => setInput("Giải pháp tự động hóa Zalo?")} className="whitespace-nowrap text-xs bg-surface border border-white/10 px-4 py-2 rounded-full hover:border-secondary/50 hover:text-secondary transition-colors font-medium">
                 Tự động hóa Zalo
               </button>
             </div>
@@ -175,19 +192,20 @@ export function AIChatbot() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Hỏi AI bất kỳ điều gì..."
-              className="flex-1 px-3 py-2 bg-background border border-border rounded-xl text-sm focus:outline-none focus:border-secondary/50 focus:ring-1 focus:ring-secondary/50"
+              className="flex-1 px-4 py-2.5 bg-background/50 border border-white/10 rounded-full text-sm focus:outline-none focus:border-secondary/50 focus:ring-1 focus:ring-secondary/50"
               disabled={isLoading || showLeadForm}
             />
             <button
               type="submit"
               disabled={!input.trim() || isLoading || showLeadForm}
-              className="w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+              className="w-10 h-10 bg-secondary text-black rounded-full flex items-center justify-center hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed shrink-0 shadow-[0_0_10px_rgba(0,255,133,0.2)]"
             >
               <Send className="w-4 h-4 ml-0.5" />
             </button>
           </form>
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </>
   );
 }

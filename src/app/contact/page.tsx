@@ -30,8 +30,8 @@ export default function ContactPage() {
   return (
     <main className="flex-1 py-12 md:py-20 relative overflow-hidden min-h-screen">
       {/* Decorative Background */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-secondary/10 rounded-full blur-[100px] -z-10 pointer-events-none"></div>
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[100px] -z-10 pointer-events-none"></div>
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-secondary/10 rounded-full blur-[120px] -z-10 pointer-events-none"></div>
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-secondary/5 rounded-full blur-[120px] -z-10 pointer-events-none"></div>
 
       <div className="container px-4 md:px-6 max-w-6xl mx-auto">
         <div className="text-center mb-16">
@@ -52,7 +52,7 @@ export default function ContactPage() {
               
               <div className="space-y-6">
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center shrink-0">
+                  <div className="w-12 h-12 bg-secondary/10 text-secondary border border-secondary/20 rounded-xl flex items-center justify-center shrink-0">
                     <Mail className="w-6 h-6" />
                   </div>
                   <div>
@@ -62,7 +62,7 @@ export default function ContactPage() {
                 </div>
 
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-secondary/10 text-secondary rounded-xl flex items-center justify-center shrink-0">
+                  <div className="w-12 h-12 bg-secondary/10 text-secondary border border-secondary/20 rounded-xl flex items-center justify-center shrink-0">
                     <Phone className="w-6 h-6" />
                   </div>
                   <div>
@@ -72,7 +72,7 @@ export default function ContactPage() {
                 </div>
 
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-blue-500/10 text-blue-500 rounded-xl flex items-center justify-center shrink-0">
+                  <div className="w-12 h-12 bg-secondary/10 text-secondary border border-secondary/20 rounded-xl flex items-center justify-center shrink-0">
                     <MapPin className="w-6 h-6" />
                   </div>
                   <div>
@@ -89,7 +89,7 @@ export default function ContactPage() {
               </div>
               <h3 className="text-2xl font-bold mb-3">Đặt lịch 1-1 ngay</h3>
               <p className="text-foreground/70 mb-6">Bạn muốn trao đổi trực tiếp qua Google Meet? Hãy chọn thời gian rảnh của bạn trên lịch của tôi.</p>
-              <button className="w-full flex items-center justify-center gap-2 py-3 rounded-lg bg-surface border-2 border-secondary text-secondary font-bold hover:bg-secondary hover:text-surface transition-all">
+              <button className="w-full flex items-center justify-center gap-2 py-3 rounded-full bg-transparent border border-secondary text-secondary font-bold hover:bg-secondary hover:text-black hover:shadow-[0_0_15px_rgba(0,255,133,0.3)] transition-all">
                 Mở lịch Calendly
               </button>
             </div>
@@ -106,7 +106,7 @@ export default function ContactPage() {
                 </p>
                 <button 
                   onClick={() => setIsSuccess(false)}
-                  className="px-6 py-2 bg-secondary text-surface font-bold rounded-lg hover:bg-secondary/90 transition-colors"
+                  className="px-6 py-2 bg-secondary text-black font-bold rounded-full hover-glow transition-all"
                 >
                   Gửi yêu cầu khác
                 </button>
@@ -173,7 +173,7 @@ export default function ContactPage() {
               <button 
                 type="submit"
                 disabled={isPending}
-                className="w-full flex items-center justify-center gap-2 py-4 rounded-xl bg-primary text-white font-bold text-lg hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
+                className="w-full flex items-center justify-center gap-2 py-4 rounded-full bg-secondary text-black font-bold text-lg hover-glow transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
               >
                 {isPending ? 'Đang gửi...' : 'Gửi yêu cầu phân tích'}
                 {!isPending && <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />}

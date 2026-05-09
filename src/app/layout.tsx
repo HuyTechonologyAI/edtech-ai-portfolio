@@ -1,21 +1,23 @@
 import type { Metadata } from "next";
-import { Inter, Geist_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { AIChatbot } from "@/components/AIChatbot";
+import { CustomCursor } from "@/components/CustomCursor";
+import { FloatingOrbs } from "@/components/FloatingOrbs";
 
 import { GoogleAnalytics } from "@next/third-parties/google";
 import Script from "next/script";
 import Link from "next/link";
 
-const inter = Inter({
-  variable: "--font-inter",
+const jakarta = Plus_Jakarta_Sans({
+  variable: "--font-inter", // Keep variable name to avoid breaking css
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const space = Space_Grotesk({
+  variable: "--font-geist-mono", // Repurpose mono for headers if needed
   subsets: ["latin"],
 });
 
@@ -50,7 +52,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${jakarta.variable} ${space.variable} h-full antialiased dark`}
       suppressHydrationWarning
     >
       <head>
@@ -70,27 +72,31 @@ export default function RootLayout({
           `}
         </Script>
       </head>
-      <body className="min-h-full flex flex-col font-sans">
+      <body className="min-h-full flex flex-col font-sans bg-background text-foreground selection:bg-secondary selection:text-black cursor-auto md:cursor-none">
+        <div className="hidden md:block">
+          <CustomCursor />
+        </div>
+        <FloatingOrbs />
         {/* Google Analytics component */}
         <GoogleAnalytics gaId="G-XYZ123456" /> {/* THAY ID GOOGLE ANALYTICS VÀO ĐÂY */}
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
-          enableSystem
+          defaultTheme="dark"
+          forcedTheme="dark"
+          enableSystem={false}
           disableTransitionOnChange
         >
-          <header className="sticky top-0 z-50 w-full border-b border-border bg-surface/80 backdrop-blur">
+          <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-xl">
             <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-              <div className="font-bold text-xl tracking-tight">AI & Auto<span className="text-secondary">Expert</span></div>
-              <nav className="hidden md:flex gap-6 items-center">
-                <Link href="/" className="text-sm font-medium hover:text-secondary transition-colors">Trang chủ</Link>
-                <Link href="/roadmap" className="text-sm font-medium hover:text-secondary transition-colors">Lộ trình</Link>
-                <Link href="/resources" className="text-sm font-medium hover:text-secondary transition-colors">Tài liệu</Link>
-                <Link href="/videos" className="text-sm font-medium hover:text-secondary transition-colors">Videos</Link>
+              <div className="font-bold text-2xl tracking-tight">AI & Auto<span className="text-secondary neon-glow-text">Expert</span></div>
+              <nav className="hidden md:flex gap-8 items-center">
+                <Link href="/" className="text-sm font-medium text-foreground/80 hover:text-secondary transition-colors">Trang chủ</Link>
+                <Link href="/roadmap" className="text-sm font-medium text-foreground/80 hover:text-secondary transition-colors">Lộ trình</Link>
+                <Link href="/resources" className="text-sm font-medium text-foreground/80 hover:text-secondary transition-colors">Tài liệu</Link>
+                <Link href="/videos" className="text-sm font-medium text-foreground/80 hover:text-secondary transition-colors">Videos</Link>
               </nav>
               <div className="flex items-center gap-4">
-                <ThemeToggle />
-                <Link href="/contact" className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors hidden sm:block">
+                <Link href="/contact" className="px-6 py-2 bg-secondary/10 text-secondary border border-secondary/50 rounded-full text-sm font-bold hover:bg-secondary hover:text-black hover:shadow-[0_0_20px_rgba(0,255,133,0.4)] transition-all hidden sm:block">
                   Liên hệ
                 </Link>
               </div>
@@ -99,8 +105,8 @@ export default function RootLayout({
 
           {children}
 
-          <footer className="border-t border-border bg-surface py-8 mt-auto">
-            <div className="container mx-auto px-4 text-center text-foreground/60 text-sm">
+          <footer className="border-t border-border/40 bg-background py-8 mt-auto">
+            <div className="container mx-auto px-4 text-center text-foreground/40 text-sm">
               &copy; {new Date().getFullYear()} AI & Automation Expert. All rights reserved.
             </div>
           </footer>
