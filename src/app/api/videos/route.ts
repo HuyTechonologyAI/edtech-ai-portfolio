@@ -7,27 +7,29 @@ async function isAuthenticated() {
   return cookieStore.get("admin_session")?.value === "authenticated";
 }
 
-// Map camelCase frontend fields to snake_case database columns
+// Map frontend camelCase → database snake_case columns
+// Actual DB columns: id, title, description, duration, youtube_url, is_featured, created_at
 function mapToDbFields(body: any) {
   const mapped: any = {};
   if (body.title !== undefined) mapped.title = body.title;
   if (body.description !== undefined) mapped.description = body.description;
-  if (body.youtubeUrl !== undefined) mapped.youtube_url = body.youtubeUrl;
   if (body.duration !== undefined) mapped.duration = body.duration;
-  if (body.isFeatured !== undefined) mapped.is_featured = body.isFeatured;
-  // Also accept snake_case directly
+  // Handle youtubeUrl → youtube_url
+  if (body.youtubeUrl !== undefined) mapped.youtube_url = body.youtubeUrl;
   if (body.youtube_url !== undefined) mapped.youtube_url = body.youtube_url;
+  // Handle isFeatured → is_featured
+  if (body.isFeatured !== undefined) mapped.is_featured = body.isFeatured;
   if (body.is_featured !== undefined) mapped.is_featured = body.is_featured;
   return mapped;
 }
 
-// Map snake_case database columns to camelCase for frontend
+// Map database snake_case → frontend camelCase
 function mapToFrontend(item: any) {
   if (!item) return item;
   return {
     ...item,
-    youtubeUrl: item.youtube_url,
-    isFeatured: item.is_featured,
+    youtubeUrl: item.youtube_url ?? item.youtubeUrl,
+    isFeatured: item.is_featured ?? item.isFeatured,
   };
 }
 

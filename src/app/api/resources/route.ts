@@ -7,25 +7,26 @@ async function isAuthenticated() {
   return cookieStore.get("admin_session")?.value === "authenticated";
 }
 
-// Map camelCase frontend fields to snake_case database columns
+// Map frontend camelCase → database snake_case columns
+// Actual DB columns: id, title, description, link, type, is_premium, created_at
 function mapToDbFields(body: any) {
   const mapped: any = {};
   if (body.title !== undefined) mapped.title = body.title;
   if (body.description !== undefined) mapped.description = body.description;
   if (body.link !== undefined) mapped.link = body.link;
   if (body.type !== undefined) mapped.type = body.type;
+  // Handle isPremium → is_premium
   if (body.isPremium !== undefined) mapped.is_premium = body.isPremium;
-  // Also accept snake_case directly
   if (body.is_premium !== undefined) mapped.is_premium = body.is_premium;
   return mapped;
 }
 
-// Map snake_case database columns to camelCase for frontend
+// Map database snake_case → frontend camelCase
 function mapToFrontend(item: any) {
   if (!item) return item;
   return {
     ...item,
-    isPremium: item.is_premium,
+    isPremium: item.is_premium ?? item.isPremium,
   };
 }
 
