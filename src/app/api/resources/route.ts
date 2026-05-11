@@ -7,11 +7,33 @@ async function isAuthenticated() {
   return cookieStore.get("admin_session")?.value === "authenticated";
 }
 
+// Map camelCase frontend fields to snake_case database columns
+function mapToDbFields(body: any) {
+  const mapped: any = {};
+  if (body.title !== undefined) mapped.title = body.title;
+  if (body.description !== undefined) mapped.description = body.description;
+  if (body.link !== undefined) mapped.link = body.link;
+  if (body.type !== undefined) mapped.type = body.type;
+  if (body.isPremium !== undefined) mapped.is_premium = body.isPremium;
+  // Also accept snake_case directly
+  if (body.is_premium !== undefined) mapped.is_premium = body.is_premium;
+  return mapped;
+}
+
+// Map snake_case database columns to camelCase for frontend
+function mapToFrontend(item: any) {
+  if (!item) return item;
+  return {
+    ...item,
+    isPremium: item.is_premium,
+  };
+}
+
 export async function GET() {
   try {
     const { data, error } = await supabase.from("resources").select("*").order("created_at", { ascending: false });
     if (error) throw error;
-    return NextResponse.json({ resources: data });
+    return NextResponse.json({ resources: (data || []).map(mapToFrontend) });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
@@ -22,9 +44,10 @@ export async function POST(req: Request) {
   
   try {
     const body = await req.json();
-    const { data, error } = await supabase.from("resources").insert([body]).select();
+    const dbBody = mapToDbFields(body);
+    const { data, error } = await supabase.from("resources").insert([dbBody]).select();
     if (error) throw error;
-    return NextResponse.json({ success: true, resource: data[0] });
+    return NextResponse.json({ success: true, resource: mapToFrontend(data[0]) });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
@@ -39,9 +62,10 @@ export async function PUT(req: Request) {
     if (!id) return NextResponse.json({ error: "Missing ID" }, { status: 400 });
 
     const body = await req.json();
-    const { data, error } = await supabase.from("resources").update(body).eq("id", id).select();
+    const dbBody = mapToDbFields(body);
+    const { data, error } = await supabase.from("resources").update(dbBody).eq("id", id).select();
     if (error) throw error;
-    return NextResponse.json({ success: true, resource: data[0] });
+    return NextResponse.json({ success: true, resource: mapToFrontend(data[0]) });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
