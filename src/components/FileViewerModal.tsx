@@ -1,6 +1,6 @@
 "use client";
 
-import { X, ExternalLink, Lock, Eye, Calendar, CalendarDays, CalendarRange, CalendarClock, Download } from "lucide-react";
+import { X, ExternalLink, Lock, Eye, Calendar, CalendarDays, CalendarRange, CalendarClock, Download, LogIn } from "lucide-react";
 import { useEffect, useState, useCallback, useRef } from "react";
 
 interface ViewStats {
@@ -20,58 +20,80 @@ interface FileViewerModalProps {
   maxPreviewPages?: number;
 }
 
-/**
- * Convert various Google Drive URL formats to an embeddable preview URL.
- * 
- * Supported inputs:
- *   - https://drive.google.com/file/d/FILE_ID/view?usp=...
- *   - https://drive.google.com/open?id=FILE_ID
- *   - https://docs.google.com/document/d/FILE_ID/...
- *   - https://docs.google.com/spreadsheets/d/FILE_ID/...
- *   - https://docs.google.com/presentation/d/FILE_ID/...
- *   - Any other URL → fallback to Google Docs Viewer
- */
-function getEmbedUrl(url: string): string {
-  if (!url) return "";
-
-  // Google Drive file: /file/d/FILE_ID/...
-  const driveFileMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
-  if (driveFileMatch) {
-    return `https://drive.google.com/file/d/${driveFileMatch[1]}/preview`;
-  }
-
-  // Google Drive open: /open?id=FILE_ID
-  const driveOpenMatch = url.match(/drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/);
-  if (driveOpenMatch) {
-    return `https://drive.google.com/file/d/${driveOpenMatch[1]}/preview`;
-  }
-
-  // Google Docs/Sheets/Slides: /d/FILE_ID/...
-  const docsMatch = url.match(/docs\.google\.com\/(document|spreadsheets|presentation)\/d\/([a-zA-Z0-9_-]+)/);
-  if (docsMatch) {
-    const type = docsMatch[1];
-    const id = docsMatch[2];
-    return `https://docs.google.com/${type}/d/${id}/preview`;
-  }
-
-  // Fallback: Google Docs Viewer for other URLs (e.g. direct PDF links)
-  return `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
+function extractDriveId(url: string): string | null {
+  const m1 = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (m1) return m1[1];
+  const m2 = url.match(/drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/);
+  if (m2) return m2[1];
+  return null;
 }
 
-export function FileViewerModal({ 
-  isOpen, 
-  onClose, 
-  fileUrl, 
-  title, 
-  resourceId,
-  maxPreviewPages = 5 
+export function FileViewerModal({
+  isOpen, onClose, fileUrl, title, resourceId, maxPreviewPages = 5,
 }: FileViewerModalProps) {
+  const [pageImages, setPageImages] = useState<string[]>([]);
+  const [totalPages, setTotalPages] = useState(0);
+  const [loadingPdf, setLoadingPdf] = useState(false);
+  const [pdfError, setPdfError] = useState<string | null>(null);
   const [viewStats, setViewStats] = useState<ViewStats | null>(null);
   const [hasRecordedView, setHasRecordedView] = useState(false);
-  const [iframeLoaded, setIframeLoaded] = useState(false);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Record view and fetch stats when modal opens
+  // Load PDF and render pages
+  useEffect(() => {
+    if (!isOpen || !fileUrl) return;
+    let cancelled = false;
+
+    const loadPdf = async () => {
+      setLoadingPdf(true);
+      setPdfError(null);
+      setPageImages([]);
+
+      try {
+        const pdfjsLib = await import("pdfjs-dist");
+        pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+
+        // Fetch PDF through our proxy to avoid CORS
+        const proxyUrl = `/api/resources/proxy?url=${encodeURIComponent(fileUrl)}`;
+        const pdf = await pdfjsLib.getDocument(proxyUrl).promise;
+
+        if (cancelled) return;
+        setTotalPages(pdf.numPages);
+
+        const pagesToRender = Math.min(maxPreviewPages, pdf.numPages);
+        const images: string[] = [];
+
+        for (let i = 1; i <= pagesToRender; i++) {
+          if (cancelled) return;
+          const page = await pdf.getPage(i);
+          const scale = 1.5;
+          const viewport = page.getViewport({ scale });
+
+          const canvas = document.createElement("canvas");
+          canvas.width = viewport.width;
+          canvas.height = viewport.height;
+          const ctx = canvas.getContext("2d")!;
+
+          await page.render({ canvasContext: ctx, viewport }).promise;
+          images.push(canvas.toDataURL("image/jpeg", 0.85));
+        }
+
+        if (!cancelled) setPageImages(images);
+      } catch (err: any) {
+        if (!cancelled) {
+          console.error("PDF load error:", err);
+          setPdfError(err.message || "Không thể tải tài liệu");
+        }
+      } finally {
+        if (!cancelled) setLoadingPdf(false);
+      }
+    };
+
+    loadPdf();
+    return () => { cancelled = true; };
+  }, [isOpen, fileUrl, maxPreviewPages]);
+
+  // Record view
   useEffect(() => {
     if (isOpen && resourceId && !hasRecordedView) {
       fetch("/api/resources/views", {
@@ -83,14 +105,9 @@ export function FileViewerModal({
         fetchViewStats();
       }).catch(console.error);
     }
-
-    if (isOpen && resourceId) {
-      fetchViewStats();
-    }
-
+    if (isOpen && resourceId) fetchViewStats();
     if (!isOpen) {
       setHasRecordedView(false);
-      setIframeLoaded(false);
     }
   }, [isOpen, resourceId]);
 
@@ -100,62 +117,42 @@ export function FileViewerModal({
       const res = await fetch(`/api/resources/views?resourceId=${resourceId}`);
       const data = await res.json();
       setViewStats(data.views || null);
-    } catch (error) {
-      console.error("Failed to fetch view stats:", error);
-    }
+    } catch (e) { console.error(e); }
   }, [resourceId]);
 
+  // Lock body scroll
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "unset";
-    }
-    return () => {
-      document.body.style.overflow = "unset";
-    };
+    document.body.style.overflow = isOpen ? "hidden" : "unset";
+    return () => { document.body.style.overflow = "unset"; };
   }, [isOpen]);
 
   if (!isOpen) return null;
 
-  const embedUrl = getEmbedUrl(fileUrl);
-
-  const formatNumber = (n: number) => {
-    if (n >= 1000) return (n / 1000).toFixed(1) + "K";
-    return n.toString();
-  };
+  const fmt = (n: number) => (n >= 1000 ? (n / 1000).toFixed(1) + "K" : String(n));
+  const hasMorePages = totalPages > maxPreviewPages;
+  const lockedPages = totalPages - maxPreviewPages;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6">
-      <div 
-        className="absolute inset-0 bg-black/85 backdrop-blur-sm"
-        onClick={onClose}
-      />
-      
-      <div className="relative w-full max-w-6xl h-[92vh] bg-surface border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+      <div className="absolute inset-0 bg-black/85 backdrop-blur-sm" onClick={onClose} />
+
+      <div className="relative w-full max-w-5xl h-[92vh] bg-surface border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-border bg-surface/90 backdrop-blur-md shrink-0">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-border bg-surface/90 shrink-0">
           <div className="flex items-center gap-3 min-w-0">
-            <h3 className="font-bold text-lg truncate pr-2">{title}</h3>
-            <div className="hidden sm:flex items-center gap-1.5 text-xs text-secondary bg-secondary/10 border border-secondary/20 px-2.5 py-1 rounded-full font-medium shrink-0">
+            <h3 className="font-bold text-lg truncate">{title}</h3>
+            <span className="hidden sm:flex items-center gap-1.5 text-xs text-secondary bg-secondary/10 border border-secondary/20 px-2.5 py-1 rounded-full font-medium shrink-0">
               <Eye className="w-3 h-3" />
               Xem trước {maxPreviewPages} trang
-            </div>
+            </span>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <a 
-              href={fileUrl} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="p-2 hover:bg-secondary/10 text-secondary rounded-lg transition-colors flex items-center gap-2 text-sm font-medium"
-            >
+            <a href={fileUrl} target="_blank" rel="noopener noreferrer"
+              className="p-2 hover:bg-secondary/10 text-secondary rounded-lg transition-colors text-sm font-medium flex items-center gap-1.5">
               <ExternalLink className="w-4 h-4" />
-              <span className="hidden sm:inline">Mở thẻ mới</span>
+              <span className="hidden sm:inline">Mở link gốc</span>
             </a>
-            <button 
-              onClick={onClose}
-              className="p-2 hover:bg-red-500/10 text-red-500 rounded-lg transition-colors"
-            >
+            <button onClick={onClose} className="p-2 hover:bg-red-500/10 text-red-500 rounded-lg transition-colors">
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -165,95 +162,125 @@ export function FileViewerModal({
         {viewStats && (
           <div className="flex items-center gap-2 px-4 sm:px-6 py-2 border-b border-border bg-background/50 overflow-x-auto scrollbar-hide shrink-0">
             <span className="text-xs text-foreground/40 font-medium shrink-0 uppercase tracking-wider mr-1">Lượt xem:</span>
-            <div className="flex items-center gap-1.5 text-xs bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-2.5 py-1 rounded-full font-medium shrink-0">
-              <Calendar className="w-3 h-3" />
-              Hôm nay: {formatNumber(viewStats.today)}
-            </div>
-            <div className="flex items-center gap-1.5 text-xs bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2.5 py-1 rounded-full font-medium shrink-0">
-              <CalendarDays className="w-3 h-3" />
-              Tuần: {formatNumber(viewStats.week)}
-            </div>
-            <div className="flex items-center gap-1.5 text-xs bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2.5 py-1 rounded-full font-medium shrink-0">
-              <CalendarRange className="w-3 h-3" />
-              Tháng: {formatNumber(viewStats.month)}
-            </div>
-            <div className="flex items-center gap-1.5 text-xs bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-1 rounded-full font-medium shrink-0">
-              <CalendarClock className="w-3 h-3" />
-              Năm: {formatNumber(viewStats.year)}
-            </div>
-            <div className="flex items-center gap-1.5 text-xs bg-secondary/10 text-secondary border border-secondary/20 px-2.5 py-1 rounded-full font-bold shrink-0">
-              <Eye className="w-3 h-3" />
-              Tổng: {formatNumber(viewStats.total)}
-            </div>
+            <span className="flex items-center gap-1.5 text-xs bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-2.5 py-1 rounded-full font-medium shrink-0">
+              <Calendar className="w-3 h-3" />Hôm nay: {fmt(viewStats.today)}
+            </span>
+            <span className="flex items-center gap-1.5 text-xs bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2.5 py-1 rounded-full font-medium shrink-0">
+              <CalendarDays className="w-3 h-3" />Tuần: {fmt(viewStats.week)}
+            </span>
+            <span className="flex items-center gap-1.5 text-xs bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2.5 py-1 rounded-full font-medium shrink-0">
+              <CalendarRange className="w-3 h-3" />Tháng: {fmt(viewStats.month)}
+            </span>
+            <span className="flex items-center gap-1.5 text-xs bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-1 rounded-full font-medium shrink-0">
+              <CalendarClock className="w-3 h-3" />Năm: {fmt(viewStats.year)}
+            </span>
+            <span className="flex items-center gap-1.5 text-xs bg-secondary/10 text-secondary border border-secondary/20 px-2.5 py-1 rounded-full font-bold shrink-0">
+              <Eye className="w-3 h-3" />Tổng: {fmt(viewStats.total)}
+            </span>
           </div>
         )}
 
-        {/* Document Content Area */}
-        <div className="flex-1 w-full bg-background relative min-h-0">
-          {/* Loading spinner (shows behind iframe until loaded) */}
-          {!iframeLoaded && (
-            <div className="absolute inset-0 flex items-center justify-center z-0">
-              <div className="flex flex-col items-center">
-                <div className="w-10 h-10 border-4 border-secondary border-t-transparent rounded-full animate-spin mb-4" />
-                <p className="text-foreground/50 text-sm">Đang tải tài liệu từ Google Drive...</p>
-              </div>
+        {/* Pages Content */}
+        <div ref={scrollRef} className="flex-1 overflow-y-auto bg-background min-h-0">
+          {/* Loading State */}
+          {loadingPdf && (
+            <div className="flex flex-col items-center justify-center py-20">
+              <div className="w-12 h-12 border-4 border-secondary border-t-transparent rounded-full animate-spin mb-4" />
+              <p className="text-foreground/60 text-sm font-medium">Đang tải tài liệu...</p>
+              <p className="text-foreground/30 text-xs mt-1">Vui lòng đợi trong giây lát</p>
             </div>
           )}
 
-          {/* Document Viewer Iframe */}
-          <iframe 
-            ref={iframeRef}
-            src={embedUrl}
-            className="w-full h-full border-none relative z-10"
-            title={title}
-            allow="autoplay"
-            onLoad={() => setIframeLoaded(true)}
-            sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
-          />
-
-          {/* Gradient fade overlay at the bottom — only covers bottom 25% */}
-          <div 
-            className="absolute bottom-0 left-0 right-0 z-20 pointer-events-none" 
-            style={{ 
-              height: "28%",
-              background: "linear-gradient(to bottom, transparent 0%, rgba(13,13,13,0.5) 35%, rgba(13,13,13,0.85) 65%, rgba(13,13,13,0.98) 100%)"
-            }}
-          />
-
-          {/* Lock Card — shows at the very bottom */}
-          <div className="absolute bottom-4 left-0 right-0 z-30 flex justify-center px-4">
-            <div className="glass-panel rounded-2xl px-6 py-5 max-w-lg w-full text-center shadow-[0_0_40px_rgba(0,255,133,0.08)] border border-white/10">
-              <div className="flex items-center justify-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-full bg-secondary/10 border border-secondary/20 flex items-center justify-center shrink-0">
-                  <Lock className="w-5 h-5 text-secondary" />
-                </div>
-                <div className="text-left">
-                  <h4 className="text-sm font-bold">Giới hạn xem trước {maxPreviewPages} trang</h4>
-                  <p className="text-xs text-foreground/50">Tải tài liệu để xem toàn bộ nội dung</p>
-                </div>
+          {/* Error State */}
+          {pdfError && !loadingPdf && (
+            <div className="flex flex-col items-center justify-center py-20 px-4">
+              <div className="w-16 h-16 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-4">
+                <X className="w-8 h-8 text-red-500" />
               </div>
-              <a 
-                href={fileUrl} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-secondary text-black rounded-xl font-bold text-sm hover:scale-105 transition-all shadow-[0_0_15px_rgba(0,255,133,0.25)]"
-              >
-                <Download className="w-4 h-4" />
-                Tải tài liệu đầy đủ
+              <p className="text-foreground/70 font-bold mb-2">Không thể tải xem trước</p>
+              <p className="text-foreground/40 text-sm text-center max-w-md mb-4">{pdfError}</p>
+              <a href={fileUrl} target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-secondary text-black rounded-xl font-bold text-sm hover:scale-105 transition-all">
+                <ExternalLink className="w-4 h-4" />Mở tài liệu gốc
               </a>
             </div>
-          </div>
+          )}
+
+          {/* Rendered Pages */}
+          {!loadingPdf && !pdfError && pageImages.length > 0 && (
+            <div className="flex flex-col items-center gap-4 py-6 px-4">
+              {pageImages.map((src, idx) => (
+                <div key={idx} className="relative w-full max-w-3xl">
+                  {/* Page number badge */}
+                  <div className="absolute top-3 left-3 z-10 bg-black/70 text-foreground/70 text-xs font-bold px-2.5 py-1 rounded-lg backdrop-blur-sm border border-white/10">
+                    Trang {idx + 1} / {totalPages}
+                  </div>
+                  {/* Page image */}
+                  <img
+                    src={src}
+                    alt={`Trang ${idx + 1}`}
+                    className="w-full rounded-lg border border-white/10 shadow-xl"
+                    draggable={false}
+                  />
+                </div>
+              ))}
+
+              {/* Lock Card — After last preview page */}
+              {hasMorePages && (
+                <div className="w-full max-w-3xl">
+                  <div className="relative rounded-2xl overflow-hidden border border-white/10">
+                    {/* Blurred fake page background */}
+                    <div className="h-80 bg-gradient-to-b from-surface/80 to-background flex items-center justify-center relative">
+                      {/* Fake blurred content lines */}
+                      <div className="absolute inset-0 p-10 opacity-20 blur-sm">
+                        {Array.from({ length: 12 }).map((_, i) => (
+                          <div key={i} className="h-3 bg-foreground/30 rounded mb-3" style={{ width: `${60 + Math.random() * 35}%` }} />
+                        ))}
+                      </div>
+
+                      {/* Lock overlay */}
+                      <div className="relative z-10 glass-panel rounded-2xl p-8 max-w-sm w-full text-center border border-white/10 shadow-[0_0_40px_rgba(0,255,133,0.08)]">
+                        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-secondary/10 border border-secondary/20 flex items-center justify-center">
+                          <Lock className="w-8 h-8 text-secondary" />
+                        </div>
+                        <h4 className="text-xl font-bold mb-2">Nội dung bị khóa</h4>
+                        <p className="text-sm text-foreground/50 mb-1">
+                          Còn <span className="text-secondary font-bold">{lockedPages} trang</span> chưa được hiển thị
+                        </p>
+                        <p className="text-xs text-foreground/40 mb-5">
+                          Đăng nhập tài khoản để xem toàn bộ tài liệu
+                        </p>
+                        <div className="flex flex-col gap-3">
+                          <a href="/admin/login"
+                            className="flex items-center justify-center gap-2 px-5 py-3 bg-secondary text-black rounded-xl font-bold text-sm hover:scale-105 transition-all shadow-[0_0_20px_rgba(0,255,133,0.25)]">
+                            <LogIn className="w-4 h-4" />
+                            Đăng nhập để xem tiếp
+                          </a>
+                          <a href={fileUrl} target="_blank" rel="noopener noreferrer"
+                            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-transparent border border-white/10 hover:border-secondary/50 text-foreground/70 hover:text-secondary rounded-xl font-bold text-sm transition-all">
+                            <Download className="w-4 h-4" />
+                            Tải tài liệu đầy đủ
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-4 sm:px-6 py-2.5 border-t border-border bg-surface/90 backdrop-blur-md shrink-0">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-2.5 border-t border-border bg-surface/90 shrink-0">
           <p className="text-xs text-foreground/40">
-            Chế độ xem trước — Giới hạn {maxPreviewPages} trang đầu
+            {totalPages > 0
+              ? `Xem trước ${Math.min(maxPreviewPages, totalPages)}/${totalPages} trang`
+              : "Chế độ xem trước"}
           </p>
           {viewStats && (
             <p className="text-xs text-foreground/40 flex items-center gap-1.5">
-              <Eye className="w-3 h-3" />
-              {formatNumber(viewStats.total)} lượt xem
+              <Eye className="w-3 h-3" />{fmt(viewStats.total)} lượt xem
             </p>
           )}
         </div>
