@@ -51,7 +51,7 @@ export function FileViewerModal({
 
       try {
         const pdfjsLib = await import("pdfjs-dist");
-        pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+        pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
 
         // Fetch PDF through our proxy to avoid CORS
         const proxyUrl = `/api/resources/proxy?url=${encodeURIComponent(fileUrl)}`;
