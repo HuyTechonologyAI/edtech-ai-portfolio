@@ -2,7 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { LogOut, Video, FileText, Plus, Trash2, Pencil, Loader2, X, Save } from "lucide-react";
+import { LogOut, Video, FileText, Plus, Trash2, Pencil, Loader2, X, Save, Eye, BarChart3 } from "lucide-react";
+
+interface ViewStats {
+  today: number;
+  week: number;
+  month: number;
+  year: number;
+  total: number;
+}
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -14,6 +22,10 @@ export default function AdminDashboard() {
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState<any>({});
+
+  // View stats for resources
+  const [viewStats, setViewStats] = useState<Record<number, ViewStats>>({});
+  const [showStatsId, setShowStatsId] = useState<number | null>(null);
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -28,8 +40,21 @@ export default function AdminDashboard() {
     }
   };
 
+  const fetchViewStats = async () => {
+    try {
+      const res = await fetch("/api/resources/views");
+      const data = await res.json();
+      setViewStats(data.stats || {});
+    } catch (error) {
+      console.error("Failed to fetch view stats", error);
+    }
+  };
+
   useEffect(() => {
     fetchData();
+    if (activeTab === "resources") {
+      fetchViewStats();
+    }
   }, [activeTab]);
 
   const handleLogout = async () => {
@@ -333,11 +358,16 @@ export default function AdminDashboard() {
                       <th className="py-4 px-4 font-bold text-sm text-foreground/50">ID</th>
                       <th className="py-4 px-4 font-bold text-sm text-foreground/50">TIÊU ĐỀ</th>
                       <th className="py-4 px-4 font-bold text-sm text-foreground/50">LINK</th>
+                      {activeTab === "resources" && (
+                        <th className="py-4 px-4 font-bold text-sm text-foreground/50 text-center">LƯỢT XEM</th>
+                      )}
                       <th className="py-4 px-4 font-bold text-sm text-foreground/50 text-right">THAO TÁC</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {items.map((item) => (
+                    {items.map((item) => {
+                      const stats = activeTab === "resources" ? viewStats[item.id] : null;
+                      return (
                       <tr key={item.id} className="border-b border-white/5 hover:bg-white/5 transition-colors group">
                         <td className="py-4 px-4 text-sm text-foreground/50">#{item.id}</td>
                         <td className="py-4 px-4 font-medium">
@@ -351,6 +381,48 @@ export default function AdminDashboard() {
                             {activeTab === "videos" ? item.youtubeUrl : item.link}
                           </a>
                         </td>
+                        {activeTab === "resources" && (
+                          <td className="py-4 px-4 text-center">
+                            <button
+                              onClick={() => setShowStatsId(showStatsId === item.id ? null : item.id)}
+                              className="inline-flex items-center gap-1.5 text-xs bg-secondary/10 text-secondary border border-secondary/20 px-2.5 py-1.5 rounded-lg font-bold hover:bg-secondary/20 transition-all"
+                              title="Xem thống kê lượt xem"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                              {stats?.total || 0}
+                            </button>
+                            {showStatsId === item.id && stats && (
+                              <div className="absolute z-50 mt-2 right-auto bg-background border border-border rounded-xl p-4 shadow-2xl shadow-black/50 min-w-[220px] text-left">
+                                <div className="flex items-center gap-2 mb-3 pb-2 border-b border-white/5">
+                                  <BarChart3 className="w-4 h-4 text-secondary" />
+                                  <span className="text-sm font-bold">Thống kê lượt xem</span>
+                                </div>
+                                <div className="space-y-2">
+                                  <div className="flex justify-between items-center text-xs">
+                                    <span className="text-cyan-400">Hôm nay</span>
+                                    <span className="font-bold bg-cyan-500/10 text-cyan-400 px-2 py-0.5 rounded-md">{stats.today}</span>
+                                  </div>
+                                  <div className="flex justify-between items-center text-xs">
+                                    <span className="text-blue-400">Tuần này</span>
+                                    <span className="font-bold bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded-md">{stats.week}</span>
+                                  </div>
+                                  <div className="flex justify-between items-center text-xs">
+                                    <span className="text-purple-400">Tháng này</span>
+                                    <span className="font-bold bg-purple-500/10 text-purple-400 px-2 py-0.5 rounded-md">{stats.month}</span>
+                                  </div>
+                                  <div className="flex justify-between items-center text-xs">
+                                    <span className="text-amber-400">Năm nay</span>
+                                    <span className="font-bold bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-md">{stats.year}</span>
+                                  </div>
+                                  <div className="flex justify-between items-center text-xs pt-1 border-t border-white/5">
+                                    <span className="text-secondary font-medium">Tổng cộng</span>
+                                    <span className="font-bold bg-secondary/10 text-secondary px-2 py-0.5 rounded-md">{stats.total}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </td>
+                        )}
                         <td className="py-4 px-4 text-right">
                           <div className="flex items-center justify-end gap-2">
                             <button
@@ -370,7 +442,8 @@ export default function AdminDashboard() {
                           </div>
                         </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               )}
