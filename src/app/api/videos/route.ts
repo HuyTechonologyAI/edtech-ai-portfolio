@@ -30,6 +30,23 @@ export async function POST(req: Request) {
   }
 }
 
+export async function PUT(req: Request) {
+  if (!(await isAuthenticated())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  try {
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+    if (!id) return NextResponse.json({ error: "Missing ID" }, { status: 400 });
+
+    const body = await req.json();
+    const { data, error } = await supabase.from("videos").update(body).eq("id", id).select();
+    if (error) throw error;
+    return NextResponse.json({ success: true, video: data[0] });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
 export async function DELETE(req: Request) {
   if (!(await isAuthenticated())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   
