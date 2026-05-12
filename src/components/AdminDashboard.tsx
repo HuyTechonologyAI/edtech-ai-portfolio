@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { LogOut, Video, FileText, Plus, Trash2, Pencil, Loader2, X, Save, Eye, BarChart3 } from "lucide-react";
+import { LogOut, Video, FileText, Plus, Trash2, Pencil, Loader2, X, Save, Eye, BarChart3, Users } from "lucide-react";
+import UserManagementTab from "./UserManagementTab";
 
 interface ViewStats {
   today: number;
@@ -14,7 +15,7 @@ interface ViewStats {
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"videos" | "resources">("videos");
+  const [activeTab, setActiveTab] = useState<"videos" | "resources" | "users">("videos");
   const [items, setItems] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -285,10 +286,20 @@ export default function AdminDashboard() {
           >
             <FileText className="w-5 h-5" /> Quản lý Tài liệu
           </button>
+          <button 
+            onClick={() => {setActiveTab("users"); setIsAdding(false); setEditingId(null);}}
+            className={`flex items-center gap-3 p-4 rounded-xl transition-all ${activeTab === "users" ? "bg-secondary/10 border border-secondary/30 text-secondary" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
+          >
+            <Users className="w-5 h-5" /> Quản lý Người dùng
+          </button>
         </div>
 
         {/* Content */}
         <div className="flex-1 bg-surface rounded-2xl border border-border p-6 min-h-[500px]">
+          {activeTab === "users" ? (
+            <UserManagementTab />
+          ) : (
+          <>
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold capitalize">Danh sách {activeTab}</h2>
             {!isAdding && editingId === null && (
@@ -448,6 +459,8 @@ export default function AdminDashboard() {
                 </table>
               )}
             </div>
+          )}
+          </>
           )}
         </div>
       </main>
