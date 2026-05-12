@@ -88,35 +88,35 @@ export default function RootLayout({
           enableSystem={false}
           disableTransitionOnChange
         >
-          <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-xl">
-            <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-              <div className="font-bold text-2xl tracking-tight">AI & Auto<span className="text-secondary neon-glow-text">Expert</span></div>
-              <nav className="hidden md:flex gap-8 items-center">
-                <Link href="/" className="text-sm font-medium text-foreground/80 hover:text-secondary transition-colors">Trang chủ</Link>
-                <Link href="/roadmap" className="text-sm font-medium text-foreground/80 hover:text-secondary transition-colors">Lộ trình</Link>
-                <Link href="/resources" className="text-sm font-medium text-foreground/80 hover:text-secondary transition-colors">Tài liệu</Link>
-                <Link href="/videos" className="text-sm font-medium text-foreground/80 hover:text-secondary transition-colors">Videos</Link>
-              </nav>
-              <div className="flex items-center gap-3">
-                <Link href="/contact" className="px-5 py-2 bg-secondary/10 text-secondary border border-secondary/50 rounded-full text-sm font-bold hover:bg-secondary hover:text-black hover:shadow-[0_0_20px_rgba(0,255,133,0.4)] transition-all hidden sm:block">
-                  Liên hệ
-                </Link>
-                <UserMenu />
-              </div>
-            </div>
-          </header>
-
           <AuthProvider>
-            {children}
-          </AuthProvider>
+            <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-xl">
+              <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+                <div className="font-bold text-2xl tracking-tight">AI & Auto<span className="text-secondary neon-glow-text">Expert</span></div>
+                <nav className="hidden md:flex gap-8 items-center">
+                  <Link href="/" className="text-sm font-medium text-foreground/80 hover:text-secondary transition-colors">Trang chủ</Link>
+                  <Link href="/roadmap" className="text-sm font-medium text-foreground/80 hover:text-secondary transition-colors">Lộ trình</Link>
+                  <Link href="/resources" className="text-sm font-medium text-foreground/80 hover:text-secondary transition-colors">Tài liệu</Link>
+                  <Link href="/videos" className="text-sm font-medium text-foreground/80 hover:text-secondary transition-colors">Videos</Link>
+                </nav>
+                <div className="flex items-center gap-3">
+                  <Link href="/contact" className="px-5 py-2 bg-secondary/10 text-secondary border border-secondary/50 rounded-full text-sm font-bold hover:bg-secondary hover:text-black hover:shadow-[0_0_20px_rgba(0,255,133,0.4)] transition-all hidden sm:block">
+                    Liên hệ
+                  </Link>
+                  <UserMenu />
+                </div>
+              </div>
+            </header>
 
-          <footer className="border-t border-border/40 bg-background py-8 mt-auto">
-            <div className="container mx-auto px-4 text-center text-foreground/40 text-sm">
-              &copy; {new Date().getFullYear()} AI & Automation Expert. All rights reserved.
-            </div>
-          </footer>
+            {children}
+
+            <footer className="border-t border-border/40 bg-background py-8 mt-auto">
+              <div className="container mx-auto px-4 text-center text-foreground/40 text-sm">
+                &copy; {new Date().getFullYear()} AI & Automation Expert. All rights reserved.
+              </div>
+            </footer>
           
-          <AIChatbot />
+            <AIChatbot />
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>
