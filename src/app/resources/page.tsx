@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, FileText, Download, Eye, FileDown, Loader2, TrendingUp } from "lucide-react";
+import { Search, FileText, Download, Eye, FileDown, Loader2, TrendingUp, Lock } from "lucide-react";
 import { TiltCard } from "@/components/TiltCard";
 import { FileViewerModal } from "@/components/FileViewerModal";
+import { useAuth } from "@/components/AuthProvider";
+import Link from "next/link";
 
 interface ViewStats {
   today: number;
@@ -14,6 +16,7 @@ interface ViewStats {
 }
 
 export default function ResourcesPage() {
+  const { user } = useAuth();
   const [resources, setResources] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [viewerState, setViewerState] = useState<{isOpen: boolean; url: string; title: string; resourceId: number | undefined}>({
@@ -170,10 +173,17 @@ export default function ResourcesPage() {
                           <Eye className="h-4 w-4" />
                           Xem trước
                         </button>
-                        <a href={item.link} target="_blank" rel="noreferrer" className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl transition-all text-sm font-bold hover-glow ${item.isPremium ? 'bg-orange-500 text-black hover:bg-orange-600' : 'bg-secondary text-black hover:bg-secondary/90'}`}>
-                          <Download className="h-4 w-4" />
-                          Tải về
-                        </a>
+                        {user ? (
+                          <a href={item.link} target="_blank" rel="noreferrer" className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl transition-all text-sm font-bold hover-glow ${item.isPremium ? 'bg-orange-500 text-black hover:bg-orange-600' : 'bg-secondary text-black hover:bg-secondary/90'}`}>
+                            <Download className="h-4 w-4" />
+                            Tải về
+                          </a>
+                        ) : (
+                          <Link href="/auth" className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-white/5 border border-white/10 text-foreground/50 hover:border-secondary/30 hover:text-secondary transition-all text-sm font-bold">
+                            <Lock className="h-4 w-4" />
+                            Đăng nhập để tải
+                          </Link>
+                        )}
                       </div>
                     </div>
                   </div>

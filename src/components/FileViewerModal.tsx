@@ -2,6 +2,7 @@
 
 import { X, ExternalLink, Lock, Eye, Calendar, CalendarDays, CalendarRange, CalendarClock, Download, LogIn } from "lucide-react";
 import { useEffect, useState, useCallback, useRef } from "react";
+import { useAuth } from "@/components/AuthProvider";
 
 interface ViewStats {
   today: number;
@@ -38,6 +39,7 @@ export function FileViewerModal({
   const [viewStats, setViewStats] = useState<ViewStats | null>(null);
   const [hasRecordedView, setHasRecordedView] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
 
   // Load PDF and render pages
   useEffect(() => {
@@ -251,16 +253,20 @@ export function FileViewerModal({
                           Đăng nhập tài khoản để xem toàn bộ tài liệu
                         </p>
                         <div className="flex flex-col gap-3">
-                          <a href="/admin/login"
+                          <a href="/auth"
                             className="flex items-center justify-center gap-2 px-5 py-3 bg-secondary text-black rounded-xl font-bold text-sm hover:scale-105 transition-all shadow-[0_0_20px_rgba(0,255,133,0.25)]">
                             <LogIn className="w-4 h-4" />
                             Đăng nhập để xem tiếp
                           </a>
-                          <a href={fileUrl} target="_blank" rel="noopener noreferrer"
-                            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-transparent border border-white/10 hover:border-secondary/50 text-foreground/70 hover:text-secondary rounded-xl font-bold text-sm transition-all">
-                            <Download className="w-4 h-4" />
-                            Tải tài liệu đầy đủ
-                          </a>
+                          {user ? (
+                            <a href={fileUrl} target="_blank" rel="noopener noreferrer"
+                              className="flex items-center justify-center gap-2 px-5 py-2.5 bg-transparent border border-white/10 hover:border-secondary/50 text-foreground/70 hover:text-secondary rounded-xl font-bold text-sm transition-all">
+                              <Download className="w-4 h-4" />
+                              Tải tài liệu đầy đủ
+                            </a>
+                          ) : (
+                            <p className="text-xs text-foreground/30">Đăng nhập để tải tài liệu</p>
+                          )}
                         </div>
                       </div>
                     </div>
