@@ -19,11 +19,12 @@ export default function ResourcesPage() {
   const { user } = useAuth();
   const [resources, setResources] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [viewerState, setViewerState] = useState<{isOpen: boolean; url: string; title: string; resourceId: number | undefined}>({
+  const [viewerState, setViewerState] = useState<{isOpen: boolean; url: string; title: string; resourceId: number | undefined; isPremium?: boolean}>({
     isOpen: false,
     url: "",
     title: "",
-    resourceId: undefined
+    resourceId: undefined,
+    isPremium: false
   });
   const [allViewStats, setAllViewStats] = useState<Record<number, ViewStats>>({});
 
@@ -53,8 +54,8 @@ export default function ResourcesPage() {
     }
   };
 
-  const openViewer = (url: string, title: string, resourceId: number) => {
-    setViewerState({ isOpen: true, url, title, resourceId });
+  const openViewer = (url: string, title: string, resourceId: number, isPremium: boolean = false) => {
+    setViewerState({ isOpen: true, url, title, resourceId, isPremium });
   };
 
   const closeViewer = () => {
@@ -126,6 +127,10 @@ export default function ResourcesPage() {
               const totalViews = stats?.total || 0;
               const todayViews = stats?.today || 0;
 
+              const isUserPremium = user?.app_metadata?.is_premium === true || (user as any)?.user_metadata?.is_premium === true;
+              const isUserAdmin = user?.app_metadata?.role === "admin" || (user as any)?.user_metadata?.role === "admin";
+              const canDownloadPremium = isUserPremium || isUserAdmin;
+
               return (
                 <TiltCard key={item.id}>
                   <div className="glass-panel h-full rounded-2xl overflow-hidden flex flex-col group shadow-lg">
@@ -167,17 +172,24 @@ export default function ResourcesPage() {
                       </p>
                       <div className="flex items-center gap-3 mt-auto relative z-10">
                         <button 
-                          onClick={() => openViewer(item.link, item.title, item.id)}
+                          onClick={() => openViewer(item.link, item.title, item.id, item.isPremium)}
                           className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-transparent border border-white/10 hover:border-secondary/50 hover:text-secondary transition-all text-sm font-bold"
                         >
                           <Eye className="h-4 w-4" />
                           Xem trước
                         </button>
                         {user ? (
-                          <a href={item.link} target="_blank" rel="noreferrer" className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl transition-all text-sm font-bold hover-glow ${item.isPremium ? 'bg-orange-500 text-black hover:bg-orange-600' : 'bg-secondary text-black hover:bg-secondary/90'}`}>
-                            <Download className="h-4 w-4" />
-                            Tải về
-                          </a>
+                          item.isPremium && !canDownloadPremium ? (
+                            <Link href="/contact" className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-orange-500/10 border border-orange-500/30 text-orange-400 hover:bg-orange-500 hover:text-black transition-all text-xs font-bold">
+                              <Lock className="h-4 w-4 shrink-0" />
+                              Nâng cấp Premium
+                            </Link>
+                          ) : (
+                            <a href={item.link} target="_blank" rel="noreferrer" className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl transition-all text-sm font-bold hover-glow ${item.isPremium ? 'bg-orange-500 text-black hover:bg-orange-600' : 'bg-secondary text-black hover:bg-secondary/90'}`}>
+                              <Download className="h-4 w-4" />
+                              Tải về
+                            </a>
+                          )
                         ) : (
                           <Link href="/auth" className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-white/5 border border-white/10 text-foreground/50 hover:border-secondary/30 hover:text-secondary transition-all text-sm font-bold">
                             <Lock className="h-4 w-4" />
@@ -201,6 +213,7 @@ export default function ResourcesPage() {
         title={viewerState.title}
         resourceId={viewerState.resourceId}
         maxPreviewPages={5}
+        isPremium={viewerState.isPremium}
       />
     </main>
   );

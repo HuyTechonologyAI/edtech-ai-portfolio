@@ -19,6 +19,7 @@ interface FileViewerModalProps {
   title: string;
   resourceId?: number;
   maxPreviewPages?: number;
+  isPremium?: boolean;
 }
 
 function extractDriveId(url: string): string | null {
@@ -30,7 +31,7 @@ function extractDriveId(url: string): string | null {
 }
 
 export function FileViewerModal({
-  isOpen, onClose, fileUrl, title, resourceId, maxPreviewPages = 5,
+  isOpen, onClose, fileUrl, title, resourceId, maxPreviewPages = 5, isPremium = false,
 }: FileViewerModalProps) {
   const [pageImages, setPageImages] = useState<string[]>([]);
   const [totalPages, setTotalPages] = useState(0);
@@ -133,6 +134,10 @@ export function FileViewerModal({
   const fmt = (n: number) => (n >= 1000 ? (n / 1000).toFixed(1) + "K" : String(n));
   const hasMorePages = totalPages > maxPreviewPages;
   const lockedPages = totalPages - maxPreviewPages;
+
+  const isUserPremium = user?.app_metadata?.is_premium === true || (user as any)?.user_metadata?.is_premium === true;
+  const isUserAdmin = user?.app_metadata?.role === "admin" || (user as any)?.user_metadata?.role === "admin";
+  const canDownloadPremium = isUserPremium || isUserAdmin;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6">
@@ -245,22 +250,37 @@ export function FileViewerModal({
                           Còn <span className="text-secondary font-bold">{lockedPages} trang</span> chưa được hiển thị
                         </p>
                         <p className="text-xs text-foreground/40 mb-5">
-                          Đăng nhập tài khoản để xem toàn bộ tài liệu
+                          {!user 
+                            ? "Đăng nhập tài khoản để xem toàn bộ tài liệu" 
+                            : isPremium && !canDownloadPremium 
+                            ? "Tài liệu thuộc gói Premium chưa được mở khóa" 
+                            : "Tài liệu đã sẵn sàng để tải về"}
                         </p>
                         <div className="flex flex-col gap-3">
-                          <a href="/auth"
-                            className="flex items-center justify-center gap-2 px-5 py-3 bg-secondary text-black rounded-xl font-bold text-sm hover:scale-105 transition-all shadow-[0_0_20px_rgba(0,255,133,0.25)]">
-                            <LogIn className="w-4 h-4" />
-                            Đăng nhập để xem tiếp
-                          </a>
-                          {user ? (
+                          {!user ? (
+                            <>
+                              <a href="/auth"
+                                className="flex items-center justify-center gap-2 px-5 py-3 bg-secondary text-black rounded-xl font-bold text-sm hover:scale-105 transition-all shadow-[0_0_20px_rgba(0,255,133,0.25)]">
+                                <LogIn className="w-4 h-4" />
+                                Đăng nhập để xem tiếp
+                              </a>
+                              <p className="text-xs text-foreground/30">Đăng nhập để tải tài liệu</p>
+                            </>
+                          ) : isPremium && !canDownloadPremium ? (
+                            <>
+                              <a href="/contact"
+                                className="flex items-center justify-center gap-2 px-5 py-3 bg-orange-500 text-black rounded-xl font-bold text-sm hover:scale-105 transition-all shadow-[0_0_20px_rgba(249,115,22,0.25)]">
+                                <Lock className="w-4 h-4" />
+                                Nâng cấp Premium để tải
+                              </a>
+                              <p className="text-xs text-orange-400/80">Tài liệu Premium dành riêng cho hội viên</p>
+                            </>
+                          ) : (
                             <a href={fileUrl} target="_blank" rel="noopener noreferrer"
-                              className="flex items-center justify-center gap-2 px-5 py-2.5 bg-transparent border border-white/10 hover:border-secondary/50 text-foreground/70 hover:text-secondary rounded-xl font-bold text-sm transition-all">
+                              className="flex items-center justify-center gap-2 px-5 py-3 bg-secondary text-black hover:bg-secondary/90 rounded-xl font-bold text-sm transition-all shadow-[0_0_20px_rgba(0,255,133,0.25)]">
                               <Download className="w-4 h-4" />
                               Tải tài liệu đầy đủ
                             </a>
-                          ) : (
-                            <p className="text-xs text-foreground/30">Đăng nhập để tải tài liệu</p>
                           )}
                         </div>
                       </div>
