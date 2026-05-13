@@ -3,7 +3,7 @@
 import { Suspense, useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
-import { Printer, Share2, Linkedin, Facebook, CheckCircle2, Award, Sparkles, ShieldCheck, Download } from "lucide-react";
+import { Printer, Linkedin, Facebook, CheckCircle2, Award, Sparkles, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 
 function CertificateRenderer() {
@@ -237,8 +237,8 @@ function CertificateRenderer() {
 export default function CertificatePage() {
   return (
     <main className="flex-1 py-12 animate-fade-in">
-      {/* Cấu hình in ấn tích hợp trực tiếp qua thẻ style */}
-      <style jsx global>{`
+      {/* Cấu hình in ấn tích hợp trực tiếp qua thẻ style an toàn cho App Router */}
+      <style dangerouslySetInnerHTML={{ __html: `
         @media print {
           body {
             background: white !important;
@@ -254,7 +254,7 @@ export default function CertificatePage() {
             display: none !important;
           }
         }
-      `}</style>
+      `}} />
 
       <div className="container px-4 max-w-6xl mx-auto">
         <Suspense fallback={<div className="text-center py-20 text-xs">Đang nạp bộ máy sinh Chứng chỉ...</div>}>
