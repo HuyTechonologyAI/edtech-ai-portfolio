@@ -3,6 +3,7 @@
 import { X, ExternalLink, Lock, Eye, Calendar, CalendarDays, CalendarRange, CalendarClock, Download, LogIn } from "lucide-react";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useAuth } from "@/components/AuthProvider";
+import { CommentSection } from "./CommentSection";
 
 interface ViewStats {
   today: number;
@@ -290,6 +291,10 @@ export function FileViewerModal({
               )}
             </div>
           )}
+
+          <div className="px-4 pb-8 max-w-3xl mx-auto w-full">
+            <CommentSection itemType="resources" itemId={file.id} />
+          </div>
         </div>
 
         {/* Footer */}

@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { LogOut, Video, FileText, Plus, Trash2, Pencil, Loader2, X, Save, Eye, BarChart3, Users, Crown } from "lucide-react";
+import { LogOut, Video, FileText, Plus, Trash2, Pencil, Loader2, X, Save, Eye, BarChart3, Users, Crown, MessageSquare } from "lucide-react";
 import UserManagementTab from "./UserManagementTab";
+import CommentModerationTab from "./CommentModerationTab";
 import { useAuth } from "@/components/AuthProvider";
 
 interface ViewStats {
@@ -17,7 +18,7 @@ interface ViewStats {
 export default function AdminDashboard() {
   const router = useRouter();
   const { user, loading: authLoading, signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState<"videos" | "resources" | "users" | "premium">("videos");
+  const [activeTab, setActiveTab] = useState<"videos" | "resources" | "users" | "premium" | "comments">("videos");
   const [items, setItems] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -380,12 +381,20 @@ export default function AdminDashboard() {
           >
             <Crown className="w-5 h-5 text-amber-400" /> Nội dung Premium
           </button>
+          <button 
+            onClick={() => {setActiveTab("comments"); setIsAdding(false); setEditingId(null);}}
+            className={`flex items-center gap-3 p-4 rounded-xl transition-all ${activeTab === "comments" ? "bg-secondary/10 border border-secondary/30 text-secondary" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
+          >
+            <MessageSquare className="w-5 h-5" /> Quản lý Bình luận
+          </button>
         </div>
 
         {/* Content */}
         <div className="flex-1 bg-surface rounded-2xl border border-border p-6 min-h-[500px]">
           {activeTab === "users" ? (
             <UserManagementTab />
+          ) : activeTab === "comments" ? (
+            <CommentModerationTab />
           ) : (
           <>
           <div className="flex justify-between items-center mb-6">
