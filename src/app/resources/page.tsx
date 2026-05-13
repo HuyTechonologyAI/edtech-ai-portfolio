@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, FileText, Download, Eye, FileDown, Loader2, TrendingUp, Lock } from "lucide-react";
+import { Search, FileText, Download, Eye, FileDown, Loader2, TrendingUp, Lock, Folder } from "lucide-react";
 import { TiltCard } from "@/components/TiltCard";
 import { FileViewerModal } from "@/components/FileViewerModal";
 import { useAuth } from "@/components/AuthProvider";
@@ -15,11 +15,24 @@ interface ViewStats {
   total: number;
 }
 
+interface FolderItem {
+  id: number;
+  name: string;
+  type: string;
+  parent_id: number | null;
+}
+
 export default function ResourcesPage() {
   const { user } = useAuth();
   const [resources, setResources] = useState<any[]>([]);
+  const [folders, setFolders] = useState<FolderItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  
+  // Custom Filter taxonomy state properties
+  const [selectedCategory, setSelectedCategory] = useState<string>("ALL");
+  const [selectedFolderId, setSelectedFolderId] = useState<number | null>(null);
+
   const [viewerState, setViewerState] = useState<{isOpen: boolean; url: string; title: string; resourceId: number | undefined; isPremium?: boolean}>({
     isOpen: false,
     url: "",
@@ -60,7 +73,19 @@ export default function ResourcesPage() {
         setIsLoading(false);
       }
     };
+
+    const fetchPublicFolders = async () => {
+      try {
+        const res = await fetch("/api/admin/folders?type=RESOURCE");
+        const data = await res.json();
+        if (data.success) setFolders(data.folders || []);
+      } catch (err) {
+        console.error("Failed to fetch folders", err);
+      }
+    };
+
     fetchResources();
+    fetchPublicFolders();
     fetchAllViewStats();
   }, []);
 
@@ -80,7 +105,6 @@ export default function ResourcesPage() {
 
   const closeViewer = () => {
     setViewerState(prev => ({ ...prev, isOpen: false }));
-    // Refresh stats after viewing
     fetchAllViewStats();
   };
 
@@ -90,8 +114,32 @@ export default function ResourcesPage() {
     return n.toString();
   };
 
+  // Filter computing logic
+  const filteredResources = resources.filter(item => {
+    // Search check
+    const matchesSearch = !searchQuery || 
+      item.title?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      item.description?.toLowerCase().includes(searchQuery.toLowerCase());
+
+    // Type Category logic mapping
+    let matchesCategory = true;
+    if (selectedCategory === "PPT") {
+      matchesCategory = item.type === "PPTX" || item.type === "PPT";
+    } else if (selectedCategory === "PDF") {
+      matchesCategory = item.type === "PDF";
+    } else if (selectedCategory === "TEMPLATE") {
+      const tStr = `${item.title || ''} ${item.description || ''} ${item.type || ''}`.toLowerCase();
+      matchesCategory = item.type === "TEMPLATE" || tStr.includes("template") || tStr.includes("workflow");
+    }
+
+    // Folder selection mapping
+    const matchesFolder = selectedFolderId === null || item.folderId === selectedFolderId || item.folder_id === selectedFolderId;
+
+    return matchesSearch && matchesCategory && matchesFolder;
+  });
+
   return (
-    <main className="flex-1 py-12">
+    <main className="flex-1 py-12 animate-fade-in">
       <div className="container px-4 md:px-6 max-w-6xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
           <div>
@@ -117,34 +165,110 @@ export default function ResourcesPage() {
           </div>
         </div>
 
-        {/* Categories Tabs - Placeholder */}
+        {/* Dynamic Folder Hierarchy Tree Strip */}
+        {folders.length > 0 && (
+          <div className="mb-6 bg-surface/30 border border-white/5 rounded-2xl p-4 animate-fade-in shadow-sm">
+            <div className="text-xs font-bold uppercase tracking-wider text-amber-400 mb-3 flex items-center gap-1.5">
+              <Folder className="w-4 h-4" />
+              <span>Duyệt theo Chủ đề Thư mục:</span>
+              <span className="text-[10px] text-foreground/40 italic font-normal lowercase">(Click để định vị học liệu)</span>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setSelectedFolderId(null)}
+                className={`px-3 py-1.5 rounded-xl text-xs transition-all cursor-pointer ${
+                  selectedFolderId === null
+                    ? "bg-amber-500/10 border border-amber-500/30 text-amber-400 font-bold shadow-[0_0_10px_rgba(245,158,11,0.1)]"
+                    : "bg-background/60 hover:bg-surface text-foreground/70"
+                }`}
+              >
+                📁 Tất cả thư mục
+              </button>
+
+              {folders.map(f => (
+                <button
+                  key={f.id}
+                  onClick={() => setSelectedFolderId(f.id)}
+                  className={`px-3 py-1.5 rounded-xl text-xs transition-all flex items-center gap-1.5 cursor-pointer ${
+                    selectedFolderId === f.id
+                      ? "bg-amber-500 text-black font-bold shadow-sm scale-105"
+                      : "bg-background/60 hover:bg-surface text-foreground/80 border border-white/5"
+                  }`}
+                >
+                  <span className="text-foreground/40">{f.parent_id ? "↳ " : ""}</span>
+                  <span>📁 {f.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* FIXED: Dynamic Interactive Category Filter Tabs */}
         <div className="flex gap-2 overflow-x-auto pb-4 mb-6 scrollbar-hide">
-          <button className="px-4 py-2 rounded-full bg-secondary text-black text-sm font-bold whitespace-nowrap shadow-[0_0_15px_rgba(0,255,133,0.2)]">
-            Tất cả
+          <button 
+            onClick={() => setSelectedCategory("ALL")}
+            className={`px-4 py-2 rounded-full text-sm transition-all cursor-pointer whitespace-nowrap ${
+              selectedCategory === "ALL" 
+                ? "bg-secondary text-black font-bold shadow-[0_0_15px_rgba(0,255,133,0.2)]" 
+                : "bg-surface border border-white/10 hover:border-secondary/50 hover:text-secondary text-foreground font-medium"
+            }`}
+          >
+            Tất cả định dạng
           </button>
-          <button className="px-4 py-2 rounded-full bg-surface border border-white/10 hover:border-secondary/50 hover:text-secondary text-foreground text-sm font-medium whitespace-nowrap transition-all">
+          
+          <button 
+            onClick={() => setSelectedCategory("PPT")}
+            className={`px-4 py-2 rounded-full text-sm transition-all cursor-pointer whitespace-nowrap ${
+              selectedCategory === "PPT" 
+                ? "bg-secondary text-black font-bold shadow-[0_0_15px_rgba(0,255,133,0.2)]" 
+                : "bg-surface border border-white/10 hover:border-secondary/50 hover:text-secondary text-foreground font-medium"
+            }`}
+          >
             Slide Bài Giảng (PPT)
           </button>
-          <button className="px-4 py-2 rounded-full bg-surface border border-white/10 hover:border-secondary/50 hover:text-secondary text-foreground text-sm font-medium whitespace-nowrap transition-all">
+
+          <button 
+            onClick={() => setSelectedCategory("PDF")}
+            className={`px-4 py-2 rounded-full text-sm transition-all cursor-pointer whitespace-nowrap ${
+              selectedCategory === "PDF" 
+                ? "bg-secondary text-black font-bold shadow-[0_0_15px_rgba(0,255,133,0.2)]" 
+                : "bg-surface border border-white/10 hover:border-secondary/50 hover:text-secondary text-foreground font-medium"
+            }`}
+          >
             Ebook (PDF)
           </button>
-          <button className="px-4 py-2 rounded-full bg-surface border border-white/10 hover:border-secondary/50 hover:text-secondary text-foreground text-sm font-medium whitespace-nowrap transition-all">
-            Templates
+
+          <button 
+            onClick={() => setSelectedCategory("TEMPLATE")}
+            className={`px-4 py-2 rounded-full text-sm transition-all cursor-pointer whitespace-nowrap ${
+              selectedCategory === "TEMPLATE" 
+                ? "bg-secondary text-black font-bold shadow-[0_0_15px_rgba(0,255,133,0.2)]" 
+                : "bg-surface border border-white/10 hover:border-secondary/50 hover:text-secondary text-foreground font-medium"
+            }`}
+          >
+            Templates &amp; Workflows
           </button>
         </div>
 
-        {/* Resources Grid */}
+        {/* Resources Grid View Layout */}
         {isLoading ? (
           <div className="flex justify-center items-center py-20">
             <Loader2 className="w-10 h-10 text-secondary animate-spin" />
           </div>
-        ) : resources.length === 0 ? (
-          <div className="text-center py-20 text-foreground/50 border border-dashed border-border rounded-xl">
-            Chưa có tài liệu nào. Admin hãy đăng nhập để thêm tài liệu nhé!
+        ) : filteredResources.length === 0 ? (
+          <div className="text-center py-20 text-foreground/50 border border-dashed border-border rounded-xl space-y-2">
+            <p className="text-sm">Không tìm thấy tài liệu phù hợp với phân loại được chọn.</p>
+            <button 
+              onClick={() => { setSearchQuery(""); setSelectedCategory("ALL"); setSelectedFolderId(null); }}
+              className="text-xs text-secondary font-bold hover:underline block mx-auto"
+            >
+              Xóa các bộ lọc
+            </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {resources.filter(r => !searchQuery || r.title?.toLowerCase().includes(searchQuery.toLowerCase()) || r.description?.toLowerCase().includes(searchQuery.toLowerCase())).map((item) => {
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
+            {filteredResources.map((item) => {
               const stats = allViewStats[item.id];
               const totalViews = stats?.total || 0;
               const todayViews = stats?.today || 0;
@@ -153,69 +277,86 @@ export default function ResourcesPage() {
               const isUserAdmin = user?.app_metadata?.role === "admin" || (user as any)?.user_metadata?.role === "admin";
               const canDownloadPremium = isUserPremium || isUserAdmin;
 
+              // Tìm mapping thư mục trực quan
+              const targetFolder = folders.find(f => f.id === item.folderId || f.id === item.folder_id);
+
               return (
                 <TiltCard key={item.id}>
-                  <div className="glass-panel h-full rounded-2xl overflow-hidden flex flex-col group shadow-lg">
-                    <div className={`h-48 flex items-center justify-center relative border-b border-white/5 ${item.type === 'PPTX' ? 'bg-blue-500/5' : 'bg-secondary/5'}`}>
-                      {item.type === 'PPTX' ? (
+                  <div className="glass-panel h-full rounded-2xl overflow-hidden flex flex-col group shadow-lg border border-white/5 hover:border-secondary/20 transition-all">
+                    <div className={`h-48 flex items-center justify-center relative border-b border-white/5 ${item.type === 'PPTX' || item.type === 'PPT' ? 'bg-blue-500/5' : 'bg-secondary/5'}`}>
+                      {item.type === 'PPTX' || item.type === 'PPT' ? (
                         <FileDown className="h-16 w-16 text-blue-500/40 group-hover:text-blue-400 drop-shadow-[0_0_10px_rgba(59,130,246,0.2)] group-hover:scale-110 transition-all duration-500" />
                       ) : (
                         <FileText className="h-16 w-16 text-secondary/40 group-hover:text-secondary drop-shadow-[0_0_10px_rgba(0,255,133,0.2)] group-hover:scale-110 transition-all duration-500" />
                       )}
-                      <div className={`absolute top-4 right-4 bg-black/80 border text-xs font-bold px-3 py-1 rounded-full shadow-sm ${item.type === 'PPTX' ? 'border-blue-500/30 text-blue-400' : 'border-secondary/30 text-secondary'}`}>
+                      
+                      <div className={`absolute top-4 right-4 bg-black/80 border text-xs font-bold px-3 py-1 rounded-full shadow-sm ${item.type === 'PPTX' || item.type === 'PPT' ? 'border-blue-500/30 text-blue-400' : 'border-secondary/30 text-secondary'}`}>
                         {item.type || 'FILE'}
                       </div>
+
                       {item.isPremium && (
                         <div className="absolute top-4 left-4 bg-orange-500/20 border border-orange-500/30 text-orange-500 text-xs font-bold px-3 py-1 rounded-full shadow-sm">
                           PREMIUM
                         </div>
                       )}
                       
-                      {/* View count badge */}
-                      <div className="absolute bottom-4 left-4 flex items-center gap-3">
+                      {/* View count & Folder tag mapping */}
+                      <div className="absolute bottom-4 left-4 flex flex-wrap items-center gap-2">
                         <div className="flex items-center gap-1.5 bg-black/70 backdrop-blur-sm border border-white/10 text-foreground/80 text-xs font-medium px-2.5 py-1 rounded-full">
                           <Eye className="w-3 h-3 text-secondary" />
                           <span>{formatViewCount(totalViews)}</span>
                         </div>
+
                         {todayViews > 0 && (
                           <div className="flex items-center gap-1 bg-cyan-500/10 backdrop-blur-sm border border-cyan-500/20 text-cyan-400 text-xs font-medium px-2 py-1 rounded-full">
                             <TrendingUp className="w-3 h-3" />
-                            +{todayViews} hôm nay
+                            +{todayViews}
                           </div>
                         )}
                       </div>
+
+                      {targetFolder && (
+                        <div className="absolute bottom-4 right-4 max-w-[150px] truncate text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded-md backdrop-blur-sm">
+                          📁 {targetFolder.name}
+                        </div>
+                      )}
                     </div>
-                    <div className="p-6 flex flex-col flex-1">
-                      <h3 className="text-xl font-bold mb-2 group-hover:text-secondary transition-colors">
-                        {item.title}
-                      </h3>
-                      <p className="text-sm text-foreground/70 mb-6 flex-1">
-                        {item.description}
-                      </p>
-                      <div className="flex items-center gap-3 mt-auto relative z-10">
+
+                    <div className="p-6 flex flex-col flex-1 justify-between space-y-4">
+                      <div className="space-y-2">
+                        <h3 className="text-lg font-bold group-hover:text-secondary transition-colors line-clamp-2">
+                          {item.title}
+                        </h3>
+                        <p className="text-xs text-foreground/70 line-clamp-3 leading-relaxed">
+                          {item.description}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-3 pt-2 border-t border-white/5 relative z-10">
                         <button 
                           onClick={() => openViewer(item.link, item.title, item.id, item.isPremium)}
-                          className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-transparent border border-white/10 hover:border-secondary/50 hover:text-secondary transition-all text-sm font-bold"
+                          className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-surface/50 hover:bg-surface border border-white/10 hover:border-secondary/50 hover:text-secondary transition-all text-xs font-bold cursor-pointer"
                         >
-                          <Eye className="h-4 w-4" />
-                          Xem trước
+                          <Eye className="h-3.5 w-3.5" />
+                          <span>Xem trước</span>
                         </button>
+
                         {user ? (
                           item.isPremium && !canDownloadPremium ? (
-                            <Link href="/checkout" className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-orange-500/10 border border-orange-500/30 text-orange-400 hover:bg-orange-500 hover:text-black transition-all text-xs font-bold">
-                              <Lock className="h-4 w-4 shrink-0" />
-                              Nâng cấp Premium
+                            <Link href="/checkout" className="flex-1 flex items-center justify-center gap-1 py-2 rounded-xl bg-orange-500/10 border border-orange-500/30 text-orange-400 hover:bg-orange-500 hover:text-black transition-all text-[11px] font-bold">
+                              <Lock className="h-3.5 w-3.5 shrink-0" />
+                              <span>Nâng cấp</span>
                             </Link>
                           ) : (
-                            <a href={item.link} target="_blank" rel="noreferrer" className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl transition-all text-sm font-bold hover-glow ${item.isPremium ? 'bg-orange-500 text-black hover:bg-orange-600' : 'bg-secondary text-black hover:bg-secondary/90'}`}>
-                              <Download className="h-4 w-4" />
-                              Tải về
+                            <a href={item.link} target="_blank" rel="noreferrer" className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl transition-all text-xs font-bold hover-glow ${item.isPremium ? 'bg-orange-500 text-black hover:bg-orange-600' : 'bg-secondary text-black hover:bg-secondary/90'}`}>
+                              <Download className="h-3.5 w-3.5" />
+                              <span>Tải về</span>
                             </a>
                           )
                         ) : (
-                          <Link href="/auth" className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-white/5 border border-white/10 text-foreground/50 hover:border-secondary/30 hover:text-secondary transition-all text-sm font-bold">
-                            <Lock className="h-4 w-4" />
-                            Đăng nhập để tải
+                          <Link href="/auth" className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-white/5 border border-white/10 text-foreground/50 hover:border-secondary/30 hover:text-secondary transition-all text-xs font-bold">
+                            <Lock className="h-3.5 w-3.5" />
+                            <span>Đăng nhập</span>
                           </Link>
                         )}
                       </div>
