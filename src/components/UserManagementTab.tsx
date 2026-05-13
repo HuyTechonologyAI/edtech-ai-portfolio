@@ -12,6 +12,11 @@ interface UserItem {
   email: string;
   fullName: string | null;
   avatarUrl: string | null;
+  phone?: string | null;
+  address?: string | null;
+  occupation?: string | null;
+  interests?: string | null;
+  goals?: string | null;
   provider: string;
   role: string;
   isPremium: boolean;
@@ -104,11 +109,46 @@ function UserDetailModal({ user, onClose, onAction }: { user: UserItem; onClose:
           </div>
         </div>
 
-        <div className="space-y-2 text-sm mb-5">
+        <div className="space-y-2 text-sm mb-4">
           <div className="flex justify-between"><span className="text-foreground/50">Đăng ký</span><span>{fmtDate(user.createdAt)}</span></div>
           <div className="flex justify-between"><span className="text-foreground/50">Đăng nhập cuối</span><span>{fmtDateTime(user.lastSignIn)}</span></div>
           <div className="flex justify-between"><span className="text-foreground/50">Quyền</span><span className="capitalize font-medium">{user.role}</span></div>
           <div className="flex justify-between"><span className="text-foreground/50">Email xác thực</span>{user.emailConfirmed ? <CheckCircle className="w-4 h-4 text-green-400" /> : <XCircle className="w-4 h-4 text-red-400" />}</div>
+        </div>
+
+        {/* Ngữ cảnh AI & Định hướng cá nhân */}
+        <div className="bg-background/40 rounded-xl p-3 border border-white/5 space-y-2 mb-5 text-xs">
+          <div className="font-bold text-[10px] text-secondary uppercase tracking-wider">🧠 Tri thức AI & Định hướng</div>
+          <div className="grid grid-cols-2 gap-1.5 pt-1">
+            <div>
+              <span className="text-foreground/40 block text-[9px]">SĐT / Zalo:</span>
+              <span className="font-mono text-foreground font-bold">{user.phone || "—"}</span>
+            </div>
+            <div>
+              <span className="text-foreground/40 block text-[9px]">Khu vực:</span>
+              <span className="text-foreground truncate block">{user.address || "—"}</span>
+            </div>
+          </div>
+          {user.occupation && (
+            <div>
+              <span className="text-foreground/40 block text-[9px]">Nghề nghiệp:</span>
+              <span className="text-foreground font-medium">{user.occupation}</span>
+            </div>
+          )}
+          {user.interests && (
+            <div>
+              <span className="text-foreground/40 block text-[9px]">Sở thích công nghệ:</span>
+              <span className="text-secondary/90 line-clamp-1">{user.interests}</span>
+            </div>
+          )}
+          {user.goals && (
+            <div>
+              <span className="text-foreground/40 block text-[9px]">Mục tiêu ứng dụng:</span>
+              <p className="text-foreground/80 bg-surface/60 p-2 rounded border border-white/5 mt-0.5 leading-relaxed line-clamp-3">
+                {user.goals}
+              </p>
+            </div>
+          )}
         </div>
 
         {loading ? (
