@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabase";
-import { User, Mail, Shield, Sparkles, Save, Loader2, CheckCircle2, AlertCircle, Crown, Image as ImageIcon, Phone, MapPin, Briefcase, Heart, Target } from "lucide-react";
+import { User, Mail, Shield, Sparkles, Save, Loader2, CheckCircle2, AlertCircle, Crown, Image as ImageIcon, Phone, MapPin, Briefcase, Heart, Target, Award, Download } from "lucide-react";
 import Link from "next/link";
 
 const PRESET_AVATARS = [
@@ -188,6 +188,44 @@ export default function ProfilePage() {
               </Link>
             </div>
           )}
+
+          {/* Academic Achievements & Dynamic PDF Certificates pane */}
+          <div className="glass-panel p-5 rounded-3xl border border-white/5 space-y-4">
+            <h4 className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5 border-b border-white/5 pb-2">
+              <Award className="w-4 h-4 text-secondary" />
+              <span>🎓 Chứng chỉ Tốt nghiệp</span>
+            </h4>
+
+            <div className="space-y-3">
+              {/* Khóa 1: Master AI */}
+              <div className="p-3 bg-surface/50 border border-white/5 rounded-xl space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-foreground truncate max-w-[150px]">Master AI &amp; Auto</span>
+                  <span className="text-[10px] font-bold text-secondary bg-secondary/10 px-1.5 py-0.5 rounded">100%</span>
+                </div>
+                <p className="text-[10px] text-foreground/40">Hoàn thành chuyên đề thực chiến</p>
+                <Link
+                  href={`/certificate?course=masterclass&name=${encodeURIComponent(fullName || user.email?.split("@")[0] || "Học Viên")}`}
+                  className="w-full inline-flex items-center justify-center gap-1.5 py-2 bg-secondary text-black font-extrabold rounded-lg text-[11px] hover:bg-secondary/90 transition-all shadow-[0_0_10px_rgba(0,255,133,0.2)]"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Cấp Chứng Chỉ PDF</span>
+                </Link>
+              </div>
+
+              {/* Khóa 2: Prompt Engineering */}
+              <div className="p-3 bg-surface/30 border border-white/5 rounded-xl space-y-2 opacity-60">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-foreground truncate max-w-[150px]">Prompt Engineering</span>
+                  <span className="text-[10px] font-medium text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded">80%</span>
+                </div>
+                <div className="w-full bg-surface h-1 rounded-full overflow-hidden">
+                  <div className="bg-amber-400 h-full w-[80%]" />
+                </div>
+                <p className="text-[9px] text-foreground/40 italic">Cày nốt 1 video để nhận chứng chỉ</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Right Side: Comprehensive Configuration Update Form */}

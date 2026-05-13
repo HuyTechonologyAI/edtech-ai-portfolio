@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, Home, Map, FileText, Video, Layers, Gift, PhoneCall, Sparkles, User, ShieldCheck, LogOut, DollarSign } from "lucide-react";
+import { Menu, X, Home, Map, FileText, Video, Layers, Gift, PhoneCall, Sparkles, User, ShieldCheck, LogOut, DollarSign, Award } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
 
 export function MobileNavMenu() {
@@ -175,6 +175,15 @@ export function MobileNavMenu() {
                   >
                     <User className="w-4 h-4 shrink-0 text-foreground/60" />
                     <span>Thông Tin Tài Khoản</span>
+                  </Link>
+
+                  {/* Link Chứng chỉ tốt nghiệp động */}
+                  <Link
+                    href="/certificate"
+                    className="flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-bold bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.1)]"
+                  >
+                    <Award className="w-4 h-4 shrink-0 text-emerald-400" />
+                    <span>🎓 Chứng Chỉ Tốt Nghiệp</span>
                   </Link>
 
                   {/* Link Affiliate MMO */}
