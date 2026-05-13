@@ -7,7 +7,8 @@ import { Menu, X, Home, Map, FileText, Video, Layers, Gift, PhoneCall, Sparkles,
 import { useAuth } from "@/components/AuthProvider";
 
 export function MobileNavMenu() {
-  const { user, isAdmin, logout } = useAuth();
+  const { user, signOut } = useAuth();
+  const isAdmin = user?.app_metadata?.role === "admin" || (user as any)?.user_metadata?.role === "admin";
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
 
@@ -188,7 +189,7 @@ export function MobileNavMenu() {
                   {/* Nút Đăng xuất */}
                   <button
                     type="button"
-                    onClick={() => { logout(); setIsOpen(false); }}
+                    onClick={() => { signOut(); setIsOpen(false); }}
                     className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-bold bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition-all text-left cursor-pointer"
                   >
                     <LogOut className="w-4 h-4 shrink-0 text-red-400" />
