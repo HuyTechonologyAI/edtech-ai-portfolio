@@ -59,7 +59,7 @@ export default function RoadmapPage() {
               </div>
 
               {/* Content Box */}
-              <div className={`ml-12 md:ml-0 w-full md:w-5/12 p-6 glass-panel rounded-3xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(0,255,133,0.1)] ${step.status === 'current' ? 'border-secondary/50 shadow-[0_0_20px_rgba(0,255,133,0.3)]' : ''}`}>
+              <div className={`ml-16 md:ml-0 w-full md:w-5/12 p-6 glass-panel rounded-3xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(0,255,133,0.1)] ${step.status === 'current' ? 'border-secondary/50 shadow-[0_0_20px_rgba(0,255,133,0.3)]' : ''}`}>
                 <div className={`text-sm font-bold uppercase tracking-wider mb-2 ${step.status === 'completed' ? 'text-secondary/70' : step.status === 'current' ? 'text-secondary neon-glow-text' : 'text-foreground/50'}`}>
                   {step.status === 'completed' ? 'Đã hoàn thành' : step.status === 'current' ? 'Đang học' : 'Sắp tới'}
                 </div>

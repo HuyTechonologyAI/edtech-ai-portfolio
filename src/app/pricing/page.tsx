@@ -162,7 +162,7 @@ export default function PricingPage() {
                 key={tier.id}
                 className={`relative rounded-3xl p-6 md:p-8 flex flex-col justify-between transition-all duration-300 ${
                   isFeatured
-                    ? "bg-gradient-to-b from-secondary/10 via-surface/80 to-surface border-2 border-secondary shadow-[0_0_35px_rgba(0,255,133,0.15)] scale-105 z-10"
+                    ? "bg-gradient-to-b from-secondary/10 via-surface/80 to-surface border-2 border-secondary shadow-[0_0_35px_rgba(0,255,133,0.15)] md:scale-105 z-10"
                     : "bg-surface/60 hover:bg-surface border border-white/5 hover:border-white/10"
                 }`}
               >
