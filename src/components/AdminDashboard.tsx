@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { LogOut, Video, FileText, Plus, Trash2, Pencil, Loader2, X, Save, Eye, BarChart3, Users, Crown, MessageSquare, Shield, ClipboardList, Sparkles, Gift } from "lucide-react";
+import { LogOut, Video, FileText, Plus, Trash2, Pencil, Loader2, X, Save, Eye, BarChart3, Users, Crown, MessageSquare, Shield, ClipboardList, Sparkles, Gift, Layers } from "lucide-react";
 import UserManagementTab from "./UserManagementTab";
 import CommentModerationTab from "./CommentModerationTab";
 import RoleDelegationTab from "./RoleDelegationTab";
