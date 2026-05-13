@@ -293,7 +293,7 @@ export function FileViewerModal({
           )}
 
           <div className="px-4 pb-8 max-w-3xl mx-auto w-full">
-            <CommentSection itemType="resources" itemId={file.id} />
+            <CommentSection itemType="resources" itemId={resourceId || 0} />
           </div>
         </div>
 
