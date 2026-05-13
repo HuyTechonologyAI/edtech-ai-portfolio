@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { LogOut, Video, FileText, Plus, Trash2, Pencil, Loader2, X, Save, Eye, BarChart3, Users, Crown, MessageSquare } from "lucide-react";
+import { LogOut, Video, FileText, Plus, Trash2, Pencil, Loader2, X, Save, Eye, BarChart3, Users, Crown, MessageSquare, Shield } from "lucide-react";
 import UserManagementTab from "./UserManagementTab";
 import CommentModerationTab from "./CommentModerationTab";
+import RoleDelegationTab from "./RoleDelegationTab";
 import { useAuth } from "@/components/AuthProvider";
 
 interface ViewStats {
@@ -18,7 +19,7 @@ interface ViewStats {
 export default function AdminDashboard() {
   const router = useRouter();
   const { user, loading: authLoading, signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState<"videos" | "resources" | "users" | "premium" | "comments">("videos");
+  const [activeTab, setActiveTab] = useState<"videos" | "resources" | "users" | "premium" | "comments" | "roles">("videos");
   const [items, setItems] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -376,6 +377,12 @@ export default function AdminDashboard() {
             <Users className="w-5 h-5" /> Quản lý Người dùng
           </button>
           <button 
+            onClick={() => {setActiveTab("roles"); setIsAdding(false); setEditingId(null);}}
+            className={`flex items-center gap-3 p-4 rounded-xl transition-all ${activeTab === "roles" ? "bg-cyan-500/10 border border-cyan-500/30 text-cyan-400" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
+          >
+            <Shield className="w-5 h-5 text-cyan-400" /> Phân quyền Quản trị
+          </button>
+          <button 
             onClick={() => {setActiveTab("premium"); setIsAdding(false); setEditingId(null);}}
             className={`flex items-center gap-3 p-4 rounded-xl transition-all ${activeTab === "premium" ? "bg-amber-500/10 border border-amber-500/30 text-amber-400" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
           >
@@ -393,6 +400,8 @@ export default function AdminDashboard() {
         <div className="flex-1 bg-surface rounded-2xl border border-border p-6 min-h-[500px]">
           {activeTab === "users" ? (
             <UserManagementTab />
+          ) : activeTab === "roles" ? (
+            <RoleDelegationTab />
           ) : activeTab === "comments" ? (
             <CommentModerationTab />
           ) : (

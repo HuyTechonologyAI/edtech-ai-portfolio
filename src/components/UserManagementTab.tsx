@@ -164,58 +164,6 @@ function UserDetailModal({ user, onClose, onAction }: { user: UserItem; onClose:
           )}
         </div>
 
-        {/* Phân quyền Quản lý Chi tiết (RBAC) */}
-        <div className="bg-surface/50 rounded-xl p-3 border border-white/5 space-y-2 mb-5 text-xs">
-          <div className="font-bold text-[10px] text-cyan-400 uppercase tracking-wider flex items-center justify-between">
-            <span>🔐 Ủy quyền Trợ lý Quản trị</span>
-            <span className="text-[8px] bg-cyan-500/10 text-cyan-400 px-1 py-0.2 rounded font-bold">RBAC</span>
-          </div>
-          
-          <div className="space-y-1.5 pt-1">
-            <label className="flex items-center justify-between p-1.5 rounded hover:bg-white/5 cursor-pointer transition-colors">
-              <span className="text-foreground/80 text-xs">📁 Cập nhật Video & Tài liệu</span>
-              <input
-                type="checkbox"
-                checked={!!user.canManageContent}
-                onChange={(e) => doAction("setPermissions", {
-                  canManageContent: e.target.checked,
-                  canModerateComments: !!user.canModerateComments,
-                  canGrantPremium: !!user.canGrantPremium,
-                })}
-                className="rounded bg-background border-border text-secondary focus:ring-0 w-4 h-4 cursor-pointer"
-              />
-            </label>
-
-            <label className="flex items-center justify-between p-1.5 rounded hover:bg-white/5 cursor-pointer transition-colors">
-              <span className="text-foreground/80 text-xs">💬 Duyệt bình luận học viên</span>
-              <input
-                type="checkbox"
-                checked={!!user.canModerateComments}
-                onChange={(e) => doAction("setPermissions", {
-                  canManageContent: !!user.canManageContent,
-                  canModerateComments: e.target.checked,
-                  canGrantPremium: !!user.canGrantPremium,
-                })}
-                className="rounded bg-background border-border text-secondary focus:ring-0 w-4 h-4 cursor-pointer"
-              />
-            </label>
-
-            <label className="flex items-center justify-between p-1.5 rounded hover:bg-white/5 cursor-pointer transition-colors">
-              <span className="text-foreground/80 text-xs">👑 Cấp tài khoản Premium VIP</span>
-              <input
-                type="checkbox"
-                checked={!!user.canGrantPremium}
-                onChange={(e) => doAction("setPermissions", {
-                  canManageContent: !!user.canManageContent,
-                  canModerateComments: !!user.canModerateComments,
-                  canGrantPremium: e.target.checked,
-                })}
-                className="rounded bg-background border-border text-secondary focus:ring-0 w-4 h-4 cursor-pointer"
-              />
-            </label>
-          </div>
-        </div>
-
         {loading ? (
           <div className="flex justify-center py-4"><Loader2 className="w-6 h-6 animate-spin text-secondary" /></div>
         ) : (
