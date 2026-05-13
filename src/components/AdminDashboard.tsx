@@ -9,6 +9,7 @@ import RoleDelegationTab from "./RoleDelegationTab";
 import AuditLogsTab from "./AuditLogsTab";
 import AiTrendsAnalyticsTab from "./AiTrendsAnalyticsTab";
 import DailyTasksAdminTab from "./DailyTasksAdminTab";
+import FolderTreeManager from "./FolderTreeManager";
 import { useAuth } from "@/components/AuthProvider";
 
 interface ViewStats {
@@ -35,6 +36,18 @@ export default function AdminDashboard() {
   const [viewStats, setViewStats] = useState<Record<number, ViewStats>>({});
   const [showStatsId, setShowStatsId] = useState<number | null>(null);
 
+  // Folder Taxonomy states
+  const [selectedFolderId, setSelectedFolderId] = useState<number | null>(null);
+  const [foldersList, setFoldersList] = useState<any[]>([]);
+
+  const fetchFoldersList = async (type: string) => {
+    try {
+      const res = await fetch(`/api/admin/folders?type=${type}`);
+      const data = await res.json();
+      if (data.success) setFoldersList(data.folders || []);
+    } catch { setFoldersList([]); }
+  };
+
   const fetchData = async () => {
     setIsLoading(true);
     try {
@@ -60,8 +73,12 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     fetchData();
+    setSelectedFolderId(null);
     if (activeTab === "resources") {
       fetchViewStats();
+      fetchFoldersList("RESOURCE");
+    } else if (activeTab === "videos") {
+      fetchFoldersList("VIDEO");
     }
   }, [activeTab]);
 
@@ -243,6 +260,24 @@ export default function AdminDashboard() {
           placeholder="Nhập mô tả..."
         />
       </div>
+
+      {(activeTab === "videos" || activeTab === "resources") && (
+        <div>
+          <label className="block text-sm font-medium mb-1 text-amber-400 font-bold">📁 Chọn Thư Mục Chủ Đề</label>
+          <select
+            value={formData.folder_id || ""}
+            onChange={(e) => setFormData({ ...formData, folder_id: e.target.value ? Number(e.target.value) : null })}
+            className="w-full bg-surface border border-amber-500/30 rounded-lg p-3 text-foreground focus:border-amber-400 focus:outline-none transition-all"
+          >
+            <option value="">— Không thuộc thư mục nào (Gốc) —</option>
+            {foldersList.map(f => (
+              <option key={f.id} value={f.id}>
+                {f.parent_id ? "↳ " : ""}{f.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {activeTab === "videos" ? (
         <>
@@ -531,32 +566,43 @@ export default function AdminDashboard() {
               </form>
             </div>
           ) : (
-            /* Table */
-            <div className="overflow-x-auto">
-              {isLoading ? (
-                <div className="flex items-center justify-center py-20 text-secondary">
-                  <Loader2 className="w-8 h-8 animate-spin" />
-                </div>
-              ) : items.length === 0 ? (
-                <div className="text-center py-20 text-foreground/50 border border-dashed border-border rounded-xl">
-                  Chưa có dữ liệu. Hãy bấm &quot;Thêm mới&quot;.
-                </div>
-              ) : (
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b border-white/10">
-                      <th className="py-4 px-4 font-bold text-sm text-foreground/50">ID</th>
-                      <th className="py-4 px-4 font-bold text-sm text-foreground/50">TIÊU ĐỀ</th>
-                      <th className="py-4 px-4 font-bold text-sm text-foreground/50">LINK</th>
-                      {activeTab === "resources" && (
-                        <th className="py-4 px-4 font-bold text-sm text-foreground/50 text-center">LƯỢT XEM</th>
-                      )}
-                      <th className="py-4 px-4 font-bold text-sm text-foreground/50 text-right">THAO TÁC</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {items.map((item) => {
-                      const stats = activeTab === "resources" ? viewStats[item.id] : null;
+            /* Table & Taxonomy Tree Studio */
+            <div className="space-y-6">
+              {(activeTab === "videos" || activeTab === "resources") && (
+                <FolderTreeManager
+                  folderType={activeTab === "videos" ? "VIDEO" : "RESOURCE"}
+                  selectedFolderId={selectedFolderId}
+                  onSelectFolder={setSelectedFolderId}
+                />
+              )}
+
+              <div className="overflow-x-auto">
+                {isLoading ? (
+                  <div className="flex items-center justify-center py-20 text-secondary">
+                    <Loader2 className="w-8 h-8 animate-spin" />
+                  </div>
+                ) : items.length === 0 ? (
+                  <div className="text-center py-20 text-foreground/50 border border-dashed border-border rounded-xl">
+                    Chưa có dữ liệu. Hãy bấm &quot;Thêm mới&quot;.
+                  </div>
+                ) : (
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-white/10">
+                        <th className="py-4 px-4 font-bold text-sm text-foreground/50">ID</th>
+                        <th className="py-4 px-4 font-bold text-sm text-foreground/50">TIÊU ĐỀ</th>
+                        <th className="py-4 px-4 font-bold text-sm text-foreground/50">LINK</th>
+                        {activeTab === "resources" && (
+                          <th className="py-4 px-4 font-bold text-sm text-foreground/50 text-center">LƯỢT XEM</th>
+                        )}
+                        <th className="py-4 px-4 font-bold text-sm text-foreground/50 text-right">THAO TÁC</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {items
+                        .filter(item => selectedFolderId === null || item.folder_id === selectedFolderId || item.folderId === selectedFolderId)
+                        .map((item) => {
+                          const stats = activeTab === "resources" ? viewStats[item.id] : null;
                       return (
                       <tr key={item.id} className="border-b border-white/5 hover:bg-white/5 transition-colors group">
                         <td className="py-4 px-4 text-sm text-foreground/50">#{item.id}</td>
@@ -644,6 +690,7 @@ export default function AdminDashboard() {
                   </tbody>
                 </table>
               )}
+            </div>
             </div>
           )}
           </>
