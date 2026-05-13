@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { LogOut, Video, FileText, Plus, Trash2, Pencil, Loader2, X, Save, Eye, BarChart3, Users } from "lucide-react";
+import { LogOut, Video, FileText, Plus, Trash2, Pencil, Loader2, X, Save, Eye, BarChart3, Users, Crown } from "lucide-react";
 import UserManagementTab from "./UserManagementTab";
 import { useAuth } from "@/components/AuthProvider";
 
@@ -17,7 +17,7 @@ interface ViewStats {
 export default function AdminDashboard() {
   const router = useRouter();
   const { user, loading: authLoading, signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState<"videos" | "resources" | "users">("videos");
+  const [activeTab, setActiveTab] = useState<"videos" | "resources" | "users" | "premium">("videos");
   const [items, setItems] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -87,6 +87,13 @@ export default function AdminDashboard() {
         duration: item.duration || "",
         isFeatured: item.isFeatured || false,
       });
+    } else if (activeTab === "premium") {
+      setFormData({
+        title: item.title || "",
+        description: item.description || "",
+        link: item.link || "",
+        category: item.category || "Workflow",
+      });
     } else {
       setFormData({
         title: item.title || "",
@@ -110,7 +117,7 @@ export default function AdminDashboard() {
       const payload = { ...formData };
       if (activeTab === "videos") {
         payload.isFeatured = payload.isFeatured === "true" || payload.isFeatured === true;
-      } else {
+      } else if (activeTab === "resources") {
         payload.isPremium = payload.isPremium === "true" || payload.isPremium === true;
       }
 
@@ -139,20 +146,26 @@ export default function AdminDashboard() {
       const payload = { ...formData };
       if (activeTab === "videos") {
         payload.isFeatured = payload.isFeatured === "true" || payload.isFeatured === true;
-      } else {
+      } else if (activeTab === "resources") {
         payload.isPremium = payload.isPremium === "true" || payload.isPremium === true;
       }
 
-      await fetch(`/api/${activeTab}`, {
+      const res = await fetch(`/api/${activeTab}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Lỗi khi thêm mới");
+      }
+
       setIsAdding(false);
       setFormData({});
       fetchData();
-    } catch (error) {
-      alert("Lỗi khi thêm mới");
+    } catch (error: any) {
+      alert("Lỗi: " + error.message);
     }
   };
 
@@ -214,6 +227,30 @@ export default function AdminDashboard() {
             <label htmlFor={`isFeatured-${isEdit ? "edit" : "add"}`} className="text-sm font-medium text-foreground/70">
               Đánh dấu là Video Nổi bật (Featured)
             </label>
+          </div>
+        </>
+      ) : activeTab === "premium" ? (
+        <>
+          <div>
+            <label className="block text-sm font-medium mb-1 text-foreground/70">Link bảo mật (File JSON / Tài nguyên) *</label>
+            <input
+              required
+              type="url"
+              value={formData.link || ""}
+              onChange={(e) => setFormData({ ...formData, link: e.target.value })}
+              className="w-full bg-surface border border-white/10 rounded-lg p-3 text-foreground focus:border-secondary/50 focus:outline-none focus:ring-1 focus:ring-secondary/30 transition-all"
+              placeholder="https://..."
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1 text-foreground/70">Danh mục (VD: Make/n8n Workflow, AI Prompt)</label>
+            <input
+              type="text"
+              value={formData.category || ""}
+              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+              className="w-full bg-surface border border-white/10 rounded-lg p-3 text-foreground focus:border-secondary/50 focus:outline-none focus:ring-1 focus:ring-secondary/30 transition-all"
+              placeholder="Make/n8n Workflow"
+            />
           </div>
         </>
       ) : (
@@ -337,6 +374,12 @@ export default function AdminDashboard() {
           >
             <Users className="w-5 h-5" /> Quản lý Người dùng
           </button>
+          <button 
+            onClick={() => {setActiveTab("premium"); setIsAdding(false); setEditingId(null);}}
+            className={`flex items-center gap-3 p-4 rounded-xl transition-all ${activeTab === "premium" ? "bg-amber-500/10 border border-amber-500/30 text-amber-400" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
+          >
+            <Crown className="w-5 h-5 text-amber-400" /> Nội dung Premium
+          </button>
         </div>
 
         {/* Content */}
@@ -427,7 +470,14 @@ export default function AdminDashboard() {
                       <tr key={item.id} className="border-b border-white/5 hover:bg-white/5 transition-colors group">
                         <td className="py-4 px-4 text-sm text-foreground/50">#{item.id}</td>
                         <td className="py-4 px-4 font-medium">
-                          <div>{item.title}</div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span>{item.title}</span>
+                            {activeTab === "premium" && item.category && (
+                              <span className="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded-full font-bold shrink-0">
+                                {item.category}
+                              </span>
+                            )}
+                          </div>
                           {item.description && (
                             <div className="text-xs text-foreground/40 mt-1 max-w-[300px] truncate">{item.description}</div>
                           )}
