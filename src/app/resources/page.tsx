@@ -180,7 +180,7 @@ export default function ResourcesPage() {
                         </button>
                         {user ? (
                           item.isPremium && !canDownloadPremium ? (
-                            <Link href="/contact" className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-orange-500/10 border border-orange-500/30 text-orange-400 hover:bg-orange-500 hover:text-black transition-all text-xs font-bold">
+                            <Link href="/checkout" className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-orange-500/10 border border-orange-500/30 text-orange-400 hover:bg-orange-500 hover:text-black transition-all text-xs font-bold">
                               <Lock className="h-4 w-4 shrink-0" />
                               Nâng cấp Premium
                             </Link>

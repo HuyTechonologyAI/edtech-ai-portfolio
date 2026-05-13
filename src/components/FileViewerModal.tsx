@@ -268,7 +268,7 @@ export function FileViewerModal({
                             </>
                           ) : isPremium && !canDownloadPremium ? (
                             <>
-                              <a href="/contact"
+                              <a href="/checkout"
                                 className="flex items-center justify-center gap-2 px-5 py-3 bg-orange-500 text-black rounded-xl font-bold text-sm hover:scale-105 transition-all shadow-[0_0_20px_rgba(249,115,22,0.25)]">
                                 <Lock className="w-4 h-4" />
                                 Nâng cấp Premium để tải
