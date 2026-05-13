@@ -205,7 +205,7 @@ export default function ResourcesPage() {
         )}
 
         {/* FIXED: Dynamic Interactive Category Filter Tabs */}
-        <div className="flex gap-2 overflow-x-auto pb-4 mb-6 scrollbar-hide">
+        <div className="flex flex-wrap gap-2 mb-6">
           <button 
             onClick={() => setSelectedCategory("ALL")}
             className={`px-4 py-2 rounded-full text-sm transition-all cursor-pointer whitespace-nowrap ${
