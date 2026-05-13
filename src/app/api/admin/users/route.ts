@@ -52,6 +52,9 @@ export async function GET(req: NextRequest) {
       occupation: user.user_metadata?.occupation || null,
       interests: user.user_metadata?.interests || null,
       goals: user.user_metadata?.goals || null,
+      canManageContent: user.user_metadata?.can_manage_content || false,
+      canModerateComments: user.user_metadata?.can_moderate_comments || false,
+      canGrantPremium: user.user_metadata?.can_grant_premium || false,
       provider: user.app_metadata?.provider || "email",
       role: user.app_metadata?.role || "user",
       isPremium: user.app_metadata?.is_premium || false,
@@ -135,6 +138,16 @@ export async function PATCH(req: NextRequest) {
         // Xác nhận email thủ công
         updateData = {
           email_confirm: true,
+        };
+        break;
+
+      case "setPermissions":
+        updateData = {
+          user_metadata: {
+            can_manage_content: value.canManageContent,
+            can_moderate_comments: value.canModerateComments,
+            can_grant_premium: value.canGrantPremium,
+          },
         };
         break;
 
