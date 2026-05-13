@@ -55,9 +55,11 @@ export default function ContactPage() {
                   <div className="w-12 h-12 bg-secondary/10 text-secondary border border-secondary/20 rounded-xl flex items-center justify-center shrink-0">
                     <Mail className="w-6 h-6" />
                   </div>
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <div className="font-bold mb-1">Email chuyên gia</div>
-                    <a href="mailto:huytechnologyai2025@gmail.com" className="text-foreground/70 hover:text-secondary transition-colors">huytechnologyai2025@gmail.com</a>
+                    <a href="mailto:huytechnologyai2025@gmail.com" className="text-foreground/70 hover:text-secondary transition-colors break-all block text-xs sm:text-base font-mono">
+                      huytechnologyai2025@gmail.com
+                    </a>
                   </div>
                 </div>
 
