@@ -81,6 +81,7 @@ export default function RootLayout({
                   <Link href="/roadmap" className="text-sm font-medium text-foreground/80 hover:text-secondary transition-colors">Lộ trình</Link>
                   <Link href="/resources" className="text-sm font-medium text-foreground/80 hover:text-secondary transition-colors">Tài liệu</Link>
                   <Link href="/videos" className="text-sm font-medium text-foreground/80 hover:text-secondary transition-colors">Videos</Link>
+                  <Link href="/rewards" className="text-sm font-bold text-orange-400 bg-orange-500/10 px-3 py-1 rounded-full border border-orange-500/30 hover:scale-105 transition-all shadow-[0_0_15px_rgba(249,115,22,0.2)]">🎁 Đổi Quà</Link>
                 </nav>
                 <div className="flex items-center gap-2.5">
                   <LanguageSwitcher />

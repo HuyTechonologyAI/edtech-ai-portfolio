@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { LogOut, Video, FileText, Plus, Trash2, Pencil, Loader2, X, Save, Eye, BarChart3, Users, Crown, MessageSquare, Shield, ClipboardList, Sparkles } from "lucide-react";
+import { LogOut, Video, FileText, Plus, Trash2, Pencil, Loader2, X, Save, Eye, BarChart3, Users, Crown, MessageSquare, Shield, ClipboardList, Sparkles, Gift } from "lucide-react";
 import UserManagementTab from "./UserManagementTab";
 import CommentModerationTab from "./CommentModerationTab";
 import RoleDelegationTab from "./RoleDelegationTab";
 import AuditLogsTab from "./AuditLogsTab";
 import AiTrendsAnalyticsTab from "./AiTrendsAnalyticsTab";
+import DailyTasksAdminTab from "./DailyTasksAdminTab";
 import { useAuth } from "@/components/AuthProvider";
 
 interface ViewStats {
@@ -21,7 +22,7 @@ interface ViewStats {
 export default function AdminDashboard() {
   const router = useRouter();
   const { user, loading: authLoading, signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState<"videos" | "resources" | "users" | "premium" | "comments" | "roles" | "logs" | "trends">("videos");
+  const [activeTab, setActiveTab] = useState<"videos" | "resources" | "users" | "premium" | "comments" | "roles" | "logs" | "trends" | "tasks">("videos");
   const [items, setItems] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -454,6 +455,12 @@ export default function AdminDashboard() {
           >
             <Sparkles className="w-5 h-5 text-purple-400" /> AI Gợi ý Xu hướng
           </button>
+          <button 
+            onClick={() => {setActiveTab("tasks"); setIsAdding(false); setEditingId(null);}}
+            className={`flex items-center gap-3 p-4 rounded-xl transition-all ${activeTab === "tasks" ? "bg-orange-500/10 border border-orange-500/30 text-orange-400 font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
+          >
+            <Gift className="w-5 h-5 text-orange-400" /> Quản lý Đổi thưởng
+          </button>
         </div>
 
         {/* Content */}
@@ -466,6 +473,8 @@ export default function AdminDashboard() {
             <AuditLogsTab />
           ) : activeTab === "trends" ? (
             <AiTrendsAnalyticsTab />
+          ) : activeTab === "tasks" ? (
+            <DailyTasksAdminTab />
           ) : activeTab === "comments" ? (
             <CommentModerationTab />
           ) : (
