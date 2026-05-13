@@ -67,7 +67,8 @@ export default function CheckoutPage() {
         body: JSON.stringify({
           userEmail: user?.email || "anonymous@zentratech.io",
           userId: user?.id,
-          amount: targetPrice
+          amount: targetPrice,
+          referredBy: typeof window !== "undefined" ? localStorage.getItem("zentra_referral_code") : undefined
         })
       });
       const data = await res.json();

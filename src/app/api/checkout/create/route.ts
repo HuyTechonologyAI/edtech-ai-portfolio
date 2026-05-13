@@ -4,7 +4,7 @@ import { supabase } from "@/lib/supabase";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { userEmail, userId, amount = 299000 } = body;
+    const { userEmail, userId, amount = 299000, referredBy } = body;
 
     if (!userEmail) {
       return NextResponse.json({ error: "Yêu cầu địa chỉ email người dùng" }, { status: 400 });
@@ -23,7 +23,8 @@ export async function POST(req: NextRequest) {
           user_email: userEmail,
           amount: amount,
           memo_code: memoCode,
-          status: "PENDING"
+          status: "PENDING",
+          referred_by: referredBy || null
         }])
         .select();
 

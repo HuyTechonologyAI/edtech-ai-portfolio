@@ -9,6 +9,7 @@ import { FloatingOrbs } from "@/components/FloatingOrbs";
 import { AuthProvider } from "@/components/AuthProvider";
 import { UserMenu } from "@/components/UserMenu";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { ReferralTracker } from "@/components/ReferralTracker";
 
 import { GoogleTagManager } from "@next/third-parties/google";
 import Link from "next/link";
@@ -73,6 +74,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <AuthProvider>
+            <ReferralTracker />
             <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-xl">
               <div className="container mx-auto px-4 h-16 flex items-center justify-between">
                 <div className="font-bold text-2xl tracking-tight">AI & Auto<span className="text-secondary neon-glow-text">Expert</span></div>
