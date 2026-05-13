@@ -18,6 +18,7 @@ function mapToDbFields(body: any) {
   // Handle isPremium → is_premium
   if (body.isPremium !== undefined) mapped.is_premium = body.isPremium;
   if (body.is_premium !== undefined) mapped.is_premium = body.is_premium;
+  if (body.folder_id !== undefined) mapped.folder_id = body.folder_id;
   return mapped;
 }
 
@@ -27,6 +28,7 @@ function mapToFrontend(item: any) {
   return {
     ...item,
     isPremium: item.is_premium ?? item.isPremium,
+    folderId: item.folder_id,
   };
 }
 

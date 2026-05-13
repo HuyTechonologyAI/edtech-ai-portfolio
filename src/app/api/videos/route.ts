@@ -20,6 +20,7 @@ function mapToDbFields(body: any) {
   // Handle isFeatured → is_featured
   if (body.isFeatured !== undefined) mapped.is_featured = body.isFeatured;
   if (body.is_featured !== undefined) mapped.is_featured = body.is_featured;
+  if (body.folder_id !== undefined) mapped.folder_id = body.folder_id;
   return mapped;
 }
 
@@ -30,6 +31,7 @@ function mapToFrontend(item: any) {
     ...item,
     youtubeUrl: item.youtube_url ?? item.youtubeUrl,
     isFeatured: item.is_featured ?? item.isFeatured,
+    folderId: item.folder_id,
   };
 }
 

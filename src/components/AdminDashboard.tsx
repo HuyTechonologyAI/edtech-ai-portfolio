@@ -140,6 +140,7 @@ export default function AdminDashboard() {
         youtubeUrl: item.youtubeUrl || "",
         duration: item.duration || "",
         isFeatured: item.isFeatured || false,
+        folder_id: item.folder_id || item.folderId || null,
       });
     } else if (activeTab === "premium") {
       setFormData({
@@ -155,6 +156,7 @@ export default function AdminDashboard() {
         link: item.link || "",
         type: item.type || "",
         isPremium: item.isPremium || false,
+        folder_id: item.folder_id || item.folderId || null,
       });
     }
   };
@@ -668,6 +670,36 @@ export default function AdminDashboard() {
                         )}
                         <td className="py-4 px-4 text-right">
                           <div className="flex items-center justify-end gap-2">
+                            {(activeTab === "videos" || activeTab === "resources") && (
+                              <select
+                                value={item.folder_id || item.folderId || ""}
+                                onChange={async (e) => {
+                                  const newFolderId = e.target.value ? Number(e.target.value) : null;
+                                  try {
+                                    const res = await fetch(`/api/${activeTab}?id=${item.id}`, {
+                                      method: "PUT",
+                                      headers: { "Content-Type": "application/json" },
+                                      body: JSON.stringify({ folder_id: newFolderId })
+                                    });
+                                    if (res.ok) {
+                                      fetchData();
+                                    } else {
+                                      alert("Lỗi di chuyển thư mục");
+                                    }
+                                  } catch { alert("Lỗi kết nối"); }
+                                }}
+                                className="text-[11px] bg-surface/90 border border-white/10 rounded-lg px-2 py-1 text-foreground/70 hover:text-amber-400 focus:outline-none focus:border-amber-400 transition-all max-w-[130px] truncate"
+                                title="Chuyển nhanh vào thư mục"
+                              >
+                                <option value="">[Gốc]</option>
+                                {foldersList.map(f => (
+                                  <option key={f.id} value={f.id}>
+                                    {f.name}
+                                  </option>
+                                ))}
+                              </select>
+                            )}
+
                             <button
                               onClick={() => handleEdit(item)}
                               className="p-2 bg-amber-500/10 text-amber-400 rounded-lg hover:bg-amber-500 hover:text-black transition-all"
