@@ -96,11 +96,11 @@ export default function RootLayout({
                     Liên hệ
                   </Link>
                   <UserMenu />
-                  <MobileNavMenu />
                 </div>
               </div>
             </header>
 
+            <MobileNavMenu />
             {children}
 
             <footer className="border-t border-border/40 bg-background py-8 mt-auto">
