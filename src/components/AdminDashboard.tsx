@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { LogOut, Video, FileText, Plus, Trash2, Pencil, Loader2, X, Save, Eye, BarChart3, Users, Crown, MessageSquare, Shield, ClipboardList, Sparkles, Gift, Layers } from "lucide-react";
+import { LogOut, Video, FileText, Plus, Trash2, Pencil, Loader2, X, Save, Eye, BarChart3, Users, Crown, MessageSquare, Shield, ClipboardList, Sparkles, Gift, Layers, Smartphone } from "lucide-react";
 import UserManagementTab from "./UserManagementTab";
 import CommentModerationTab from "./CommentModerationTab";
 import RoleDelegationTab from "./RoleDelegationTab";
@@ -11,6 +11,7 @@ import AiTrendsAnalyticsTab from "./AiTrendsAnalyticsTab";
 import DailyTasksAdminTab from "./DailyTasksAdminTab";
 import FolderTreeManager from "./FolderTreeManager";
 import SaaSAndAffiliateSettingsTab from "./SaaSAndAffiliateSettingsTab";
+import { ViewportSimulatorTab } from "./ViewportSimulatorTab";
 import { useAuth } from "@/components/AuthProvider";
 
 interface ViewStats {
@@ -24,7 +25,7 @@ interface ViewStats {
 export default function AdminDashboard() {
   const router = useRouter();
   const { user, loading: authLoading, signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState<"videos" | "resources" | "users" | "premium" | "comments" | "roles" | "logs" | "trends" | "tasks" | "settings">("videos");
+  const [activeTab, setActiveTab] = useState<"videos" | "resources" | "users" | "premium" | "comments" | "roles" | "logs" | "trends" | "tasks" | "settings" | "simulator">("videos");
   const [items, setItems] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -505,6 +506,12 @@ export default function AdminDashboard() {
           >
             <Layers className="w-4 h-4 md:w-5 md:h-5 shrink-0 text-secondary" /> Cấu hình SaaS
           </button>
+          <button 
+            onClick={() => {setActiveTab("simulator"); setIsAdding(false); setEditingId(null);}}
+            className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "simulator" ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
+          >
+            <Smartphone className="w-4 h-4 md:w-5 md:h-5 shrink-0 text-emerald-400" /> Giả lập Giao diện
+          </button>
         </div>
 
         {/* Content */}
@@ -523,6 +530,8 @@ export default function AdminDashboard() {
             <DailyTasksAdminTab />
           ) : activeTab === "comments" ? (
             <CommentModerationTab />
+          ) : activeTab === "simulator" ? (
+            <ViewportSimulatorTab />
           ) : (
           <>
           <div className="flex justify-between items-center mb-6">
