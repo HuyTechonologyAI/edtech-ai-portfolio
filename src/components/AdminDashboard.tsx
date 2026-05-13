@@ -10,6 +10,7 @@ import AuditLogsTab from "./AuditLogsTab";
 import AiTrendsAnalyticsTab from "./AiTrendsAnalyticsTab";
 import DailyTasksAdminTab from "./DailyTasksAdminTab";
 import FolderTreeManager from "./FolderTreeManager";
+import SaaSAndAffiliateSettingsTab from "./SaaSAndAffiliateSettingsTab";
 import { useAuth } from "@/components/AuthProvider";
 
 interface ViewStats {
@@ -23,7 +24,7 @@ interface ViewStats {
 export default function AdminDashboard() {
   const router = useRouter();
   const { user, loading: authLoading, signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState<"videos" | "resources" | "users" | "premium" | "comments" | "roles" | "logs" | "trends" | "tasks">("videos");
+  const [activeTab, setActiveTab] = useState<"videos" | "resources" | "users" | "premium" | "comments" | "roles" | "logs" | "trends" | "tasks" | "settings">("videos");
   const [items, setItems] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -498,11 +499,19 @@ export default function AdminDashboard() {
           >
             <Gift className="w-5 h-5 text-orange-400" /> Quản lý Đổi thưởng
           </button>
+          <button 
+            onClick={() => {setActiveTab("settings"); setIsAdding(false); setEditingId(null);}}
+            className={`flex items-center gap-3 p-4 rounded-xl transition-all ${activeTab === "settings" ? "bg-secondary/10 border border-secondary/30 text-secondary font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
+          >
+            <Layers className="w-5 h-5 text-secondary" /> Cấu hình SaaS &amp; MMO
+          </button>
         </div>
 
         {/* Content */}
         <div className="flex-1 bg-surface rounded-2xl border border-border p-6 min-h-[500px]">
-          {activeTab === "users" ? (
+          {activeTab === "settings" ? (
+            <SaaSAndAffiliateSettingsTab />
+          ) : activeTab === "users" ? (
             <UserManagementTab />
           ) : activeTab === "roles" ? (
             <RoleDelegationTab />

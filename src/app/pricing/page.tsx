@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Check, Sparkles, ShieldCheck, Zap, HelpCircle, ArrowRight, Layers } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
@@ -8,8 +8,24 @@ import { useAuth } from "@/components/AuthProvider";
 export default function PricingPage() {
   const { user } = useAuth();
   const [isYearly, setIsYearly] = useState(true);
+  const [customTiersList, setCustomTiersList] = useState<any[] | null>(null);
 
-  const tiers = [
+  useEffect(() => {
+    // Nạp cấu hình ghi đè từ CSDL Admin Settings hoặc LocalStorage
+    fetch("/api/admin/settings")
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.settings?.saas_tiers) {
+          setCustomTiersList(data.settings.saas_tiers);
+        }
+      })
+      .catch(() => {
+        const cached = localStorage.getItem("custom_saas_tiers");
+        if (cached) setCustomTiersList(JSON.parse(cached));
+      });
+  }, []);
+
+  const baseTiers = [
     {
       id: "free",
       name: "Free Member",
@@ -133,7 +149,7 @@ export default function PricingPage() {
 
         {/* Tiers Grid view */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch mb-16">
-          {tiers.map((tier) => {
+          {(customTiersList || baseTiers).map((tier: any) => {
             const currentPrice = isYearly ? tier.priceYearly : tier.priceMonthly;
             const originalPrice = isYearly ? tier.originalYearly : null;
 

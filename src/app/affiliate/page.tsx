@@ -26,6 +26,28 @@ export default function AffiliatePage() {
   const [earnedAmount, setEarnedAmount] = useState(897000); // 30% commission
   const [earnedPoints, setEarnedPoints] = useState(1500);
 
+  const [configCommissionPercent, setConfigCommissionPercent] = useState(30);
+  const [configBonusPoints, setConfigBonusPoints] = useState(500);
+
+  useEffect(() => {
+    fetch("/api/admin/settings")
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.settings?.affiliate_config) {
+          if (data.settings.affiliate_config.commissionPercent) setConfigCommissionPercent(data.settings.affiliate_config.commissionPercent);
+          if (data.settings.affiliate_config.bonusPointsPerReferral) setConfigBonusPoints(data.settings.affiliate_config.bonusPointsPerReferral);
+        }
+      })
+      .catch(() => {
+        const cached = localStorage.getItem("custom_affiliate_config");
+        if (cached) {
+          const p = JSON.parse(cached);
+          if (p.commissionPercent) setConfigCommissionPercent(p.commissionPercent);
+          if (p.bonusPointsPerReferral) setConfigBonusPoints(p.bonusPointsPerReferral);
+        }
+      });
+  }, []);
+
   // Top earners dummy state list
   const topEarners: LeaderboardItem[] = [
     { rank: 1, partnerName: "Nguyễn Kiến Huy", code: "HUYAI_MASTER", signups: 45, earned: 13455000 },
@@ -90,8 +112,8 @@ export default function AffiliatePage() {
     // Tỷ lệ ngẫu nhiên ra đơn hàng
     if (Math.random() > 0.6) {
       setReferralsCount(prev => prev + 1);
-      setEarnedAmount(prev => prev + 299000 * 0.3);
-      setEarnedPoints(prev => prev + 500);
+      setEarnedAmount(prev => prev + 299000 * (configCommissionPercent / 100));
+      setEarnedPoints(prev => prev + configBonusPoints);
     }
   };
 
@@ -113,7 +135,7 @@ export default function AffiliatePage() {
               Tiếp Thị Liên Kết <span className="text-secondary neon-glow-text">Tự Sinh</span>
             </h1>
             <p className="text-foreground/70 text-sm md:text-base max-w-2xl">
-              Chia sẻ tri thức, nhận về giá trị. Hưởng ngay <strong className="text-secondary">30% hoa hồng gạch nợ tự động</strong> hoặc thưởng <strong className="text-amber-400">+500 siêu Point</strong> cho mỗi lượt giới thiệu thành công.
+              Chia sẻ tri thức, nhận về giá trị. Hưởng ngay <strong className="text-secondary">{configCommissionPercent}% hoa hồng gạch nợ tự động</strong> hoặc thưởng <strong className="text-amber-400">+{configBonusPoints} siêu Point</strong> cho mỗi lượt giới thiệu thành công.
             </p>
           </div>
 
@@ -247,7 +269,7 @@ export default function AffiliatePage() {
                 {/* Card 3: Earned Cash */}
                 <div className="glass-panel p-5 rounded-2xl border border-white/5 flex flex-col justify-between">
                   <div className="flex items-center justify-between text-foreground/50 text-xs">
-                    <span>Hoa hồng tiền mặt (30%)</span>
+                    <span>Hoa hồng tiền mặt ({configCommissionPercent}%)</span>
                     <DollarSign className="w-4 h-4 text-amber-400" />
                   </div>
                   <div className="mt-3">
