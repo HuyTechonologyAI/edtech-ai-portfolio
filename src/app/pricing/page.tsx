@@ -152,17 +152,21 @@ export default function PricingPage() {
           {(customTiersList || baseTiers).map((tier: any) => {
             const currentPrice = isYearly ? tier.priceYearly : tier.priceMonthly;
             const originalPrice = isYearly ? tier.originalYearly : null;
+            const isFeatured = tier.featured ?? (tier.id === "pro");
+            const isPopular = tier.popular ?? (tier.id === "pro");
+            const currentHref = tier.href || (tier.id === "pro" ? "/checkout?plan=premium" : tier.id === "enterprise" ? "/checkout?plan=vip" : "/resources");
+            const currentCta = tier.cta || (tier.id === "free" ? "Bắt đầu học ngay" : "Nâng cấp Pro ngay");
 
             return (
               <div
                 key={tier.id}
                 className={`relative rounded-3xl p-6 md:p-8 flex flex-col justify-between transition-all duration-300 ${
-                  tier.featured
+                  isFeatured
                     ? "bg-gradient-to-b from-secondary/10 via-surface/80 to-surface border-2 border-secondary shadow-[0_0_35px_rgba(0,255,133,0.15)] scale-105 z-10"
                     : "bg-surface/60 hover:bg-surface border border-white/5 hover:border-white/10"
                 }`}
               >
-                {tier.popular && (
+                {isPopular && (
                   <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-secondary text-black text-xs font-black px-4 py-1 rounded-full uppercase tracking-wider shadow-md">
                     🔥 Phổ Biến Nhất
                   </div>
@@ -208,7 +212,7 @@ export default function PricingPage() {
                     <div className="text-[11px] font-bold uppercase tracking-wider text-foreground/40">Đặc quyền bao gồm:</div>
                     {tier.features?.map((feat: any, idx: number) => (
                       <div key={idx} className="flex items-start gap-2 text-xs text-foreground/80">
-                        <Check className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${tier.featured ? 'text-secondary' : 'text-secondary/60'}`} />
+                        <Check className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${isFeatured ? 'text-secondary' : 'text-secondary/60'}`} />
                         <span>{feat}</span>
                       </div>
                     ))}
@@ -218,14 +222,14 @@ export default function PricingPage() {
                 {/* CTA Button Link */}
                 <div className="pt-6 mt-auto">
                   <Link
-                    href={tier.href}
+                    href={currentHref}
                     className={`w-full inline-flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-xs transition-all ${
-                      tier.featured
+                      isFeatured
                         ? "bg-secondary text-black hover:bg-secondary/90 hover:shadow-[0_0_20px_rgba(0,255,133,0.4)]"
                         : "bg-surface border border-white/10 hover:border-secondary/40 hover:text-secondary text-foreground"
                     }`}
                   >
-                    <span>{tier.cta}</span>
+                    <span>{currentCta}</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                   <p className="text-[10px] text-center text-foreground/40 mt-2">
