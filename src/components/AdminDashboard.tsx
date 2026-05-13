@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { LogOut, Video, FileText, Plus, Trash2, Pencil, Loader2, X, Save, Eye, BarChart3, Users } from "lucide-react";
 import UserManagementTab from "./UserManagementTab";
+import { useAuth } from "@/components/AuthProvider";
 
 interface ViewStats {
   today: number;
@@ -15,6 +16,7 @@ interface ViewStats {
 
 export default function AdminDashboard() {
   const router = useRouter();
+  const { user, loading: authLoading, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState<"videos" | "resources" | "users">("videos");
   const [items, setItems] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -253,6 +255,49 @@ export default function AdminDashboard() {
       )}
     </>
   );
+
+  const isStudentAccount = user && user.app_metadata?.role !== "admin" && (user as any).user_metadata?.role !== "admin";
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-secondary" />
+      </div>
+    );
+  }
+
+  if (isStudentAccount) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="max-w-md w-full glass-panel p-8 rounded-3xl text-center border border-red-500/30 shadow-2xl animate-scale-up">
+          <div className="w-16 h-16 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20">
+            <X className="w-8 h-8" />
+          </div>
+          <h2 className="text-xl font-bold mb-2">Quyền truy cập bị từ chối</h2>
+          <p className="text-sm text-foreground/70 mb-6">
+            Tài khoản học viên (<span className="text-secondary font-bold">{user.email}</span>) không có quyền truy cập hệ thống Quản trị viên CMS.
+          </p>
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={async () => {
+                await signOut();
+                window.location.href = "/admin/login";
+              }}
+              className="w-full py-3 bg-red-500 text-white rounded-xl font-bold text-sm hover:bg-red-600 transition-all shadow-[0_0_20px_rgba(239,68,68,0.3)]"
+            >
+              Đăng xuất tài khoản học viên
+            </button>
+            <button
+              onClick={() => router.push("/")}
+              className="w-full py-3 bg-surface border border-border text-foreground/70 rounded-xl font-bold text-sm hover:text-foreground transition-all"
+            >
+              Quay lại Trang chủ
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
