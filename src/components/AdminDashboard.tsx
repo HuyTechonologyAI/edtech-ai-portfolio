@@ -444,66 +444,66 @@ export default function AdminDashboard() {
 
       <main className="container mx-auto p-4 py-8 flex flex-col md:flex-row gap-8">
         {/* Sidebar */}
-        <div className="w-full md:w-64 flex flex-col gap-2">
+        <div className="w-full md:w-64 flex md:flex-col gap-2 overflow-x-auto pb-3 md:pb-0 scrollbar-none shrink-0 border-b border-white/5 md:border-b-0">
           <button 
             onClick={() => {setActiveTab("videos"); setIsAdding(false); setEditingId(null);}}
-            className={`flex items-center gap-3 p-4 rounded-xl transition-all ${activeTab === "videos" ? "bg-secondary/10 border border-secondary/30 text-secondary" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
+            className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "videos" ? "bg-secondary/10 border border-secondary/30 text-secondary font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
           >
-            <Video className="w-5 h-5" /> Quản lý Video
+            <Video className="w-4 h-4 md:w-5 md:h-5 shrink-0" /> Quản lý Video
           </button>
           <button 
             onClick={() => {setActiveTab("resources"); setIsAdding(false); setEditingId(null);}}
-            className={`flex items-center gap-3 p-4 rounded-xl transition-all ${activeTab === "resources" ? "bg-secondary/10 border border-secondary/30 text-secondary" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
+            className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "resources" ? "bg-secondary/10 border border-secondary/30 text-secondary font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
           >
-            <FileText className="w-5 h-5" /> Quản lý Tài liệu
+            <FileText className="w-4 h-4 md:w-5 md:h-5 shrink-0" /> Quản lý Tài liệu
           </button>
           <button 
             onClick={() => {setActiveTab("users"); setIsAdding(false); setEditingId(null);}}
-            className={`flex items-center gap-3 p-4 rounded-xl transition-all ${activeTab === "users" ? "bg-secondary/10 border border-secondary/30 text-secondary" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
+            className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "users" ? "bg-secondary/10 border border-secondary/30 text-secondary font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
           >
-            <Users className="w-5 h-5" /> Quản lý Người dùng
+            <Users className="w-4 h-4 md:w-5 md:h-5 shrink-0" /> Quản lý User
           </button>
           <button 
             onClick={() => {setActiveTab("roles"); setIsAdding(false); setEditingId(null);}}
-            className={`flex items-center gap-3 p-4 rounded-xl transition-all ${activeTab === "roles" ? "bg-cyan-500/10 border border-cyan-500/30 text-cyan-400" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
+            className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "roles" ? "bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
           >
-            <Shield className="w-5 h-5 text-cyan-400" /> Phân quyền Quản trị
+            <Shield className="w-4 h-4 md:w-5 md:h-5 shrink-0 text-cyan-400" /> Phân quyền
           </button>
           <button 
             onClick={() => {setActiveTab("premium"); setIsAdding(false); setEditingId(null);}}
-            className={`flex items-center gap-3 p-4 rounded-xl transition-all ${activeTab === "premium" ? "bg-amber-500/10 border border-amber-500/30 text-amber-400" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
+            className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "premium" ? "bg-amber-500/10 border border-amber-500/30 text-amber-400 font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
           >
-            <Crown className="w-5 h-5 text-amber-400" /> Nội dung Premium
+            <Crown className="w-4 h-4 md:w-5 md:h-5 shrink-0 text-amber-400" /> Premium
           </button>
           <button 
             onClick={() => {setActiveTab("comments"); setIsAdding(false); setEditingId(null);}}
-            className={`flex items-center gap-3 p-4 rounded-xl transition-all ${activeTab === "comments" ? "bg-secondary/10 border border-secondary/30 text-secondary" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
+            className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "comments" ? "bg-secondary/10 border border-secondary/30 text-secondary font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
           >
-            <MessageSquare className="w-5 h-5" /> Quản lý Bình luận
+            <MessageSquare className="w-4 h-4 md:w-5 md:h-5 shrink-0" /> Bình luận
           </button>
           <button 
             onClick={() => {setActiveTab("logs"); setIsAdding(false); setEditingId(null);}}
-            className={`flex items-center gap-3 p-4 rounded-xl transition-all ${activeTab === "logs" ? "bg-blue-500/10 border border-blue-500/30 text-blue-400" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
+            className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "logs" ? "bg-blue-500/10 border border-blue-500/30 text-blue-400 font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
           >
-            <ClipboardList className="w-5 h-5 text-blue-400" /> Nhật ký Thao tác
+            <ClipboardList className="w-4 h-4 md:w-5 md:h-5 shrink-0 text-blue-400" /> Nhật ký
           </button>
           <button 
             onClick={() => {setActiveTab("trends"); setIsAdding(false); setEditingId(null);}}
-            className={`flex items-center gap-3 p-4 rounded-xl transition-all ${activeTab === "trends" ? "bg-purple-500/10 border border-purple-500/30 text-purple-400 font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
+            className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "trends" ? "bg-purple-500/10 border border-purple-500/30 text-purple-400 font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
           >
-            <Sparkles className="w-5 h-5 text-purple-400" /> AI Gợi ý Xu hướng
+            <Sparkles className="w-4 h-4 md:w-5 md:h-5 shrink-0 text-purple-400" /> AI Xu hướng
           </button>
           <button 
             onClick={() => {setActiveTab("tasks"); setIsAdding(false); setEditingId(null);}}
-            className={`flex items-center gap-3 p-4 rounded-xl transition-all ${activeTab === "tasks" ? "bg-orange-500/10 border border-orange-500/30 text-orange-400 font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
+            className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "tasks" ? "bg-orange-500/10 border border-orange-500/30 text-orange-400 font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
           >
-            <Gift className="w-5 h-5 text-orange-400" /> Quản lý Đổi thưởng
+            <Gift className="w-4 h-4 md:w-5 md:h-5 shrink-0 text-orange-400" /> Đổi thưởng
           </button>
           <button 
             onClick={() => {setActiveTab("settings"); setIsAdding(false); setEditingId(null);}}
-            className={`flex items-center gap-3 p-4 rounded-xl transition-all ${activeTab === "settings" ? "bg-secondary/10 border border-secondary/30 text-secondary font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
+            className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "settings" ? "bg-secondary/10 border border-secondary/30 text-secondary font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
           >
-            <Layers className="w-5 h-5 text-secondary" /> Cấu hình SaaS &amp; MMO
+            <Layers className="w-4 h-4 md:w-5 md:h-5 shrink-0 text-secondary" /> Cấu hình SaaS
           </button>
         </div>
 
