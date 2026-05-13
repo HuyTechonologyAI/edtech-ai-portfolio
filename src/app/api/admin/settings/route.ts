@@ -63,8 +63,9 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  let payload: any = {};
   try {
-    const payload = await req.json();
+    payload = await req.json();
     const { key_name, setting_value } = payload;
 
     if (!key_name || !setting_value) {
@@ -85,6 +86,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, updatedKey: key_name });
   } catch (error: any) {
     // Trả về mock thành công nếu thiếu schema
-    return NextResponse.json({ success: true, updatedKey: payload?.key_name, mockSaved: true });
+    return NextResponse.json({ success: true, updatedKey: payload?.key_name || "fallback", mockSaved: true });
   }
 }
