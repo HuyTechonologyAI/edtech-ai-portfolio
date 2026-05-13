@@ -245,9 +245,9 @@ export default function RewardsGamificationPage() {
                       <div className="space-y-2">
                         <div className="flex justify-between items-start gap-2">
                           <span className={`p-2 rounded-xl text-xs font-bold ${
-                            task.target_type === 'READ_EBOOK' ? 'bg-blue-500/10 text-blue-400' : 'bg-orange-500/10 text-orange-400'
+                            task.target_type === 'READ_EBOOK' ? 'bg-blue-500/10 text-blue-400' : task.target_type === 'WATCH_VIDEO' ? 'bg-orange-500/10 text-orange-400' : 'bg-purple-500/10 text-purple-400'
                           }`}>
-                            {task.target_type === 'READ_EBOOK' ? <BookOpen className="w-4 h-4" /> : <Video className="w-4 h-4" />}
+                            {task.target_type === 'READ_EBOOK' ? <BookOpen className="w-4 h-4" /> : task.target_type === 'WATCH_VIDEO' ? <Video className="w-4 h-4" /> : <Zap className="w-4 h-4" />}
                           </span>
 
                           <span className="text-xs font-extrabold text-orange-400 bg-orange-500/10 px-2.5 py-1 rounded-full border border-orange-500/20 shrink-0 font-mono">
@@ -259,7 +259,11 @@ export default function RewardsGamificationPage() {
                           {task.title}
                         </h3>
                         <p className="text-[11px] text-foreground/50">
-                          {task.target_type === 'READ_EBOOK' ? 'Mở xem tài liệu Ebook/Slide bất kỳ tối thiểu 10 phút.' : 'Xem trọn vẹn video hướng dẫn chuyên sâu.'}
+                          {task.target_type === 'READ_EBOOK' 
+                            ? 'Mở xem tài liệu Ebook/Slide bất kỳ tối thiểu 10 phút.' 
+                            : task.target_type === 'WATCH_VIDEO' 
+                            ? 'Xem trọn vẹn video hướng dẫn chuyên sâu.' 
+                            : `Nhiệm vụ đặc quyền: [${task.target_type}]`}
                         </p>
                       </div>
 
