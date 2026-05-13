@@ -356,6 +356,12 @@ export default function UserManagementTab() {
                             {user.emailConfirmed ? <CheckCircle className="w-3 h-3 text-green-400" /> : <XCircle className="w-3 h-3 text-red-400" />}
                             {user.email}
                           </div>
+                          {(user.phone || user.occupation) && (
+                            <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                              {user.phone && <span className="text-[10px] bg-secondary/10 text-secondary border border-secondary/20 px-1.5 py-0.2 rounded font-mono">📞 {user.phone}</span>}
+                              {user.occupation && <span className="text-[10px] bg-surface text-foreground/70 border border-white/5 px-1.5 py-0.2 rounded truncate max-w-[150px]">💼 {user.occupation}</span>}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </td>
