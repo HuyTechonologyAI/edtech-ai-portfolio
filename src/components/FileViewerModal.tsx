@@ -149,11 +149,6 @@ export function FileViewerModal({
             </span>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <a href={fileUrl} target="_blank" rel="noopener noreferrer"
-              className="p-2 hover:bg-secondary/10 text-secondary rounded-lg transition-colors text-sm font-medium flex items-center gap-1.5">
-              <ExternalLink className="w-4 h-4" />
-              <span className="hidden sm:inline">Mở link gốc</span>
-            </a>
             <button onClick={onClose} className="p-2 hover:bg-red-500/10 text-red-500 rounded-lg transition-colors">
               <X className="w-5 h-5" />
             </button>
