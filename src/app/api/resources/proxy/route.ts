@@ -19,6 +19,32 @@ export async function GET(req: Request) {
   const url = searchParams.get("url");
   if (!url) return NextResponse.json({ error: "Missing url param" }, { status: 400 });
 
+  // SEC-01 Fix: Validate URL to prevent SSRF
+  let parsedUrl: URL;
+  try {
+    parsedUrl = new URL(url);
+  } catch (e) {
+    return NextResponse.json({ error: "Invalid URL format" }, { status: 400 });
+  }
+
+  const allowedHosts = ["drive.google.com", "docs.google.com"];
+  if (!allowedHosts.includes(parsedUrl.hostname)) {
+    return NextResponse.json(
+      { error: "SSRF Protection: Only URLs from drive.google.com and docs.google.com are permitted." },
+      { status: 403 }
+    );
+  }
+
+  // SEC-10 Fix: Restrict CORS to specific allowed origins/same-origin
+  const origin = req.headers.get("origin");
+  const isAllowedOrigin = !origin || origin.startsWith("http://localhost") || origin.includes("vercel.app");
+  const corsHeaders: Record<string, string> = {
+    "Cache-Control": "public, max-age=3600",
+  };
+  if (origin && isAllowedOrigin) {
+    corsHeaders["Access-Control-Allow-Origin"] = origin;
+  }
+
   try {
     const fileId = extractFileId(url);
     // For Google Drive files, use the direct download URL
@@ -41,8 +67,7 @@ export async function GET(req: Request) {
           return new NextResponse(buf, {
             headers: {
               "Content-Type": "application/pdf",
-              "Cache-Control": "public, max-age=3600",
-              "Access-Control-Allow-Origin": "*",
+              ...corsHeaders,
             },
           });
         }
@@ -64,8 +89,7 @@ export async function GET(req: Request) {
           return new NextResponse(buf, {
             headers: {
               "Content-Type": "application/pdf",
-              "Cache-Control": "public, max-age=3600",
-              "Access-Control-Allow-Origin": "*",
+              ...corsHeaders,
             },
           });
         }
@@ -77,11 +101,11 @@ export async function GET(req: Request) {
     return new NextResponse(buffer, {
       headers: {
         "Content-Type": contentType.includes("pdf") ? "application/pdf" : contentType,
-        "Cache-Control": "public, max-age=3600",
-        "Access-Control-Allow-Origin": "*",
+        ...corsHeaders,
       },
     });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : "Internal Server Error";
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

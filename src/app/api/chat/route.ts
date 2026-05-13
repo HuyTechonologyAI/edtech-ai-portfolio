@@ -9,7 +9,39 @@ export async function POST(req: Request) {
       return NextResponse.json({ reply: "Hệ thống đang bảo trì AI (Thiếu API Key). Vui lòng để lại thông tin qua trang Liên hệ." });
     }
 
-    const { message, history } = await req.json();
+    const body = await req.json();
+    const { message, history } = body;
+
+    // SEC-05 Fix: Input validation and Prompt Injection prevention
+    if (!message || typeof message !== "string") {
+      return NextResponse.json({ reply: "Tin nhắn không hợp lệ." }, { status: 400 });
+    }
+
+    if (message.length > 500) {
+      return NextResponse.json({ reply: "Tin nhắn quá dài. Vui lòng nhập dưới 500 ký tự." }, { status: 400 });
+    }
+
+    const lowerMsg = message.toLowerCase();
+    const injectionKeywords = [
+      "ignore all instructions",
+      "ignore previous instructions",
+      "system prompt",
+      "forget all instructions",
+      "you are now",
+      "bypass",
+      "bỏ qua mọi hướng dẫn",
+      "system instruction",
+    ];
+
+    if (injectionKeywords.some((keyword) => lowerMsg.includes(keyword))) {
+      return NextResponse.json(
+        { reply: "Yêu cầu không hợp lệ do vi phạm chính sách an toàn." },
+        { status: 400 }
+      );
+    }
+
+    // Basic sanitization: strip ASCII control characters
+    const sanitizedMessage = message.replace(/[\x00-\x1F\x7F]/g, "").trim();
 
     const model = genAI.getGenerativeModel({ 
       model: "gemini-2.5-flash",
@@ -26,20 +58,16 @@ export async function POST(req: Request) {
       history: formattedHistory,
     });
 
-    const result = await chat.sendMessage(message);
+    const result = await chat.sendMessage(sanitizedMessage);
     const text = result.response.text();
 
     return NextResponse.json({ reply: text });
   } catch (error) {
-    console.error("Chat API Error:", error);
-    try {
-      // Tự động dò tìm các model được hỗ trợ nếu model hiện tại bị lỗi
-      const modelsRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${process.env.GEMINI_API_KEY}`);
-      const modelsData = await modelsRes.json();
-      const availableModels = modelsData.models?.map((m: any) => m.name.replace('models/', '')).join(", ") || "Không có model nào";
-      return NextResponse.json({ reply: `API Key của bạn chỉ hỗ trợ các Model sau: ${availableModels}. Vui lòng báo cho lập trình viên để cập nhật lại tên Model. Lỗi gốc: ${error instanceof Error ? error.message : String(error)}` }, { status: 500 });
-    } catch (fetchError) {
-      return NextResponse.json({ reply: `Lỗi kết nối Gemini: ${error instanceof Error ? error.message : String(error)}` }, { status: 500 });
-    }
+    // SEC-04 Fix: Log detailed error server-side, return safe generic message to client
+    console.error("Chat API Critical Error (Server-Side Log):", error);
+    return NextResponse.json(
+      { reply: "Hệ thống AI đang bận hoặc gặp sự cố xử lý. Vui lòng thử lại sau ít phút." },
+      { status: 500 }
+    );
   }
 }

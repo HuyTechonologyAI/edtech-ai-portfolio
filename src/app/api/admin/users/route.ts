@@ -18,8 +18,18 @@ function getAdminClient() {
   });
 }
 
+// Helper to verify admin session
+function isAuthenticatedAdmin(req: NextRequest): boolean {
+  const session = req.cookies.get("admin_session")?.value;
+  return session === "authenticated";
+}
+
 // GET: Lấy danh sách users
 export async function GET(req: NextRequest) {
+  if (!isAuthenticatedAdmin(req)) {
+    return NextResponse.json({ error: "Unauthorized access: Admin authentication required" }, { status: 401 });
+  }
+
   try {
     const adminClient = getAdminClient();
 
@@ -68,17 +78,22 @@ export async function GET(req: NextRequest) {
     };
 
     return NextResponse.json({ users: formattedUsers, stats });
-  } catch (error: any) {
+  } catch (error) {
     console.error("GET /api/admin/users error:", error);
+    const msg = error instanceof Error ? error.message : "Không thể lấy danh sách người dùng";
     return NextResponse.json(
-      { error: error.message || "Không thể lấy danh sách người dùng" },
-      { status: error.message?.includes("SERVICE_ROLE_KEY") ? 503 : 500 }
+      { error: msg },
+      { status: msg.includes("SERVICE_ROLE_KEY") ? 503 : 500 }
     );
   }
 }
 
 // PATCH: Cập nhật user (role, premium status, ban/unban)
 export async function PATCH(req: NextRequest) {
+  if (!isAuthenticatedAdmin(req)) {
+    return NextResponse.json({ error: "Unauthorized access: Admin authentication required" }, { status: 401 });
+  }
+
   try {
     const adminClient = getAdminClient();
     const { userId, action, value } = await req.json();
@@ -87,7 +102,7 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "userId is required" }, { status: 400 });
     }
 
-    let updateData: any = {};
+    let updateData: Record<string, unknown> = {};
 
     switch (action) {
       case "setRole":
@@ -130,10 +145,11 @@ export async function PATCH(req: NextRequest) {
     if (error) throw error;
 
     return NextResponse.json({ success: true, user: data.user });
-  } catch (error: any) {
+  } catch (error) {
     console.error("PATCH /api/admin/users error:", error);
+    const msg = error instanceof Error ? error.message : "Không thể cập nhật người dùng";
     return NextResponse.json(
-      { error: error.message || "Không thể cập nhật người dùng" },
+      { error: msg },
       { status: 500 }
     );
   }
@@ -141,6 +157,10 @@ export async function PATCH(req: NextRequest) {
 
 // DELETE: Xóa user
 export async function DELETE(req: NextRequest) {
+  if (!isAuthenticatedAdmin(req)) {
+    return NextResponse.json({ error: "Unauthorized access: Admin authentication required" }, { status: 401 });
+  }
+
   try {
     const adminClient = getAdminClient();
     const { searchParams } = new URL(req.url);
@@ -155,10 +175,11 @@ export async function DELETE(req: NextRequest) {
     if (error) throw error;
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
+  } catch (error) {
     console.error("DELETE /api/admin/users error:", error);
+    const msg = error instanceof Error ? error.message : "Không thể xóa người dùng";
     return NextResponse.json(
-      { error: error.message || "Không thể xóa người dùng" },
+      { error: msg },
       { status: 500 }
     );
   }

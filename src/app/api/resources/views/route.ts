@@ -1,10 +1,46 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
+// In-memory rate limiter for views to prevent spam/DoS (SEC-06)
+const viewAttempts = new Map<string, { count: number; resetAt: number }>();
+const MAX_VIEWS_PER_MIN = 20;
+const VIEW_WINDOW_MS = 60 * 1000; // 1 minute
+
+function getClientIp(req: Request): string {
+  return (
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    req.headers.get("x-real-ip") ||
+    "unknown"
+  );
+}
+
+function checkViewRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const entry = viewAttempts.get(ip);
+  if (!entry || now > entry.resetAt) {
+    viewAttempts.set(ip, { count: 1, resetAt: now + VIEW_WINDOW_MS });
+    return true;
+  }
+  if (entry.count >= MAX_VIEWS_PER_MIN) {
+    return false;
+  }
+  entry.count += 1;
+  return true;
+}
+
 // POST — Record a new view for a resource
 export async function POST(req: Request) {
+  const ip = getClientIp(req);
+  if (!checkViewRateLimit(ip)) {
+    return NextResponse.json(
+      { error: "Rate limit exceeded. Please wait before recording more views." },
+      { status: 429 }
+    );
+  }
+
   try {
-    const { resourceId } = await req.json();
+    const body = await req.json();
+    const { resourceId } = body;
     if (!resourceId) return NextResponse.json({ error: "Missing resourceId" }, { status: 400 });
 
     const { error } = await supabase.from("resource_views").insert([{
@@ -14,8 +50,9 @@ export async function POST(req: Request) {
     if (error) throw error;
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error) {
+    console.error("Views API POST Error (Server-side):", error);
+    return NextResponse.json({ error: "Could not record view" }, { status: 500 });
   }
 }
 
@@ -80,7 +117,8 @@ export async function GET(req: Request) {
 
       return NextResponse.json({ stats: statsMap });
     }
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error) {
+    console.error("Views API GET Error (Server-side):", error);
+    return NextResponse.json({ error: "Could not fetch views statistics" }, { status: 500 });
   }
 }

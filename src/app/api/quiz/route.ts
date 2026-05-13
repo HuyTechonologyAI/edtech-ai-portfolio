@@ -9,8 +9,34 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing API Key" }, { status: 500 });
     }
 
-    const { topic } = await req.json();
-    const userTopic = topic && topic.trim() !== "" ? topic : "Trí Tuệ Nhân Tạo (AI) và Tự động hóa doanh nghiệp";
+    const body = await req.json();
+    const { topic } = body;
+
+    // SEC-05 Fix: Validate topic input to prevent prompt injection
+    if (topic && typeof topic === "string") {
+      if (topic.length > 200) {
+        return NextResponse.json({ error: "Chủ đề quá dài. Vui lòng nhập dưới 200 ký tự." }, { status: 400 });
+      }
+
+      const lowerTopic = topic.toLowerCase();
+      const injectionKeywords = [
+        "ignore",
+        "bypass",
+        "system prompt",
+        "instruction",
+        "bỏ qua",
+        "forget",
+        "override",
+      ];
+
+      if (injectionKeywords.some((kw) => lowerTopic.includes(kw))) {
+        return NextResponse.json({ error: "Chủ đề chứa nội dung không hợp lệ." }, { status: 400 });
+      }
+    }
+
+    const userTopic = topic && typeof topic === "string" && topic.trim() !== "" 
+      ? topic.replace(/[\x00-\x1F\x7F]/g, "").trim() 
+      : "Trí Tuệ Nhân Tạo (AI) và Tự động hóa doanh nghiệp";
 
     const model = genAI.getGenerativeModel({ 
       model: "gemini-2.5-flash",
@@ -46,7 +72,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ questions });
   } catch (error: any) {
-    console.error("Quiz API Error:", error);
-    return NextResponse.json({ error: error.message || "Failed to generate quiz" }, { status: 500 });
+    console.error("Quiz API Error (Server-side log):", error);
+    return NextResponse.json({ error: "Hệ thống không thể tạo câu hỏi lúc này. Vui lòng thử lại sau." }, { status: 500 });
   }
 }

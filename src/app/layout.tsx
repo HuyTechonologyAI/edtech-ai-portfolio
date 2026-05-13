@@ -9,8 +9,7 @@ import { FloatingOrbs } from "@/components/FloatingOrbs";
 import { AuthProvider } from "@/components/AuthProvider";
 import { UserMenu } from "@/components/UserMenu";
 
-import { GoogleAnalytics } from "@next/third-parties/google";
-import Script from "next/script";
+import { GoogleTagManager } from "@next/third-parties/google";
 import Link from "next/link";
 
 const jakarta = Plus_Jakarta_Sans({
@@ -58,29 +57,13 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
-        {/* Meta Pixel Code Placeholder */}
-        <Script id="meta-pixel" strategy="afterInteractive">
-          {`
-            !function(f,b,e,v,n,t,s)
-            {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-            n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-            if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-            n.queue=[];t=b.createElement(e);t.async=!0;
-            t.src=v;s=b.getElementsByTagName(e)[0];
-            s.parentNode.insertBefore(t,s)}(window, document,'script',
-            'https://connect.facebook.net/en_US/fbevents.js');
-            fbq('init', '1234567890'); /* THAY ID PIXEL CỦA BẠN VÀO ĐÂY */
-            fbq('track', 'PageView');
-          `}
-        </Script>
       </head>
       <body className="min-h-full flex flex-col font-sans bg-background text-foreground selection:bg-secondary selection:text-black cursor-auto md:cursor-none">
         <div className="hidden md:block">
           <CustomCursor />
         </div>
         <FloatingOrbs />
-        {/* Google Analytics component */}
-        <GoogleAnalytics gaId="G-XYZ123456" /> {/* THAY ID GOOGLE ANALYTICS VÀO ĐÂY */}
+        <GoogleTagManager gtmId="GTM-5355K5SN" />
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
