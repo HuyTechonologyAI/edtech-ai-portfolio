@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import Link from "next/link";
-import { LogIn, LogOut, ChevronDown } from "lucide-react";
+import { LogIn, LogOut, ChevronDown, User } from "lucide-react";
 
 export function UserMenu() {
   const { user, loading, signOut } = useAuth();
@@ -66,6 +66,11 @@ export function UserMenu() {
               ⚙️ Quản trị Admin
             </Link>
           )}
+
+          <Link href="/profile" onClick={() => setOpen(false)}
+            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-foreground/80 hover:text-foreground hover:bg-white/5 rounded-lg transition-colors font-bold">
+            <User className="w-4 h-4 text-secondary" /> Thông tin cá nhân
+          </Link>
 
           <Link href="/checkout" onClick={() => setOpen(false)}
             className="w-full flex items-center gap-2 px-3 py-2 text-sm text-secondary hover:bg-secondary/10 rounded-lg transition-colors font-bold">
