@@ -31,8 +31,8 @@ export async function POST(req: NextRequest) {
 
       const order = data?.[0];
       const bankId = process.env.NEXT_PUBLIC_BANK_ID || "MB";
-      const accountNo = process.env.NEXT_PUBLIC_ACCOUNT_NO || "0987654321";
-      const accountName = encodeURIComponent(process.env.NEXT_PUBLIC_ACCOUNT_NAME || "NGO KIEN HUY");
+      const accountNo = process.env.NEXT_PUBLIC_ACCOUNT_NO || "0941214544";
+      const accountName = encodeURIComponent(process.env.NEXT_PUBLIC_ACCOUNT_NAME || "NGO QUOC HUY");
       
       // Khởi tạo VietQR URL cấu trúc chuẩn quốc gia
       const qrUrl = `https://img.vietqr.io/image/${bankId}-${accountNo}-compact2.png?amount=${amount}&addInfo=${memoCode}&accountName=${accountName}`;
@@ -41,8 +41,8 @@ export async function POST(req: NextRequest) {
     } catch (dbError: any) {
       // Fallback mô phỏng giao dịch cao cấp
       const bankId = process.env.NEXT_PUBLIC_BANK_ID || "MB";
-      const accountNo = process.env.NEXT_PUBLIC_ACCOUNT_NO || "0987654321";
-      const accountName = encodeURIComponent(process.env.NEXT_PUBLIC_ACCOUNT_NAME || "NGO KIEN HUY");
+      const accountNo = process.env.NEXT_PUBLIC_ACCOUNT_NO || "0941214544";
+      const accountName = encodeURIComponent(process.env.NEXT_PUBLIC_ACCOUNT_NAME || "NGO QUOC HUY");
       const qrUrl = `https://img.vietqr.io/image/${bankId}-${accountNo}-compact2.png?amount=${amount}&addInfo=${memoCode}&accountName=${accountName}`;
 
       return NextResponse.json({ 

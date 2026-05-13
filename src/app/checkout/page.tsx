@@ -54,8 +54,8 @@ export default function CheckoutPage() {
 
   // Read environment dynamic configs safely
   const bankId = process.env.NEXT_PUBLIC_BANK_ID || "MB";
-  const accountNo = process.env.NEXT_PUBLIC_ACCOUNT_NO || "0987654321";
-  const accountName = process.env.NEXT_PUBLIC_ACCOUNT_NAME || "NGO KIEN HUY";
+  const accountNo = process.env.NEXT_PUBLIC_ACCOUNT_NO || "0941214544";
+  const accountName = process.env.NEXT_PUBLIC_ACCOUNT_NAME || "NGO QUOC HUY";
 
   // Trigger backend Order generation payload reactive to plan selections
   const initOrder = useCallback(async (targetPrice: number) => {
