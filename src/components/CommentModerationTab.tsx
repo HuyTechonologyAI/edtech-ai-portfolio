@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Loader2, CheckCircle, XCircle, Trash2, Star, MessageSquare, AlertCircle } from "lucide-react";
+import { useAuth } from "@/components/AuthProvider";
 
 interface CommentItem {
   id: number;
@@ -15,9 +16,31 @@ interface CommentItem {
 }
 
 export default function CommentModerationTab() {
+  const { user } = useAuth();
   const [comments, setComments] = useState<CommentItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
+
+  const logAudit = async (actionType: string, targetResource: string, details: any = {}) => {
+    if (!user) return;
+    try {
+      const uMeta = (user as any).user_metadata || {};
+      await fetch("/api/admin/audit-logs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user.id,
+          userEmail: user.email,
+          userName: uMeta.full_name || uMeta.name || null,
+          actionType,
+          targetResource,
+          details,
+        }),
+      });
+    } catch {
+      // silent fail telemetry hook
+    }
+  };
 
   const fetchComments = useCallback(async () => {
     setIsLoading(true);
@@ -39,6 +62,7 @@ export default function CommentModerationTab() {
 
   const updateStatus = async (id: number, targetStatus: string) => {
     try {
+      const targetComm = comments.find(c => c.id === id);
       const res = await fetch(`/api/admin/comments?id=${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -49,6 +73,13 @@ export default function CommentModerationTab() {
       setComments((prev) =>
         prev.map((c) => (c.id === id ? { ...c, status: targetStatus } : c))
       );
+
+      // Log telemetries
+      logAudit(
+        targetStatus === "approved" ? "APPROVE_COMMENT" : "REJECT_COMMENT",
+        `Bình luận #${id} của ${targetComm?.user_email || "Học viên"}`,
+        { id, previousStatus: targetComm?.status, newStatus: targetStatus, content: targetComm?.content }
+      );
     } catch (err: any) {
       alert("Lỗi: " + err.message);
     }
@@ -57,9 +88,18 @@ export default function CommentModerationTab() {
   const deleteComment = async (id: number) => {
     if (!confirm("Bạn có chắc chắn muốn xóa vĩnh viễn bình luận này?")) return;
     try {
+      const targetComm = comments.find(c => c.id === id);
       const res = await fetch(`/api/admin/comments?id=${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Xóa thất bại");
+      
       setComments((prev) => prev.filter((c) => c.id !== id));
+
+      // Log telemetries
+      logAudit(
+        "DELETE_COMMENT",
+        `Bình luận #${id} của ${targetComm?.user_email || "Học viên"}`,
+        { id, content: targetComm?.content }
+      );
     } catch (err: any) {
       alert("Lỗi: " + err.message);
     }

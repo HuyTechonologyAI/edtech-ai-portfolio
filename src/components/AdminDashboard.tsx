@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { LogOut, Video, FileText, Plus, Trash2, Pencil, Loader2, X, Save, Eye, BarChart3, Users, Crown, MessageSquare, Shield } from "lucide-react";
+import { LogOut, Video, FileText, Plus, Trash2, Pencil, Loader2, X, Save, Eye, BarChart3, Users, Crown, MessageSquare, Shield, ClipboardList } from "lucide-react";
 import UserManagementTab from "./UserManagementTab";
 import CommentModerationTab from "./CommentModerationTab";
 import RoleDelegationTab from "./RoleDelegationTab";
+import AuditLogsTab from "./AuditLogsTab";
 import { useAuth } from "@/components/AuthProvider";
 
 interface ViewStats {
@@ -19,7 +20,7 @@ interface ViewStats {
 export default function AdminDashboard() {
   const router = useRouter();
   const { user, loading: authLoading, signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState<"videos" | "resources" | "users" | "premium" | "comments" | "roles">("videos");
+  const [activeTab, setActiveTab] = useState<"videos" | "resources" | "users" | "premium" | "comments" | "roles" | "logs">("videos");
   const [items, setItems] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -62,6 +63,27 @@ export default function AdminDashboard() {
     }
   }, [activeTab]);
 
+  const logAudit = async (actionType: string, targetResource: string, details: any = {}) => {
+    if (!user) return;
+    try {
+      const uMeta = (user as any).user_metadata || {};
+      await fetch("/api/admin/audit-logs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user.id,
+          userEmail: user.email,
+          userName: uMeta.full_name || uMeta.name || null,
+          actionType,
+          targetResource,
+          details,
+        }),
+      });
+    } catch {
+      // fail silently for telemetry
+    }
+  };
+
   const handleLogout = async () => {
     await fetch("/api/admin/logout", { method: "POST" });
     router.push("/admin/login");
@@ -70,7 +92,18 @@ export default function AdminDashboard() {
   const handleDelete = async (id: number) => {
     if (!confirm("Bạn có chắc chắn muốn xóa mục này?")) return;
     try {
+      const deletedItem = items.find(i => i.id === id);
+      const title = deletedItem?.title || `#${id}`;
+      
       await fetch(`/api/${activeTab}?id=${id}`, { method: "DELETE" });
+      
+      // Log telemetries
+      logAudit(
+        activeTab === "videos" ? "DELETE_VIDEO" : "DELETE_RESOURCE",
+        `${activeTab === "videos" ? "Video" : "Tài liệu"}: ${title}`,
+        { id }
+      );
+      
       fetchData();
     } catch (error) {
       alert("Lỗi khi xóa");
@@ -134,6 +167,13 @@ export default function AdminDashboard() {
         throw new Error(err.error || "Lỗi cập nhật");
       }
 
+      // Log telemetries
+      logAudit(
+        activeTab === "videos" ? "UPDATE_VIDEO" : "UPDATE_RESOURCE",
+        `${activeTab === "videos" ? "Video" : "Tài liệu"}: ${payload.title}`,
+        { id: editingId, ...payload }
+      );
+
       setEditingId(null);
       setFormData({});
       fetchData();
@@ -162,6 +202,13 @@ export default function AdminDashboard() {
         const err = await res.json();
         throw new Error(err.error || "Lỗi khi thêm mới");
       }
+
+      // Log telemetries
+      logAudit(
+        activeTab === "videos" ? "CREATE_VIDEO" : "CREATE_RESOURCE",
+        `${activeTab === "videos" ? "Video" : "Tài liệu"}: ${payload.title}`,
+        { ...payload }
+      );
 
       setIsAdding(false);
       setFormData({});
@@ -394,6 +441,12 @@ export default function AdminDashboard() {
           >
             <MessageSquare className="w-5 h-5" /> Quản lý Bình luận
           </button>
+          <button 
+            onClick={() => {setActiveTab("logs"); setIsAdding(false); setEditingId(null);}}
+            className={`flex items-center gap-3 p-4 rounded-xl transition-all ${activeTab === "logs" ? "bg-blue-500/10 border border-blue-500/30 text-blue-400" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
+          >
+            <ClipboardList className="w-5 h-5 text-blue-400" /> Nhật ký Thao tác
+          </button>
         </div>
 
         {/* Content */}
@@ -402,6 +455,8 @@ export default function AdminDashboard() {
             <UserManagementTab />
           ) : activeTab === "roles" ? (
             <RoleDelegationTab />
+          ) : activeTab === "logs" ? (
+            <AuditLogsTab />
           ) : activeTab === "comments" ? (
             <CommentModerationTab />
           ) : (

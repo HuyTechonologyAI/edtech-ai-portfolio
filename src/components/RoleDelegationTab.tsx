@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Shield, Search, UserCheck, UserX, Plus, RefreshCw, Loader2, CheckCircle2, AlertTriangle, Eye, X, Crown, FileText, Video, MessageSquare, Trash2 } from "lucide-react";
+import { useAuth } from "@/components/AuthProvider";
 
 interface UserItem {
   id: string;
@@ -20,6 +21,7 @@ interface UserItem {
 }
 
 export default function RoleDelegationTab() {
+  const { user } = useAuth();
   const [users, setUsers] = useState<UserItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -35,6 +37,27 @@ export default function RoleDelegationTab() {
   const [canModerateComments, setCanModerateComments] = useState(false);
   const [canGrantPremium, setCanGrantPremium] = useState(false);
   const [assignRoleAdmin, setAssignRoleAdmin] = useState(false);
+
+  const logAudit = async (actionType: string, targetResource: string, details: any = {}) => {
+    if (!user) return;
+    try {
+      const uMeta = (user as any).user_metadata || {};
+      await fetch("/api/admin/audit-logs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user.id,
+          userEmail: user.email,
+          userName: uMeta.full_name || uMeta.name || null,
+          actionType,
+          targetResource,
+          details,
+        }),
+      });
+    } catch {
+      // silent telemetry fallback
+    }
+  };
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -87,6 +110,17 @@ export default function RoleDelegationTab() {
         await patchUserProperty(selectedCandidate.id, "setRole", targetRole);
       }
 
+      // Log telemetries
+      logAudit(
+        "APPOINT_ROLE",
+        `Tài khoản: ${selectedCandidate.email}`,
+        {
+          targetUserId: selectedCandidate.id,
+          permissions: { canManageContent, canModerateComments, canGrantPremium },
+          assignedRole: targetRole,
+        }
+      );
+
       setIsModalOpen(false);
       setSelectedCandidate(null);
       await fetchUsers();
@@ -98,22 +132,29 @@ export default function RoleDelegationTab() {
   };
 
   // 2. Revoke/Remove Access Entirely
-  const handleRevokeAccess = async (user: UserItem) => {
-    if (!confirm(`Thu hồi toàn bộ quyền quản trị của tài khoản "${user.email}"?\nTài khoản sẽ trở về trạng thái học viên tiêu chuẩn.`)) return;
+  const handleRevokeAccess = async (targetUser: UserItem) => {
+    if (!confirm(`Thu hồi toàn bộ quyền quản trị của tài khoản "${targetUser.email}"?\nTài khoản sẽ trở về trạng thái học viên tiêu chuẩn.`)) return;
 
-    setActionLoading(user.id);
+    setActionLoading(targetUser.id);
     try {
       // Clear permissions metadata object
-      await patchUserProperty(user.id, "setPermissions", {
+      await patchUserProperty(targetUser.id, "setPermissions", {
         canManageContent: false,
         canModerateComments: false,
         canGrantPremium: false,
       });
 
       // Demote role if currently admin
-      if (user.role === "admin") {
-        await patchUserProperty(user.id, "setRole", "user");
+      if (targetUser.role === "admin") {
+        await patchUserProperty(targetUser.id, "setRole", "user");
       }
+
+      // Log telemetries
+      logAudit(
+        "REVOKE_ROLE",
+        `Tài khoản: ${targetUser.email}`,
+        { targetUserId: targetUser.id }
+      );
 
       await fetchUsers();
     } catch (err: any) {
