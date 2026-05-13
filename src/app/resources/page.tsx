@@ -19,6 +19,7 @@ export default function ResourcesPage() {
   const { user } = useAuth();
   const [resources, setResources] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
   const [viewerState, setViewerState] = useState<{isOpen: boolean; url: string; title: string; resourceId: number | undefined; isPremium?: boolean}>({
     isOpen: false,
     url: "",
@@ -27,6 +28,25 @@ export default function ResourcesPage() {
     isPremium: false
   });
   const [allViewStats, setAllViewStats] = useState<Record<number, ViewStats>>({});
+
+  // Auto-emit SEARCH_QUERY telemetry metrics
+  useEffect(() => {
+    const q = searchQuery.trim();
+    if (!q || q.length < 2) return;
+    const timeout = setTimeout(() => {
+      fetch("/api/metrics", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userEmail: user?.email || "anonymous@zentratech.io",
+          activityType: "SEARCH_QUERY",
+          targetItem: q,
+          metadata: { route: "/resources" },
+        }),
+      }).catch(() => {});
+    }, 1200);
+    return () => clearTimeout(timeout);
+  }, [searchQuery, user]);
 
   useEffect(() => {
     const fetchResources = async () => {
@@ -89,6 +109,8 @@ export default function ResourcesPage() {
             </div>
             <input
               type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
               placeholder="Tìm kiếm tài liệu..."
               className="pl-10 pr-4 py-2 w-full md:w-64 rounded-lg border border-border bg-surface text-foreground focus:outline-none focus:ring-2 focus:ring-secondary/50"
             />
@@ -122,7 +144,7 @@ export default function ResourcesPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {resources.map((item) => {
+            {resources.filter(r => !searchQuery || r.title?.toLowerCase().includes(searchQuery.toLowerCase()) || r.description?.toLowerCase().includes(searchQuery.toLowerCase())).map((item) => {
               const stats = allViewStats[item.id];
               const totalViews = stats?.total || 0;
               const todayViews = stats?.today || 0;

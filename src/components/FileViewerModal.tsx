@@ -108,12 +108,24 @@ export function FileViewerModal({
         setHasRecordedView(true);
         fetchViewStats();
       }).catch(console.error);
+
+      // Global AI Telemetry Metrics stream trigger hook
+      fetch("/api/metrics", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userEmail: user?.email || "anonymous@zentratech.io",
+          activityType: "VIEW_RESOURCE",
+          targetItem: title,
+          metadata: { resourceId, isPremium },
+        }),
+      }).catch(() => {});
     }
     if (isOpen && resourceId) fetchViewStats();
     if (!isOpen) {
       setHasRecordedView(false);
     }
-  }, [isOpen, resourceId]);
+  }, [isOpen, resourceId, title, isPremium, user]);
 
   const fetchViewStats = useCallback(async () => {
     if (!resourceId) return;
