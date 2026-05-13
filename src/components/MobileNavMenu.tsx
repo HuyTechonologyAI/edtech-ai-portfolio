@@ -3,9 +3,11 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, Home, Map, FileText, Video, Layers, Gift, PhoneCall, Sparkles } from "lucide-react";
+import { Menu, X, Home, Map, FileText, Video, Layers, Gift, PhoneCall, Sparkles, User, ShieldCheck, LogOut, DollarSign } from "lucide-react";
+import { useAuth } from "@/components/AuthProvider";
 
 export function MobileNavMenu() {
+  const { user, isAdmin, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
 
@@ -110,37 +112,98 @@ export function MobileNavMenu() {
             </button>
           </div>
 
-          {/* Danh mục trượt */}
-          <div className="space-y-3 my-auto py-4 overflow-y-auto max-h-[60vh]">
-            {fullLinks.map((link) => {
-              const Icon = link.icon;
-              const isActive = pathname === link.href;
+          {/* Khu vực danh mục trượt tổng hợp */}
+          <div className="space-y-6 my-auto py-4 overflow-y-auto max-h-[65vh]">
+            
+            {/* NHÓM 1: KHÁM PHÁ & THƯ VIỆN */}
+            <div className="space-y-2">
+              <div className="text-[10px] font-bold text-foreground/40 uppercase tracking-widest px-1">
+                📌 Khám phá &amp; Thư viện
+              </div>
+              <div className="space-y-2.5 pt-1">
+                {fullLinks.map((link) => {
+                  const Icon = link.icon;
+                  const isActive = pathname === link.href;
 
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`flex items-center gap-4 px-5 py-4 rounded-2xl text-base font-bold transition-all ${
-                    link.isSpecial
-                      ? "bg-secondary/10 border border-secondary/30 text-secondary shadow-[0_0_20px_rgba(0,255,133,0.2)]"
-                      : link.isReward
-                      ? "bg-orange-500/10 border border-orange-500/30 text-orange-400 shadow-[0_0_20px_rgba(249,115,22,0.2)]"
-                      : isActive
-                      ? "bg-surface text-secondary border border-white/10"
-                      : "text-foreground/80 hover:bg-surface/50 border border-transparent"
-                  }`}
-                >
-                  <Icon className={`w-5 h-5 shrink-0 ${link.isSpecial ? "text-secondary" : link.isReward ? "text-orange-400" : isActive ? "text-secondary" : "text-foreground/50"}`} />
-                  <span>{link.label}</span>
-                </Link>
-              );
-            })}
+                  return (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      className={`flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-bold transition-all ${
+                        link.isSpecial
+                          ? "bg-secondary/10 border border-secondary/30 text-secondary shadow-[0_0_15px_rgba(0,255,133,0.15)]"
+                          : link.isReward
+                          ? "bg-orange-500/10 border border-orange-500/30 text-orange-400 shadow-[0_0_15px_rgba(249,115,22,0.15)]"
+                          : isActive
+                          ? "bg-surface text-secondary border border-white/10"
+                          : "text-foreground/80 hover:bg-surface/50 border border-transparent"
+                      }`}
+                    >
+                      <Icon className={`w-4 h-4 shrink-0 ${link.isSpecial ? "text-secondary" : link.isReward ? "text-orange-400" : isActive ? "text-secondary" : "text-foreground/50"}`} />
+                      <span>{link.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* NHÓM 2: TÀI KHOẢN & QUẢN TRỊ (Hiển thị khi đã đăng nhập) */}
+            {user && (
+              <div className="space-y-2 pt-2 border-t border-white/5">
+                <div className="text-[10px] font-bold text-secondary/80 uppercase tracking-widest px-1 flex items-center gap-1">
+                  <User className="w-3 h-3" />
+                  <span>🔑 Tài khoản của tôi</span>
+                </div>
+
+                <div className="space-y-2.5 pt-1">
+                  {/* Link Admin (nếu có quyền) */}
+                  {isAdmin && (
+                    <Link
+                      href="/admin"
+                      className="flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-bold bg-amber-500/10 border border-amber-500/30 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.1)]"
+                    >
+                      <ShieldCheck className="w-4 h-4 shrink-0 text-amber-400" />
+                      <span>Bảng Điều Khiển Admin CMS</span>
+                    </Link>
+                  )}
+
+                  {/* Link Hồ sơ cá nhân */}
+                  <Link
+                    href="/profile"
+                    className="flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-bold bg-surface border border-white/5 text-foreground hover:border-white/10"
+                  >
+                    <User className="w-4 h-4 shrink-0 text-foreground/60" />
+                    <span>Thông Tin Tài Khoản</span>
+                  </Link>
+
+                  {/* Link Affiliate MMO */}
+                  <Link
+                    href="/affiliate"
+                    className="flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-bold bg-surface border border-white/5 text-secondary hover:border-secondary/30"
+                  >
+                    <DollarSign className="w-4 h-4 shrink-0 text-secondary" />
+                    <span>Bảng Điều Khiển Kiếm Tiền MMO</span>
+                  </Link>
+
+                  {/* Nút Đăng xuất */}
+                  <button
+                    type="button"
+                    onClick={() => { logout(); setIsOpen(false); }}
+                    className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-bold bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition-all text-left cursor-pointer"
+                  >
+                    <LogOut className="w-4 h-4 shrink-0 text-red-400" />
+                    <span>Đăng xuất khỏi thiết bị</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
           </div>
 
           {/* Footer thông tin đệm */}
           <div className="mt-auto pt-4 border-t border-white/5 text-center">
             <p className="text-[10px] text-foreground/40">
-              Thiết kế tối ưu hóa chạm tay (Thumb-driven layout) cho smartphone.
+              {user ? `Đăng nhập với tư cách: ${user.email}` : "Hệ thống hỗ trợ thao tác mượt mà trên di động."}
             </p>
           </div>
 

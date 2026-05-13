@@ -80,10 +80,10 @@ export function AIChatbot() {
       {/* Floating Button */}
       <button
         onClick={() => setIsOpen(true)}
-        className={`fixed bottom-6 right-6 w-14 h-14 bg-secondary text-black rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(0,255,133,0.4)] hover:scale-110 hover:shadow-[0_0_30px_rgba(0,255,133,0.6)] transition-all z-50 ${isOpen ? "hidden" : "flex"}`}
+        className={`fixed bottom-24 md:bottom-6 right-4 md:right-6 w-12 h-12 md:w-14 md:h-14 bg-secondary text-black rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(0,255,133,0.4)] hover:scale-110 hover:shadow-[0_0_30px_rgba(0,255,133,0.6)] transition-all z-50 ${isOpen ? "hidden" : "flex"}`}
         aria-label="Open AI Chatbot"
       >
-        <MessageSquare className="w-6 h-6" />
+        <MessageSquare className="w-5 h-5 md:w-6 md:h-6" />
       </button>
 
       {/* Chat Window */}
