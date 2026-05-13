@@ -206,7 +206,7 @@ export default function PricingPage() {
                   {/* Danh sách checkmark */}
                   <div className="space-y-2.5 pt-2">
                     <div className="text-[11px] font-bold uppercase tracking-wider text-foreground/40">Đặc quyền bao gồm:</div>
-                    {tier.features.map((feat, idx) => (
+                    {tier.features?.map((feat: any, idx: number) => (
                       <div key={idx} className="flex items-start gap-2 text-xs text-foreground/80">
                         <Check className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${tier.featured ? 'text-secondary' : 'text-secondary/60'}`} />
                         <span>{feat}</span>
@@ -258,7 +258,7 @@ export default function PricingPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5 text-xs">
-                {matrixFeatures.map((row, idx) => (
+                {matrixFeatures.map((row: any, idx: number) => (
                   <tr key={idx} className="hover:bg-white/5 transition-colors">
                     <td className="p-4 font-medium text-foreground/80">{row.name}</td>
                     

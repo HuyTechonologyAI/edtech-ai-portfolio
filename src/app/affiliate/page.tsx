@@ -311,7 +311,7 @@ export default function AffiliatePage() {
               </p>
 
               <div className="space-y-3 pt-2">
-                {topEarners.map((item) => (
+                {topEarners.map((item: any) => (
                   <div
                     key={item.rank}
                     className={`p-3 rounded-xl flex items-center justify-between gap-3 transition-all ${
