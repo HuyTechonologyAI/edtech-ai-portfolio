@@ -8,6 +8,7 @@ import { CustomCursor } from "@/components/CustomCursor";
 import { FloatingOrbs } from "@/components/FloatingOrbs";
 import { AuthProvider } from "@/components/AuthProvider";
 import { UserMenu } from "@/components/UserMenu";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 import { GoogleTagManager } from "@next/third-parties/google";
 import Link from "next/link";
@@ -81,8 +82,9 @@ export default function RootLayout({
                   <Link href="/resources" className="text-sm font-medium text-foreground/80 hover:text-secondary transition-colors">Tài liệu</Link>
                   <Link href="/videos" className="text-sm font-medium text-foreground/80 hover:text-secondary transition-colors">Videos</Link>
                 </nav>
-                <div className="flex items-center gap-3">
-                  <Link href="/contact" className="px-5 py-2 bg-secondary/10 text-secondary border border-secondary/50 rounded-full text-sm font-bold hover:bg-secondary hover:text-black hover:shadow-[0_0_20px_rgba(0,255,133,0.4)] transition-all hidden sm:block">
+                <div className="flex items-center gap-2.5">
+                  <LanguageSwitcher />
+                  <Link href="/contact" className="px-4 py-2 bg-secondary/10 text-secondary border border-secondary/50 rounded-full text-sm font-bold hover:bg-secondary hover:text-black hover:shadow-[0_0_20px_rgba(0,255,133,0.4)] transition-all hidden sm:block">
                     Liên hệ
                   </Link>
                   <UserMenu />
