@@ -2,10 +2,14 @@ import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
+  let workflowContent = "";
+  let platformType = "n8n";
+
   try {
     const apiKey = process.env.GEMINI_API_KEY;
     const body = await req.json();
-    const { workflowContent, platformType = "n8n" } = body;
+    workflowContent = body?.workflowContent || "";
+    platformType = body?.platformType || "n8n";
 
     if (!workflowContent || typeof workflowContent !== "string") {
       return NextResponse.json({ error: "Nội dung workflow không hợp lệ hoặc rỗng." }, { status: 400 });
@@ -71,8 +75,8 @@ export async function POST(req: Request) {
     console.error("Auto-Grader AI Fallback triggered:", error);
     
     // Phân tích heuristic tĩnh trên chuỗi văn bản nếu API rớt
-    const contentLower = (body?.workflowContent || "").toLowerCase();
-    const isMake = body?.platformType === "make";
+    const contentLower = workflowContent.toLowerCase();
+    const isMake = platformType === "make";
 
     const isComplex = contentLower.length > 500 || contentLower.includes("http") || contentLower.includes("webhook");
     const hasLoop = contentLower.includes("split") || contentLower.includes("loop") || contentLower.includes("iterate");
