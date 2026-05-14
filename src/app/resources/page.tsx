@@ -42,6 +42,28 @@ export default function ResourcesPage() {
   });
   const [allViewStats, setAllViewStats] = useState<Record<number, ViewStats>>({});
   const [downloadingId, setDownloadingId] = useState<number | null>(null);
+  const [quotaUsed, setQuotaUsed] = useState<{ reads: number; downloads: number }>({ reads: 0, downloads: 0 });
+
+  const loadQuotaState = () => {
+    const todayStr = new Date().toISOString().split("T")[0];
+    const storageKey = "zentratech_freemium_usage_tracker";
+    try {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.date === todayStr) {
+          setQuotaUsed({
+            reads: parsed.readDocs ? parsed.readDocs.length : 0,
+            downloads: parsed.downloadedDocs ? parsed.downloadedDocs.length : 0
+          });
+        }
+      }
+    } catch { /* ignore */ }
+  };
+
+  useEffect(() => {
+    loadQuotaState();
+  }, []);
 
   // CƠ CHẾ KIỂM SOÁT QUOTA TÀI KHOẢN MIỄN PHÍ VÀ KHÁCH VÃNG LAI
   // Giới hạn: Đọc tối đa 2 tài liệu/ngày, Tải 1 tài liệu miễn phí/ngày
@@ -87,18 +109,17 @@ export default function ResourcesPage() {
 
     try {
       localStorage.setItem(storageKey, JSON.stringify(tracker));
+      loadQuotaState();
     } catch { /* ignore */ }
 
     return true;
   };
 
-  const handleSecureDownload = async (id: number, isPremium: boolean, rawLink: string) => {
+  const handleSecureDownload = async (id: number, isPremium: boolean) => {
     if (!isPremium) {
       if (!checkFreemiumQuota("DOWNLOAD_DOC", id.toString())) {
         return;
       }
-      window.open(`/api/resources/proxy?url=${encodeURIComponent(rawLink)}`, "_blank");
-      return;
     }
 
     setDownloadingId(id);
@@ -242,6 +263,30 @@ export default function ResourcesPage() {
             />
           </div>
         </div>
+
+        {/* Banner thông báo Lượt xem/Tải giới hạn trong ngày cho Freemember / Khách */}
+        {(!user || (user?.app_metadata?.is_premium !== true && (user as any)?.user_metadata?.is_premium !== true && user?.app_metadata?.role !== "admin" && (user as any)?.user_metadata?.role !== "admin")) && (
+          <div className="mb-8 bg-gradient-to-r from-surface to-surface/40 border border-secondary/30 p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center border border-secondary/20 shrink-0">
+                <Lock className="w-5 h-5 text-secondary animate-pulse" />
+              </div>
+              <div>
+                <div className="text-xs font-bold text-foreground">Hạn mức quyền lợi Freemember / Khách vãng lai</div>
+                <div className="text-[11px] text-foreground/70">
+                  Hôm nay còn lại: Đọc online <strong className="text-secondary">{Math.max(0, 2 - quotaUsed.reads)} lượt</strong> | Tải tài liệu miễn phí <strong className="text-secondary">{Math.max(0, 1 - quotaUsed.downloads)} lượt</strong>
+                </div>
+              </div>
+            </div>
+            
+            <Link 
+              href="/pricing"
+              className="px-4 py-2 bg-secondary text-black font-bold text-xs rounded-xl hover:bg-secondary/90 transition-all shadow-md shrink-0 hover:scale-105"
+            >
+              🚀 Nâng cấp Premium (Không giới hạn)
+            </Link>
+          </div>
+        )}
 
         {/* Dynamic Folder Hierarchy Tree Strip */}
         {folders.length > 0 && (
@@ -427,7 +472,7 @@ export default function ResourcesPage() {
                             </Link>
                           ) : (
                             <button 
-                              onClick={() => handleSecureDownload(item.id, item.isPremium, item.link)}
+                              onClick={() => handleSecureDownload(item.id, item.isPremium)}
                               disabled={downloadingId === item.id}
                               className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl transition-all text-xs font-bold hover-glow cursor-pointer ${item.isPremium ? 'bg-orange-500 text-black hover:bg-orange-600' : 'bg-secondary text-black hover:bg-secondary/90'} ${downloadingId === item.id ? 'opacity-70 cursor-wait' : ''}`}
                             >
@@ -439,11 +484,24 @@ export default function ResourcesPage() {
                               <span>{downloadingId === item.id ? "Đang tạo link..." : "Tải về"}</span>
                             </button>
                           )
-                        ) : (
+                        ) : item.isPremium ? (
                           <Link href="/auth" className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-white/5 border border-white/10 text-foreground/50 hover:border-secondary/30 hover:text-secondary transition-all text-xs font-bold">
                             <Lock className="h-3.5 w-3.5" />
                             <span>Đăng nhập</span>
                           </Link>
+                        ) : (
+                          <button 
+                            onClick={() => handleSecureDownload(item.id, false)}
+                            disabled={downloadingId === item.id}
+                            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl transition-all text-xs font-bold hover-glow cursor-pointer bg-secondary text-black hover:bg-secondary/90 ${downloadingId === item.id ? 'opacity-70 cursor-wait' : ''}`}
+                          >
+                            {downloadingId === item.id ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Download className="h-3.5 w-3.5" />
+                            )}
+                            <span>{downloadingId === item.id ? "Đang tạo link..." : "Tải về"}</span>
+                          </button>
                         )}
                       </div>
                     </div>
