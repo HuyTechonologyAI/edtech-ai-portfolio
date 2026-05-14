@@ -83,7 +83,7 @@ export function VideoPlayer({ url, playing = false, controls = true }: { url: st
         height="100%"
         playing={playing}
         controls={controls}
-        light={true} // Bấm vào ảnh bìa mới load iframe giúp website tải cực nhanh
+        light={false} // Hiển thị nguyên bản trình phát YouTube gốc đảm bảo luôn xuất hiện nút Play
         onReady={handleReady}
         onProgress={handleProgress}
         config={{
