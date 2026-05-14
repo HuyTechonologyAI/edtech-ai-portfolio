@@ -41,6 +41,29 @@ export default function ResourcesPage() {
     isPremium: false
   });
   const [allViewStats, setAllViewStats] = useState<Record<number, ViewStats>>({});
+  const [downloadingId, setDownloadingId] = useState<number | null>(null);
+
+  const handleSecureDownload = async (id: number, isPremium: boolean, rawLink: string) => {
+    if (!isPremium) {
+      window.open(`/api/resources/proxy?url=${encodeURIComponent(rawLink)}`, "_blank");
+      return;
+    }
+
+    setDownloadingId(id);
+    try {
+      const res = await fetch(`/api/resources/get-signed-url?id=${id}`);
+      const data = await res.json();
+      if (data.success && data.signedUrl) {
+        window.location.href = data.signedUrl;
+      } else {
+        alert(data.error || "Không thể khởi tạo đường dẫn tải bảo mật Signed URL. Vui lòng thử lại.");
+      }
+    } catch (err: any) {
+      alert("Lỗi kết nối máy chủ cấp phép: " + err.message);
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   // Auto-emit SEARCH_QUERY telemetry metrics
   useEffect(() => {
@@ -348,10 +371,18 @@ export default function ResourcesPage() {
                               <span>Nâng cấp</span>
                             </Link>
                           ) : (
-                            <a href={item.link} target="_blank" rel="noreferrer" className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl transition-all text-xs font-bold hover-glow ${item.isPremium ? 'bg-orange-500 text-black hover:bg-orange-600' : 'bg-secondary text-black hover:bg-secondary/90'}`}>
-                              <Download className="h-3.5 w-3.5" />
-                              <span>Tải về</span>
-                            </a>
+                            <button 
+                              onClick={() => handleSecureDownload(item.id, item.isPremium, item.link)}
+                              disabled={downloadingId === item.id}
+                              className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl transition-all text-xs font-bold hover-glow cursor-pointer ${item.isPremium ? 'bg-orange-500 text-black hover:bg-orange-600' : 'bg-secondary text-black hover:bg-secondary/90'} ${downloadingId === item.id ? 'opacity-70 cursor-wait' : ''}`}
+                            >
+                              {downloadingId === item.id ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <Download className="h-3.5 w-3.5" />
+                              )}
+                              <span>{downloadingId === item.id ? "Đang tạo link..." : "Tải về"}</span>
+                            </button>
                           )
                         ) : (
                           <Link href="/auth" className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-white/5 border border-white/10 text-foreground/50 hover:border-secondary/30 hover:text-secondary transition-all text-xs font-bold">
