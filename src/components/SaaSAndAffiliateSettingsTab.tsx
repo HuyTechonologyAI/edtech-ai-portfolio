@@ -44,12 +44,31 @@ export default function SaaSAndAffiliateSettingsTab() {
   const fetchSettings = useCallback(async () => {
     setIsLoading(true);
     try {
-      const res = await fetch("/api/admin/settings");
-      const data = await res.json();
-      if (data.success && data.settings) {
-        if (data.settings.saas_tiers) setSaasTiers(data.settings.saas_tiers);
-        if (data.settings.affiliate_config) setAffiliateConfig(data.settings.affiliate_config);
-        if (data.settings.matrix_features) setMatrixFeatures(data.settings.matrix_features);
+      // Ưu tiên nạp cấu hình ghi đè từ LocalStorage trước để giữ nguyên trạng thái Admin đã lưu
+      const cachedTiers = localStorage.getItem("custom_saas_tiers");
+      const cachedAff = localStorage.getItem("custom_affiliate_config");
+      const cachedMatrix = localStorage.getItem("custom_matrix_features");
+
+      let hasCache = false;
+      if (cachedTiers) {
+        try { setSaasTiers(JSON.parse(cachedTiers)); hasCache = true; } catch {}
+      }
+      if (cachedAff) {
+        try { setAffiliateConfig(JSON.parse(cachedAff)); hasCache = true; } catch {}
+      }
+      if (cachedMatrix) {
+        try { setMatrixFeatures(JSON.parse(cachedMatrix)); hasCache = true; } catch {}
+      }
+
+      // Nếu chưa có dữ liệu đệm, nạp từ Server API
+      if (!hasCache) {
+        const res = await fetch("/api/admin/settings");
+        const data = await res.json();
+        if (data.success && data.settings && !data.isFallback) {
+          if (data.settings.saas_tiers) setSaasTiers(data.settings.saas_tiers);
+          if (data.settings.affiliate_config) setAffiliateConfig(data.settings.affiliate_config);
+          if (data.settings.matrix_features) setMatrixFeatures(data.settings.matrix_features);
+        }
       }
     } catch (err) {
       console.error("Lỗi nạp cấu hình:", err);
