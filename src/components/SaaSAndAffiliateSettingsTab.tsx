@@ -26,6 +26,17 @@ export default function SaaSAndAffiliateSettingsTab() {
     cookieDurationDays: 30
   });
 
+  // State cấu hình bảng đối chiếu So sánh Đặc quyền
+  const [matrixFeatures, setMatrixFeatures] = useState<any[]>([
+    { name: "Xem trước Tài liệu", free: "5 trang đầu", pro: "Không giới hạn", enterprise: "Không giới hạn" },
+    { name: "Tải tài nguyên Ebook/Slide Premium", free: false, pro: true, enterprise: true },
+    { name: "Truy cập Kho Prompt chuyên sâu", free: false, pro: true, enterprise: true },
+    { name: "Tải kịch bản JSON Make.com / n8n", free: false, pro: false, enterprise: true },
+    { name: "Tốc độ Tích lũy Point Gamification", free: "Tiêu chuẩn (x1)", pro: "Nhanh (x2)", enterprise: "Siêu tốc (x5)" },
+    { name: "Cập nhật bài giảng mới định kỳ", free: "Hạn chế", pro: "Miễn phí liên tục", enterprise: "Miễn phí liên tục" },
+    { name: "Hỗ trợ Kỹ thuật & Cố vấn", free: "Cộng đồng", pro: "Kênh riêng", enterprise: "Trực tiếp 1-1" }
+  ]);
+
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
@@ -38,6 +49,7 @@ export default function SaaSAndAffiliateSettingsTab() {
       if (data.success && data.settings) {
         if (data.settings.saas_tiers) setSaasTiers(data.settings.saas_tiers);
         if (data.settings.affiliate_config) setAffiliateConfig(data.settings.affiliate_config);
+        if (data.settings.matrix_features) setMatrixFeatures(data.settings.matrix_features);
       }
     } catch (err) {
       console.error("Lỗi nạp cấu hình:", err);
@@ -75,11 +87,19 @@ export default function SaaSAndAffiliateSettingsTab() {
         body: JSON.stringify({ key_name: "affiliate_config", setting_value: affiliateConfig })
       });
 
-      // Lưu đệm ngầm vào localStorage để frontend pricing/affiliate có thể tải lại nếu cần
+      // 3. Lưu Matrix Features
+      await fetch("/api/admin/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key_name: "matrix_features", setting_value: matrixFeatures })
+      });
+
+      // Lưu đệm ngầm vào localStorage để frontend pricing/affiliate có thể tải lại ngay lập tức
       localStorage.setItem("custom_saas_tiers", JSON.stringify(saasTiers));
       localStorage.setItem("custom_affiliate_config", JSON.stringify(affiliateConfig));
+      localStorage.setItem("custom_matrix_features", JSON.stringify(matrixFeatures));
 
-      setSaveMessage("🎉 Đã lưu cấu hình Bảng giá & Tỷ lệ Affiliate thành công trên toàn hệ thống!");
+      setSaveMessage("🎉 Đã lưu cấu hình Bảng giá, Affiliate & Bảng đối chiếu đặc quyền thành công!");
       setTimeout(() => setSaveMessage(null), 4000);
     } catch (err) {
       setSaveMessage("⚠️ Đã lưu cấu hình đệm (Yêu cầu chạy SQL bảng cms_settings để lưu vĩnh viễn)");
@@ -271,6 +291,77 @@ export default function SaaSAndAffiliateSettingsTab() {
               />
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* CỘT 3: Quản Lý Bảng Đối Chiếu So Sánh Đặc Quyền */}
+      <div className="space-y-4 pt-6 border-t border-white/5">
+        <div className="border-b border-white/5 pb-2">
+          <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+            <span>📊 3. Bảng Đối Chiếu So Sánh Đặc Quyền Chi Tiết</span>
+          </h3>
+          <p className="text-xs text-foreground/50 mt-1">
+            Chỉnh sửa trực tiếp tên tính năng và giá trị quyền lợi của từng gói (nhập &quot;true&quot;/&quot;false&quot; để hiển thị dấu ✔️ hoặc dấu - bị khóa).
+          </p>
+        </div>
+
+        <div className="glass-panel rounded-2xl overflow-hidden border border-white/5 shadow-md overflow-x-auto">
+          <table className="w-full text-left border-collapse text-xs min-w-[700px]">
+            <thead>
+              <tr className="border-b border-white/10 bg-surface/50">
+                <th className="p-3 font-bold text-foreground/60 w-2/5">Tên Hạng Mục / Tính Năng</th>
+                <th className="p-3 font-bold text-center text-foreground/80 w-1/5">Free Member</th>
+                <th className="p-3 font-bold text-center text-secondary w-1/5">Pro Creator</th>
+                <th className="p-3 font-bold text-center text-amber-400 w-1/5">Enterprise Team</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {matrixFeatures.map((row, rIdx) => {
+                const renderInput = (colKey: "free" | "pro" | "enterprise") => {
+                  const val = row[colKey];
+                  const isBool = typeof val === "boolean";
+                  const strVal = isBool ? (val ? "true" : "false") : String(val ?? "");
+                  return (
+                    <input 
+                      type="text"
+                      value={strVal}
+                      onChange={(e) => {
+                        const inVal = e.target.value;
+                        let finalVal: any = inVal;
+                        if (inVal.toLowerCase() === "true") finalVal = true;
+                        if (inVal.toLowerCase() === "false") finalVal = false;
+                        
+                        const updated = [...matrixFeatures];
+                        updated[rIdx] = { ...updated[rIdx], [colKey]: finalVal };
+                        setMatrixFeatures(updated);
+                      }}
+                      className="w-full text-center bg-surface/80 border border-white/5 hover:border-white/20 focus:border-secondary rounded px-2 py-1.5 font-medium transition-all text-xs"
+                    />
+                  );
+                };
+
+                return (
+                  <tr key={rIdx} className="hover:bg-white/5">
+                    <td className="p-2.5">
+                      <input 
+                        type="text"
+                        value={row.name}
+                        onChange={(e) => {
+                          const updated = [...matrixFeatures];
+                          updated[rIdx] = { ...updated[rIdx], name: e.target.value };
+                          setMatrixFeatures(updated);
+                        }}
+                        className="w-full bg-surface/80 border border-white/5 hover:border-white/20 focus:border-secondary rounded px-2 py-1.5 font-bold text-foreground/90 transition-all text-xs"
+                      />
+                    </td>
+                    <td className="p-2.5 text-center">{renderInput("free")}</td>
+                    <td className="p-2.5 text-center">{renderInput("pro")}</td>
+                    <td className="p-2.5 text-center">{renderInput("enterprise")}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
 
