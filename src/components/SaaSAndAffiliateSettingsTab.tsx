@@ -62,7 +62,7 @@ export default function SaaSAndAffiliateSettingsTab() {
 
       // Nếu chưa có dữ liệu đệm, nạp từ Server API
       if (!hasCache) {
-        const res = await fetch("/api/admin/settings");
+        const res = await fetch(`/api/admin/settings?t=${Date.now()}`, { cache: "no-store", headers: { "Cache-Control": "no-cache" } });
         const data = await res.json();
         if (data.success && data.settings && !data.isFallback) {
           if (data.settings.saas_tiers) setSaasTiers(data.settings.saas_tiers);

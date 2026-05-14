@@ -32,7 +32,7 @@ export default function PricingPage() {
 
     // Nếu chưa có ghi đè cục bộ, thử nạp từ API máy chủ
     if (!loadedFromCache) {
-      fetch("/api/admin/settings")
+      fetch(`/api/admin/settings?t=${Date.now()}`, { cache: "no-store", headers: { "Cache-Control": "no-cache" } })
         .then(res => res.json())
         .then(data => {
           if (data.success && data.settings && !data.isFallback) {
