@@ -43,8 +43,60 @@ export default function ResourcesPage() {
   const [allViewStats, setAllViewStats] = useState<Record<number, ViewStats>>({});
   const [downloadingId, setDownloadingId] = useState<number | null>(null);
 
+  // CƠ CHẾ KIỂM SOÁT QUOTA TÀI KHOẢN MIỄN PHÍ VÀ KHÁCH VÃNG LAI
+  // Giới hạn: Đọc tối đa 2 tài liệu/ngày, Tải 1 tài liệu miễn phí/ngày
+  const checkFreemiumQuota = (type: "READ_DOC" | "DOWNLOAD_DOC", itemId: string) => {
+    const isUserPremium = user?.app_metadata?.is_premium === true || (user as any)?.user_metadata?.is_premium === true;
+    const isUserAdmin = user?.app_metadata?.role === "admin" || (user as any)?.user_metadata?.role === "admin";
+    if (isUserPremium || isUserAdmin) return true;
+
+    const todayStr = new Date().toISOString().split("T")[0];
+    const storageKey = "zentratech_freemium_usage_tracker";
+    let tracker: { date: string; readDocs: string[]; downloadedDocs: string[]; watchedVideos: string[] } = {
+      date: todayStr,
+      readDocs: [],
+      downloadedDocs: [],
+      watchedVideos: []
+    };
+
+    try {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.date === todayStr) {
+          tracker = parsed;
+        }
+      }
+    } catch { /* ignore */ }
+
+    if (type === "READ_DOC") {
+      if (tracker.readDocs.includes(itemId)) return true;
+      if (tracker.readDocs.length >= 2) {
+        alert("🔒 QUYỀN LỢI TÀI KHOẢN MIỄN PHÍ: Bạn đã đạt giới hạn đọc online 2 tài liệu/ngày. Hãy nâng cấp tài khoản Premium để mở khóa không giới hạn kho học liệu và biểu mẫu tự động hóa!");
+        return false;
+      }
+      tracker.readDocs.push(itemId);
+    } else if (type === "DOWNLOAD_DOC") {
+      if (tracker.downloadedDocs.includes(itemId)) return true;
+      if (tracker.downloadedDocs.length >= 1) {
+        alert("🔒 QUYỀN LỢI TÀI KHOẢN MIỄN PHÍ: Bạn đã hết lượt tải 1 tài liệu miễn phí hôm nay. Hãy quay lại vào ngày mai hoặc nâng cấp Premium để tải tài nguyên thả ga!");
+        return false;
+      }
+      tracker.downloadedDocs.push(itemId);
+    }
+
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(tracker));
+    } catch { /* ignore */ }
+
+    return true;
+  };
+
   const handleSecureDownload = async (id: number, isPremium: boolean, rawLink: string) => {
     if (!isPremium) {
+      if (!checkFreemiumQuota("DOWNLOAD_DOC", id.toString())) {
+        return;
+      }
       window.open(`/api/resources/proxy?url=${encodeURIComponent(rawLink)}`, "_blank");
       return;
     }
@@ -123,6 +175,9 @@ export default function ResourcesPage() {
   };
 
   const openViewer = (url: string, title: string, resourceId: number, isPremium: boolean = false) => {
+    if (!checkFreemiumQuota("READ_DOC", resourceId.toString())) {
+      return;
+    }
     setViewerState({ isOpen: true, url, title, resourceId, isPremium });
   };
 

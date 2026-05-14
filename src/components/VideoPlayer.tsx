@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { useState, useEffect } from "react";
 import { Play, Clock, RotateCcw, X } from "lucide-react";
+import { useAuth } from "@/components/AuthProvider";
 
 // Use dynamic import for general media fallbacks
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -36,6 +37,67 @@ export function VideoPlayer({ url, playing = false, controls = true }: { url: st
   const urlStartTime = getStartTime(cleanUrl);
 
   const storageKey = typeof window !== "undefined" ? `video_resume_${encodeURIComponent(cleanUrl)}` : "";
+
+  const { user } = useAuth();
+  const isUserPremium = user?.app_metadata?.is_premium === true || (user as any)?.user_metadata?.is_premium === true;
+  const isUserAdmin = user?.app_metadata?.role === "admin" || (user as any)?.user_metadata?.role === "admin";
+  const hasUnlimitedAccess = isUserPremium || isUserAdmin;
+
+  const [unlockedQuota, setUnlockedQuota] = useState(hasUnlimitedAccess);
+
+  useEffect(() => {
+    if (hasUnlimitedAccess) {
+      setUnlockedQuota(true);
+    }
+  }, [hasUnlimitedAccess]);
+
+  const handleAttemptPlay = () => {
+    if (hasUnlimitedAccess) {
+      setUnlockedQuota(true);
+      return;
+    }
+
+    if (!ytId) {
+      setUnlockedQuota(true);
+      return;
+    }
+
+    const todayStr = new Date().toISOString().split("T")[0];
+    const storageKeyTrk = "zentratech_freemium_usage_tracker";
+    let tracker: { date: string; readDocs: string[]; downloadedDocs: string[]; watchedVideos: string[] } = {
+      date: todayStr,
+      readDocs: [],
+      downloadedDocs: [],
+      watchedVideos: []
+    };
+
+    try {
+      const saved = localStorage.getItem(storageKeyTrk);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.date === todayStr) {
+          tracker = parsed;
+        }
+      }
+    } catch { /* ignore */ }
+
+    if (tracker.watchedVideos.includes(ytId)) {
+      setUnlockedQuota(true);
+      return;
+    }
+
+    if (tracker.watchedVideos.length >= 2) {
+      alert("🔒 QUYỀN LỢI TÀI KHOẢN MIỄN PHÍ: Bạn đã đạt giới hạn xem online 2 video bài giảng/ngày. Hãy nâng cấp tài khoản Premium để mở khóa không giới hạn toàn bộ video chuyên sâu và các Case Study thực chiến!");
+      return;
+    }
+
+    tracker.watchedVideos.push(ytId);
+    try {
+      localStorage.setItem(storageKeyTrk, JSON.stringify(tracker));
+    } catch { /* ignore */ }
+
+    setUnlockedQuota(true);
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -89,11 +151,34 @@ export function VideoPlayer({ url, playing = false, controls = true }: { url: st
 
   return (
     <div className="w-full h-full relative group rounded-xl overflow-hidden bg-black">
-      {ytId ? (
+      {!unlockedQuota ? (
+        <div 
+          onClick={handleAttemptPlay}
+          className="absolute inset-0 w-full h-full cursor-pointer group flex items-center justify-center z-10 overflow-hidden bg-surface"
+        >
+          {ytId && (
+            <img 
+              src={`https://img.youtube.com/vi/${ytId}/hqdefault.jpg`}
+              alt="Video Thumbnail Preview"
+              className="w-full h-full object-cover opacity-75 group-hover:opacity-90 group-hover:scale-105 transition-all duration-500"
+            />
+          )}
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px] group-hover:bg-black/20 transition-all" />
+          
+          {/* Nút Play YouTube Gốc Tuyệt Đẹp */}
+          <div className="absolute w-16 h-12 bg-red-600 rounded-xl flex items-center justify-center shadow-2xl group-hover:bg-red-500 group-hover:scale-110 transition-all">
+            <Play className="w-6 h-6 text-white fill-white" />
+          </div>
+
+          <div className="absolute bottom-3 left-3 bg-black/85 backdrop-blur-sm border border-white/10 px-2.5 py-1 rounded-lg text-[11px] font-bold text-amber-400">
+            🔒 Nhấp để xem video (Miễn phí: 2 video/ngày)
+          </div>
+        </div>
+      ) : ytId ? (
         /* Native YouTube Embed Iframe Architecture guarantees perfect UI controls */
         <iframe
           key={iframeKey}
-          src={`https://www.youtube.com/embed/${ytId}?start=${targetStartSeconds}&autoplay=${playing ? "1" : "0"}&rel=0&modestbranding=1&controls=${controls ? "1" : "0"}`}
+          src={`https://www.youtube.com/embed/${ytId}?start=${targetStartSeconds}&autoplay=1&rel=0&modestbranding=1&controls=${controls ? "1" : "0"}`}
           title="YouTube Video Player"
           className="w-full h-full absolute inset-0 border-0"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
