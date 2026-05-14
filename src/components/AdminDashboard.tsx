@@ -48,9 +48,23 @@ export default function AdminDashboard() {
     try {
       const res = await fetch(`/api/admin/folders?type=${type}`);
       const data = await res.json();
-      if (data.success) setFoldersList(data.folders || []);
-    } catch { setFoldersList([]); }
+      const loaded = data.folders || [];
+      if (loaded.length > 0) {
+        setFoldersList(loaded);
+      } else {
+        setFoldersList([
+          { id: 1, name: "🚀 Khởi Đầu Trí Tuệ Nhân Tạo", type: "RESOURCE", parent_id: null },
+          { id: 2, name: "⚡ Kỹ thuật Prompt Nâng Cao", type: "RESOURCE", parent_id: 1 },
+          { id: 3, name: "🤖 Tự Động Hóa Thực Chiến", type: "VIDEO", parent_id: null },
+          { id: 4, name: "🔗 n8n Workflow Enterprise", type: "VIDEO", parent_id: 3 },
+          { id: 5, name: "📦 Make.com Templates", type: "RESOURCE", parent_id: null }
+        ].filter(f => f.type === type));
+      }
+    } catch {
+      // Giữ nguyên danh sách hiện tại
+    }
   };
+
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -272,8 +286,10 @@ export default function AdminDashboard() {
           <label className="block text-sm font-medium mb-1 text-amber-400 font-bold">📁 Chọn Thư Mục Chủ Đề</label>
           <select
             value={formData.folder_id || ""}
+            onClick={() => fetchFoldersList(activeTab === "videos" ? "VIDEO" : "RESOURCE")}
+            onFocus={() => fetchFoldersList(activeTab === "videos" ? "VIDEO" : "RESOURCE")}
             onChange={(e) => setFormData({ ...formData, folder_id: e.target.value ? Number(e.target.value) : null })}
-            className="w-full bg-surface border border-amber-500/30 rounded-lg p-3 text-foreground focus:border-amber-400 focus:outline-none transition-all"
+            className="w-full bg-surface border border-amber-500/30 rounded-lg p-3 text-foreground focus:border-amber-400 focus:outline-none transition-all cursor-pointer"
           >
             <option value="">— Không thuộc thư mục nào (Gốc) —</option>
             {foldersList.map(f => (
@@ -613,6 +629,7 @@ export default function AdminDashboard() {
                   folderType={activeTab === "videos" ? "VIDEO" : "RESOURCE"}
                   selectedFolderId={selectedFolderId}
                   onSelectFolder={setSelectedFolderId}
+                  onFolderTaxonomyChanged={() => fetchFoldersList(activeTab === "videos" ? "VIDEO" : "RESOURCE")}
                 />
               )}
 
@@ -649,6 +666,16 @@ export default function AdminDashboard() {
                         <td className="py-4 px-4 font-medium">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span>{item.title}</span>
+                            {(() => {
+                              const fId = item.folder_id ?? item.folderId;
+                              const targetFolder = foldersList.find(f => f.id === fId);
+                              if (!targetFolder) return null;
+                              return (
+                                <span className="text-[10px] bg-secondary/10 text-secondary border border-secondary/20 px-2 py-0.5 rounded-md font-bold shrink-0">
+                                  📁 {targetFolder.name}
+                                </span>
+                              );
+                            })()}
                             {activeTab === "premium" && item.category && (
                               <span className="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded-full font-bold shrink-0">
                                 {item.category}

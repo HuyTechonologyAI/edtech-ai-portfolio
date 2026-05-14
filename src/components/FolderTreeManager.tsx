@@ -14,9 +14,10 @@ interface FolderTreeManagerProps {
   folderType: "VIDEO" | "RESOURCE";
   selectedFolderId: number | null;
   onSelectFolder: (id: number | null) => void;
+  onFolderTaxonomyChanged?: () => void;
 }
 
-export default function FolderTreeManager({ folderType, selectedFolderId, onSelectFolder }: FolderTreeManagerProps) {
+export default function FolderTreeManager({ folderType, selectedFolderId, onSelectFolder, onFolderTaxonomyChanged }: FolderTreeManagerProps) {
   const [folders, setFolders] = useState<FolderItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [creatingParentId, setCreatingParentId] = useState<number | null | "ROOT">(null);
@@ -71,6 +72,7 @@ export default function FolderTreeManager({ folderType, selectedFolderId, onSele
         if (targetParentId) {
           setExpandedNodes(prev => ({ ...prev, [targetParentId]: true }));
         }
+        onFolderTaxonomyChanged?.();
       } else {
         alert(data.error || "Tạo thư mục thất bại");
       }
@@ -94,6 +96,7 @@ export default function FolderTreeManager({ folderType, selectedFolderId, onSele
         if (selectedFolderId === id) onSelectFolder(null);
         // Lọc khỏi tree
         setFolders(prev => prev.filter(f => f.id !== id));
+        onFolderTaxonomyChanged?.();
       }
     } catch (err: any) {
       alert("Lỗi xóa thư mục: " + err.message);
