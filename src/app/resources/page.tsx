@@ -272,9 +272,15 @@ export default function ResourcesPage() {
                 <Lock className="w-5 h-5 text-secondary animate-pulse" />
               </div>
               <div>
-                <div className="text-xs font-bold text-foreground">Hạn mức quyền lợi Freemember / Khách vãng lai</div>
+                <div className="text-xs font-bold text-foreground">
+                  {!user ? "Trạng thái: Khách vãng lai (Chưa đăng nhập)" : "Quyền lợi tài khoản: Freemember"}
+                </div>
                 <div className="text-[11px] text-foreground/70">
-                  Hôm nay còn lại: Đọc online <strong className="text-secondary">{Math.max(0, 2 - quotaUsed.reads)} lượt</strong> | Tải tài liệu miễn phí <strong className="text-secondary">{Math.max(0, 1 - quotaUsed.downloads)} lượt</strong>
+                  {!user ? (
+                    <span>Xem trước online 5 trang đầu | <Link href="/auth" className="text-secondary font-bold hover:underline">Đăng nhập tài khoản</Link> để nhận 1 lượt tải tài nguyên miễn phí/ngày!</span>
+                  ) : (
+                    <span>Hôm nay còn lại: Đọc online <strong className="text-secondary">{Math.max(0, 2 - quotaUsed.reads)} lượt</strong> | Tải tài liệu miễn phí <strong className="text-secondary">{Math.max(0, 1 - quotaUsed.downloads)} lượt</strong></span>
+                  )}
                 </div>
               </div>
             </div>
@@ -484,24 +490,11 @@ export default function ResourcesPage() {
                               <span>{downloadingId === item.id ? "Đang tạo link..." : "Tải về"}</span>
                             </button>
                           )
-                        ) : item.isPremium ? (
+                        ) : (
                           <Link href="/auth" className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-white/5 border border-white/10 text-foreground/50 hover:border-secondary/30 hover:text-secondary transition-all text-xs font-bold">
                             <Lock className="h-3.5 w-3.5" />
                             <span>Đăng nhập</span>
                           </Link>
-                        ) : (
-                          <button 
-                            onClick={() => handleSecureDownload(item.id, false)}
-                            disabled={downloadingId === item.id}
-                            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl transition-all text-xs font-bold hover-glow cursor-pointer bg-secondary text-black hover:bg-secondary/90 ${downloadingId === item.id ? 'opacity-70 cursor-wait' : ''}`}
-                          >
-                            {downloadingId === item.id ? (
-                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                            ) : (
-                              <Download className="h-3.5 w-3.5" />
-                            )}
-                            <span>{downloadingId === item.id ? "Đang tạo link..." : "Tải về"}</span>
-                          </button>
                         )}
                       </div>
                     </div>
