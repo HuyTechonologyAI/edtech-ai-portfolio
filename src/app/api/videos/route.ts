@@ -7,31 +7,45 @@ async function isAuthenticated() {
   return cookieStore.get("admin_session")?.value === "authenticated";
 }
 
-// Map frontend camelCase → database snake_case columns
-// Actual DB columns: id, title, description, duration, youtube_url, is_featured, created_at
+// Map frontend camelCase → database snake_case/flat columns
 function mapToDbFields(body: any) {
   const mapped: any = {};
   if (body.title !== undefined) mapped.title = body.title;
   if (body.description !== undefined) mapped.description = body.description;
   if (body.duration !== undefined) mapped.duration = body.duration;
-  // Handle youtubeUrl → youtube_url
-  if (body.youtubeUrl !== undefined) mapped.youtube_url = body.youtubeUrl;
-  if (body.youtube_url !== undefined) mapped.youtube_url = body.youtube_url;
-  // Handle isFeatured → is_featured
-  if (body.isFeatured !== undefined) mapped.is_featured = body.isFeatured;
-  if (body.is_featured !== undefined) mapped.is_featured = body.is_featured;
-  if (body.folder_id !== undefined) mapped.folder_id = body.folder_id;
+  
+  // Ánh xạ toàn diện cho cột URL Youtube để tương thích tuyệt đối với cả bảng dùng "youtubeurl" hoặc "youtube_url"
+  const ytUrl = body.youtubeUrl ?? body.youtube_url ?? body.youtubeurl;
+  if (ytUrl !== undefined) {
+    mapped.youtube_url = ytUrl;
+    mapped.youtubeurl = ytUrl;
+  }
+
+  // Ánh xạ toàn diện cho cột Nổi bật
+  const isFeat = body.isFeatured ?? body.is_featured ?? body.isfeatured;
+  if (isFeat !== undefined) {
+    mapped.is_featured = isFeat;
+    mapped.isfeatured = isFeat;
+  }
+
+  // Ánh xạ toàn diện cho ID chuyên mục
+  const fId = body.folder_id ?? body.folderId ?? body.folderid;
+  if (fId !== undefined) {
+    mapped.folder_id = fId;
+    mapped.folderid = fId;
+  }
+
   return mapped;
 }
 
-// Map database snake_case → frontend camelCase
+// Map database snake_case/flat → frontend camelCase
 function mapToFrontend(item: any) {
   if (!item) return item;
   return {
     ...item,
-    youtubeUrl: item.youtube_url ?? item.youtubeUrl,
-    isFeatured: item.is_featured ?? item.isFeatured,
-    folderId: item.folder_id,
+    youtubeUrl: item.youtubeurl ?? item.youtube_url ?? item.youtubeUrl,
+    isFeatured: item.isfeatured ?? item.is_featured ?? item.isFeatured,
+    folderId: item.folderid ?? item.folder_id ?? item.folderId,
   };
 }
 

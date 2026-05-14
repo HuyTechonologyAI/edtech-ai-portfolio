@@ -7,28 +7,38 @@ async function isAuthenticated() {
   return cookieStore.get("admin_session")?.value === "authenticated";
 }
 
-// Map frontend camelCase → database snake_case columns
-// Actual DB columns: id, title, description, link, type, is_premium, created_at
+// Map frontend camelCase → database snake_case/flat columns
 function mapToDbFields(body: any) {
   const mapped: any = {};
   if (body.title !== undefined) mapped.title = body.title;
   if (body.description !== undefined) mapped.description = body.description;
   if (body.link !== undefined) mapped.link = body.link;
   if (body.type !== undefined) mapped.type = body.type;
-  // Handle isPremium → is_premium
-  if (body.isPremium !== undefined) mapped.is_premium = body.isPremium;
-  if (body.is_premium !== undefined) mapped.is_premium = body.is_premium;
-  if (body.folder_id !== undefined) mapped.folder_id = body.folder_id;
+  
+  // Ánh xạ toàn diện cho cột Premium
+  const isPrem = body.isPremium ?? body.is_premium ?? body.ispremium;
+  if (isPrem !== undefined) {
+    mapped.is_premium = isPrem;
+    mapped.ispremium = isPrem;
+  }
+
+  // Ánh xạ toàn diện cho ID chuyên mục
+  const fId = body.folder_id ?? body.folderId ?? body.folderid;
+  if (fId !== undefined) {
+    mapped.folder_id = fId;
+    mapped.folderid = fId;
+  }
+
   return mapped;
 }
 
-// Map database snake_case → frontend camelCase
+// Map database snake_case/flat → frontend camelCase
 function mapToFrontend(item: any) {
   if (!item) return item;
   return {
     ...item,
-    isPremium: item.is_premium ?? item.isPremium,
-    folderId: item.folder_id,
+    isPremium: item.ispremium ?? item.is_premium ?? item.isPremium,
+    folderId: item.folderid ?? item.folder_id ?? item.folderId,
   };
 }
 
