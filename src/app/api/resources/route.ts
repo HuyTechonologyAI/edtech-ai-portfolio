@@ -7,7 +7,8 @@ async function isAuthenticated() {
   return cookieStore.get("admin_session")?.value === "authenticated";
 }
 
-// Map frontend camelCase → database snake_case/flat columns
+// Ánh xạ chính xác tuyệt đối các cột Database đã được xác thực qua Schema Cache
+// Bảng "resources": title, description, link, type, is_premium (gạch dưới), folder_id (gạch dưới)
 function mapToDbFields(body: any) {
   const mapped: any = {};
   if (body.title !== undefined) mapped.title = body.title;
@@ -15,30 +16,28 @@ function mapToDbFields(body: any) {
   if (body.link !== undefined) mapped.link = body.link;
   if (body.type !== undefined) mapped.type = body.type;
   
-  // Ánh xạ toàn diện cho cột Premium
+  // Cột Premium trong DB thực tế dùng snake_case "is_premium"
   const isPrem = body.isPremium ?? body.is_premium ?? body.ispremium;
   if (isPrem !== undefined) {
     mapped.is_premium = isPrem;
-    mapped.ispremium = isPrem;
   }
 
-  // Ánh xạ toàn diện cho ID chuyên mục
+  // Cột Khóa ngoại chuyên mục trong DB thực tế dùng snake_case "folder_id"
   const fId = body.folder_id ?? body.folderId ?? body.folderid;
   if (fId !== undefined) {
     mapped.folder_id = fId;
-    mapped.folderid = fId;
   }
 
   return mapped;
 }
 
-// Map database snake_case/flat → frontend camelCase
+// Map database → frontend camelCase
 function mapToFrontend(item: any) {
   if (!item) return item;
   return {
     ...item,
-    isPremium: item.ispremium ?? item.is_premium ?? item.isPremium,
-    folderId: item.folderid ?? item.folder_id ?? item.folderId,
+    isPremium: item.is_premium ?? item.ispremium ?? item.isPremium,
+    folderId: item.folder_id ?? item.folderid ?? item.folderId,
   };
 }
 

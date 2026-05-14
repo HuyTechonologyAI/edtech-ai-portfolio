@@ -7,45 +7,43 @@ async function isAuthenticated() {
   return cookieStore.get("admin_session")?.value === "authenticated";
 }
 
-// Map frontend camelCase → database snake_case/flat columns
+// Ánh xạ chính xác tuyệt đối các cột Database đã được xác thực qua Schema Cache
+// Bảng "videos": title, description, duration, youtubeurl (viết liền), is_featured (gạch dưới), folder_id (gạch dưới)
 function mapToDbFields(body: any) {
   const mapped: any = {};
   if (body.title !== undefined) mapped.title = body.title;
   if (body.description !== undefined) mapped.description = body.description;
   if (body.duration !== undefined) mapped.duration = body.duration;
   
-  // Ánh xạ toàn diện cho cột URL Youtube để tương thích tuyệt đối với cả bảng dùng "youtubeurl" hoặc "youtube_url"
+  // Cột link Youtube trong DB thực tế viết liền "youtubeurl"
   const ytUrl = body.youtubeUrl ?? body.youtube_url ?? body.youtubeurl;
   if (ytUrl !== undefined) {
-    mapped.youtube_url = ytUrl;
     mapped.youtubeurl = ytUrl;
   }
 
-  // Ánh xạ toàn diện cho cột Nổi bật
+  // Cột Nổi bật trong DB thực tế dùng snake_case "is_featured"
   const isFeat = body.isFeatured ?? body.is_featured ?? body.isfeatured;
   if (isFeat !== undefined) {
     mapped.is_featured = isFeat;
-    mapped.isfeatured = isFeat;
   }
 
-  // Ánh xạ toàn diện cho ID chuyên mục
+  // Cột Khóa ngoại chuyên mục trong DB thực tế dùng snake_case "folder_id"
   const fId = body.folder_id ?? body.folderId ?? body.folderid;
   if (fId !== undefined) {
     mapped.folder_id = fId;
-    mapped.folderid = fId;
   }
 
   return mapped;
 }
 
-// Map database snake_case/flat → frontend camelCase
+// Map database → frontend camelCase
 function mapToFrontend(item: any) {
   if (!item) return item;
   return {
     ...item,
     youtubeUrl: item.youtubeurl ?? item.youtube_url ?? item.youtubeUrl,
-    isFeatured: item.isfeatured ?? item.is_featured ?? item.isFeatured,
-    folderId: item.folderid ?? item.folder_id ?? item.folderId,
+    isFeatured: item.is_featured ?? item.isfeatured ?? item.isFeatured,
+    folderId: item.folder_id ?? item.folderid ?? item.folderId,
   };
 }
 
