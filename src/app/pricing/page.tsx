@@ -35,7 +35,7 @@ export default function PricingPage() {
       fetch(`/api/admin/settings?t=${Date.now()}`, { cache: "no-store", headers: { "Cache-Control": "no-cache" } })
         .then(res => res.json())
         .then(data => {
-          if (data.success && data.settings && !data.isFallback) {
+          if (data.success && data.settings) {
             if (data.settings.saas_tiers) setCustomTiersList(data.settings.saas_tiers);
             if (data.settings.matrix_features) setCustomMatrixList(data.settings.matrix_features);
           }

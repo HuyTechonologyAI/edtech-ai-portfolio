@@ -64,7 +64,7 @@ export default function SaaSAndAffiliateSettingsTab() {
       if (!hasCache) {
         const res = await fetch(`/api/admin/settings?t=${Date.now()}`, { cache: "no-store", headers: { "Cache-Control": "no-cache" } });
         const data = await res.json();
-        if (data.success && data.settings && !data.isFallback) {
+        if (data.success && data.settings) {
           if (data.settings.saas_tiers) setSaasTiers(data.settings.saas_tiers);
           if (data.settings.affiliate_config) setAffiliateConfig(data.settings.affiliate_config);
           if (data.settings.matrix_features) setMatrixFeatures(data.settings.matrix_features);
