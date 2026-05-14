@@ -5,6 +5,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import { User, Mail, Shield, Sparkles, Save, Loader2, CheckCircle2, AlertCircle, Crown, Image as ImageIcon, Phone, MapPin, Briefcase, Heart, Target, Award, Download } from "lucide-react";
 import Link from "next/link";
+import { WorkflowAutoGrader } from "@/components/WorkflowAutoGrader";
 
 const PRESET_AVATARS = [
   { id: "ai_core", name: "AI Core Robot", url: "https://api.dicebear.com/7.x/bottts/svg?seed=AICore" },
@@ -438,6 +439,10 @@ export default function ProfilePage() {
           </form>
         </div>
       </div>
+
+      {/* Auto-Grader Scanner Studio */}
+      <WorkflowAutoGrader />
     </div>
   );
 }
+
