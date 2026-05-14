@@ -92,12 +92,14 @@ export default function ResourcesPage() {
     } catch { /* ignore */ }
 
     if (type === "READ_DOC") {
-      if (tracker.readDocs.includes(itemId)) return true;
-      if (tracker.readDocs.length >= 2) {
-        alert("🔒 QUYỀN LỢI TÀI KHOẢN MIỄN PHÍ: Bạn đã đạt giới hạn đọc online 2 tài liệu/ngày. Hãy nâng cấp tài khoản Premium để mở khóa không giới hạn kho học liệu và biểu mẫu tự động hóa!");
-        return false;
+      if (!tracker.readDocs.includes(itemId)) {
+        if (tracker.readDocs.length < 2) {
+          tracker.readDocs.push(itemId);
+        } else {
+          // Từ tài nguyên số 3 trở đi, tài khoản freemember chuyển sang chế độ xem trước 5 trang
+          // Không return false để học viên vẫn mở được modal đọc 5 trang đầu!
+        }
       }
-      tracker.readDocs.push(itemId);
     } else if (type === "DOWNLOAD_DOC") {
       if (tracker.downloadedDocs.includes(itemId)) return true;
       if (tracker.downloadedDocs.length >= 1) {
@@ -506,15 +508,38 @@ export default function ResourcesPage() {
         )}
       </div>
 
-      <FileViewerModal 
-        isOpen={viewerState.isOpen}
-        onClose={closeViewer}
-        fileUrl={viewerState.url}
-        title={viewerState.title}
-        resourceId={viewerState.resourceId}
-        maxPreviewPages={5}
-        isPremium={viewerState.isPremium}
-      />
+      {(() => {
+        const isUserPremium = user?.app_metadata?.is_premium === true || (user as any)?.user_metadata?.is_premium === true;
+        const isUserAdmin = user?.app_metadata?.role === "admin" || (user as any)?.user_metadata?.role === "admin";
+        let computedMaxPages = 5;
+
+        if (isUserPremium || isUserAdmin) {
+          computedMaxPages = 9999; // Không giới hạn
+        } else if (user && viewerState.resourceId) {
+          const todayStr = new Date().toISOString().split("T")[0];
+          try {
+            const saved = localStorage.getItem("zentratech_freemium_usage_tracker");
+            if (saved) {
+              const parsed = JSON.parse(saved);
+              if (parsed.date === todayStr && parsed.readDocs && parsed.readDocs.includes(viewerState.resourceId.toString())) {
+                computedMaxPages = 9999; // Đọc trực tuyến toàn bộ nội dung
+              }
+            }
+          } catch { /* ignore */ }
+        }
+
+        return (
+          <FileViewerModal 
+            isOpen={viewerState.isOpen}
+            onClose={closeViewer}
+            fileUrl={viewerState.url}
+            title={viewerState.title}
+            resourceId={viewerState.resourceId}
+            maxPreviewPages={computedMaxPages}
+            isPremium={viewerState.isPremium}
+          />
+        );
+      })()}
     </main>
   );
 }

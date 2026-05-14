@@ -289,11 +289,19 @@ export function FileViewerModal({
                               <p className="text-xs text-orange-400/80">Tài liệu Premium dành riêng cho hội viên</p>
                             </>
                           ) : (
-                            <a href={fileUrl} target="_blank" rel="noopener noreferrer"
-                              className="flex items-center justify-center gap-2 px-5 py-3 bg-secondary text-black hover:bg-secondary/90 rounded-xl font-bold text-sm transition-all shadow-[0_0_20px_rgba(0,255,133,0.25)]">
+                            <button 
+                              onClick={() => {
+                                if (resourceId) {
+                                  window.open(`/api/resources/get-signed-url?id=${resourceId}`, "_blank");
+                                } else {
+                                  window.open(fileUrl, "_blank");
+                                }
+                              }}
+                              className="flex items-center justify-center gap-2 px-5 py-3 bg-secondary text-black hover:bg-secondary/90 rounded-xl font-bold text-sm transition-all shadow-[0_0_20px_rgba(0,255,133,0.25)] cursor-pointer"
+                            >
                               <Download className="w-4 h-4" />
                               Tải tài liệu đầy đủ
-                            </a>
+                            </button>
                           )}
                         </div>
                       </div>
