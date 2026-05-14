@@ -12,22 +12,36 @@ export default function PricingPage() {
   const [customMatrixList, setCustomMatrixList] = useState<any[] | null>(null);
 
   useEffect(() => {
-    // Nạp cấu hình ghi đè từ CSDL Admin Settings hoặc LocalStorage
-    fetch("/api/admin/settings")
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && data.settings) {
-          if (data.settings.saas_tiers) setCustomTiersList(data.settings.saas_tiers);
-          if (data.settings.matrix_features) setCustomMatrixList(data.settings.matrix_features);
-        }
-      })
-      .catch(() => {
-        const cachedTiers = localStorage.getItem("custom_saas_tiers");
-        if (cachedTiers) setCustomTiersList(JSON.parse(cachedTiers));
+    // Ưu tiên nạp đệm ghi đè từ LocalStorage trước để phản hồi tức thì với thao tác lưu của Admin
+    const cachedTiers = localStorage.getItem("custom_saas_tiers");
+    const cachedMatrix = localStorage.getItem("custom_matrix_features");
 
-        const cachedMatrix = localStorage.getItem("custom_matrix_features");
-        if (cachedMatrix) setCustomMatrixList(JSON.parse(cachedMatrix));
-      });
+    let loadedFromCache = false;
+    if (cachedTiers) {
+      try {
+        setCustomTiersList(JSON.parse(cachedTiers));
+        loadedFromCache = true;
+      } catch { /* ignore */ }
+    }
+    if (cachedMatrix) {
+      try {
+        setCustomMatrixList(JSON.parse(cachedMatrix));
+        loadedFromCache = true;
+      } catch { /* ignore */ }
+    }
+
+    // Nếu chưa có ghi đè cục bộ, thử nạp từ API máy chủ
+    if (!loadedFromCache) {
+      fetch("/api/admin/settings")
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.settings && !data.isFallback) {
+            if (data.settings.saas_tiers) setCustomTiersList(data.settings.saas_tiers);
+            if (data.settings.matrix_features) setCustomMatrixList(data.settings.matrix_features);
+          }
+        })
+        .catch(() => {});
+    }
   }, []);
 
   const baseTiers = [
