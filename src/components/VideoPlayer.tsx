@@ -51,7 +51,7 @@ export function VideoPlayer({ url, playing = false, controls = true }: { url: st
     }
   }, [hasUnlimitedAccess]);
 
-  const handleAttemptPlay = () => {
+  const handleAttemptPlay = async () => {
     if (hasUnlimitedAccess) {
       setUnlockedQuota(true);
       return;
@@ -64,11 +64,18 @@ export function VideoPlayer({ url, playing = false, controls = true }: { url: st
 
     const todayStr = new Date().toISOString().split("T")[0];
     const storageKeyTrk = "zentratech_freemium_usage_tracker";
-    let tracker: { date: string; readDocs: string[]; downloadedDocs: string[]; watchedVideos: string[] } = {
+    let tracker: { 
+      date: string; 
+      readDocs: string[]; 
+      downloadedDocs: string[]; 
+      watchedVideos: string[];
+      guestIpVideos?: Record<string, string[]>;
+    } = {
       date: todayStr,
       readDocs: [],
       downloadedDocs: [],
-      watchedVideos: []
+      watchedVideos: [],
+      guestIpVideos: {}
     };
 
     try {
@@ -76,22 +83,62 @@ export function VideoPlayer({ url, playing = false, controls = true }: { url: st
       if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed.date === todayStr) {
-          tracker = parsed;
+          tracker = { ...tracker, ...parsed };
+          if (!tracker.guestIpVideos) tracker.guestIpVideos = {};
         }
       }
     } catch { /* ignore */ }
 
-    if (tracker.watchedVideos.includes(ytId)) {
+    // Luồng xử lý cho tài khoản đã đăng nhập (Freemember)
+    if (user) {
+      if (tracker.watchedVideos.includes(ytId)) {
+        setUnlockedQuota(true);
+        return;
+      }
+
+      if (tracker.watchedVideos.length >= 2) {
+        alert("🔒 QUYỀN LỢI TÀI KHOẢN MIỄN PHÍ: Bạn đã đạt giới hạn xem online 2 video bài giảng/ngày. Hãy nâng cấp tài khoản Premium để mở khóa không giới hạn toàn bộ video chuyên sâu và các Case Study thực chiến!");
+        return;
+      }
+
+      tracker.watchedVideos.push(ytId);
+      try {
+        localStorage.setItem(storageKeyTrk, JSON.stringify(tracker));
+      } catch { /* ignore */ }
+
       setUnlockedQuota(true);
       return;
     }
 
-    if (tracker.watchedVideos.length >= 2) {
-      alert("🔒 QUYỀN LỢI TÀI KHOẢN MIỄN PHÍ: Bạn đã đạt giới hạn xem online 2 video bài giảng/ngày. Hãy nâng cấp tài khoản Premium để mở khóa không giới hạn toàn bộ video chuyên sâu và các Case Study thực chiến!");
+    // Luồng kiểm soát độc lập cho Khách vãng lai (Chưa đăng nhập / !user)
+    // Tự động truy xuất địa chỉ IP truy cập công cộng để ghi nhận
+    let clientIp = "unknown_guest_ip";
+    try {
+      const ipRes = await fetch("https://api.ipify.org?format=json");
+      const ipData = await ipRes.json();
+      if (ipData && ipData.ip) {
+        clientIp = ipData.ip;
+      }
+    } catch {
+      // Dự phòng an toàn nếu bị trình duyệt chặn truy vấn IP ngoài
+      clientIp = "local_guest_fallback_ip";
+    }
+
+    const ipWatchedList = tracker.guestIpVideos![clientIp] || [];
+
+    if (ipWatchedList.includes(ytId)) {
+      setUnlockedQuota(true);
       return;
     }
 
-    tracker.watchedVideos.push(ytId);
+    if (ipWatchedList.length >= 1) {
+      alert(`🔒 TRẠNG THÁI KHÁCH VÃNG LAI (IP: ${clientIp}): Bạn đã đạt giới hạn xem thử 1 video/ngày. Vui lòng đăng nhập hoặc tạo tài khoản miễn phí để nhận thêm lượt xem bài giảng mỗi ngày!`);
+      return;
+    }
+
+    ipWatchedList.push(ytId);
+    tracker.guestIpVideos![clientIp] = ipWatchedList;
+
     try {
       localStorage.setItem(storageKeyTrk, JSON.stringify(tracker));
     } catch { /* ignore */ }
@@ -171,7 +218,7 @@ export function VideoPlayer({ url, playing = false, controls = true }: { url: st
           </div>
 
           <div className="absolute bottom-3 left-3 bg-black/85 backdrop-blur-sm border border-white/10 px-2.5 py-1 rounded-lg text-[11px] font-bold text-amber-400">
-            🔒 Nhấp để xem video (Miễn phí: 2 video/ngày)
+            🔒 Nhấp để xem video ({!user ? "Khách: 1 video/ngày" : "Miễn phí: 2 video/ngày"})
           </div>
         </div>
       ) : ytId ? (
