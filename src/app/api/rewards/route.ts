@@ -111,7 +111,41 @@ export async function POST(req: NextRequest) {
       const taskType = taskInfo?.target_type || "DAILY_CHECKIN";
       const basePoints = taskInfo?.reward_points || Number(rewardPoints) || 2;
 
-      // 2. Ghi nhận hoàn thành (sẽ văng lỗi unique nếu bấm 2 lần/ngày)
+      // 2. Đối soát học tập thực tế (Anti-bypass)
+      const dateObj = new Date(todayStr); // YYYY-MM-DD
+      const startOfTodayUtc = new Date(dateObj.getTime() - 7 * 60 * 60 * 1000).toISOString();
+
+      if (taskType === "READ_EBOOK") {
+        const { data: docProgress, error: docErr } = await supabase
+          .from("user_document_progress")
+          .select("id")
+          .eq("user_email", userEmail)
+          .eq("is_completed", true)
+          .gte("last_updated", startOfTodayUtc)
+          .limit(1);
+
+        if (docErr || !docProgress || docProgress.length === 0) {
+          return NextResponse.json({
+            error: "XÁC THỰC THẤT BẠI: Bạn chưa đọc tài liệu Ebook/Slide nào đạt tối thiểu 3 phút và cuộn qua 80% trong ngày hôm nay!"
+          }, { status: 400 });
+        }
+      } else if (taskType === "WATCH_VIDEO") {
+        const { data: videoProgress, error: vidErr } = await supabase
+          .from("user_video_progress")
+          .select("id")
+          .eq("user_email", userEmail)
+          .eq("is_completed", true)
+          .gte("last_updated", startOfTodayUtc)
+          .limit(1);
+
+        if (vidErr || !videoProgress || videoProgress.length === 0) {
+          return NextResponse.json({
+            error: "XÁC THỰC THẤT BẠI: Bạn chưa xem video bài giảng nào đạt tối thiểu 90% thời lượng trong ngày hôm nay!"
+          }, { status: 400 });
+        }
+      }
+
+      // 3. Ghi nhận hoàn thành (sẽ văng lỗi unique nếu bấm 2 lần/ngày)
       const { error: compErr } = await supabase
         .from("task_completions")
         .insert([{
@@ -124,7 +158,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Bạn đã nhận phần thưởng cho nhiệm vụ này hôm nay rồi!" }, { status: 400 });
       }
 
-      // 3. Xử lý cộng điểm và tính toán Streak nếu nhiệm vụ là DAILY_CHECKIN
+      // 4. Xử lý cộng điểm và tính toán Streak nếu nhiệm vụ là DAILY_CHECKIN
       let pointsToAdd = basePoints;
       let newStreak = 0;
       const isCheckinTask = (taskType === "DAILY_CHECKIN");

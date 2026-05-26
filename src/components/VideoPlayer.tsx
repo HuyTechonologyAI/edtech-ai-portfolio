@@ -32,6 +32,12 @@ export function VideoPlayer({ url, playing = false, controls = true }: { url: st
   const [iframeKey, setIframeKey] = useState(0);
   const [hasResumed, setHasResumed] = useState(false);
 
+  // States hỗ trợ cơ chế Anti-bypass
+  const [duration, setDuration] = useState(0);
+  const [lastLoggedProgress, setLastLoggedProgress] = useState(0);
+  const [completedToastShown, setCompletedToastShown] = useState(false);
+  const [showSuccessBadge, setShowSuccessBadge] = useState(false);
+
   const cleanUrl = (url || "").trim();
   const ytId = getYouTubeId(cleanUrl);
   const urlStartTime = getStartTime(cleanUrl);
@@ -111,7 +117,6 @@ export function VideoPlayer({ url, playing = false, controls = true }: { url: st
     }
 
     // Luồng kiểm soát độc lập cho Khách vãng lai (Chưa đăng nhập / !user)
-    // Tự động truy xuất địa chỉ IP truy cập công cộng để ghi nhận
     let clientIp = "unknown_guest_ip";
     try {
       const ipRes = await fetch("https://api.ipify.org?format=json");
@@ -120,7 +125,6 @@ export function VideoPlayer({ url, playing = false, controls = true }: { url: st
         clientIp = ipData.ip;
       }
     } catch {
-      // Dự phòng an toàn nếu bị trình duyệt chặn truy vấn IP ngoài
       clientIp = "local_guest_fallback_ip";
     }
 
@@ -159,7 +163,6 @@ export function VideoPlayer({ url, playing = false, controls = true }: { url: st
         setShowToast(true);
         setHasResumed(true);
 
-        // Tự động ẩn thông báo sau 8 giây
         const timer = setTimeout(() => {
           setShowToast(false);
         }, 8000);
@@ -168,6 +171,73 @@ export function VideoPlayer({ url, playing = false, controls = true }: { url: st
     }
   }, [storageKey]);
 
+  // Bộ lắng nghe tiến trình xem video (Anti-bypass & Auto resume)
+  const handleProgress = (state: { playedSeconds: number; played: number }) => {
+    const currentSeconds = Math.floor(state.playedSeconds);
+    if (currentSeconds <= 0 || duration <= 0) return;
+
+    // 1. Lưu thời gian phát hiện tại vào localStorage
+    if (storageKey && currentSeconds % 3 === 0) {
+      localStorage.setItem(storageKey, currentSeconds.toString());
+    }
+
+    // 2. Gửi API ghi nhận định kỳ mỗi 15 giây xem thực tế
+    const elapsedSinceLastLog = currentSeconds - lastLoggedProgress;
+    if (elapsedSinceLastLog >= 15 && user?.email) {
+      setLastLoggedProgress(currentSeconds);
+
+      fetch("/api/learning/progress", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "VIDEO",
+          userEmail: user.email,
+          videoId: ytId || cleanUrl,
+          duration: duration,
+          watchedSeconds: elapsedSinceLastLog
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.isCompleted && !completedToastShown) {
+          setCompletedToastShown(true);
+          setShowSuccessBadge(true);
+          setTimeout(() => setShowSuccessBadge(false), 6000);
+        }
+      })
+      .catch(err => console.error("Error logging video progress:", err));
+    }
+
+    // 3. Gửi log cuối cùng nếu xem đạt trên 90%
+    if (state.played >= 0.9 && !completedToastShown && user?.email) {
+      const finalElapsed = currentSeconds - lastLoggedProgress;
+      if (finalElapsed > 0) {
+        setCompletedToastShown(true); // set trước để tránh lặp gọi API song song
+        fetch("/api/learning/progress", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "VIDEO",
+            userEmail: user.email,
+            videoId: ytId || cleanUrl,
+            duration: duration,
+            watchedSeconds: finalElapsed
+          })
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            setShowSuccessBadge(true);
+            setTimeout(() => setShowSuccessBadge(false), 6000);
+          } else {
+            setCompletedToastShown(false); // rollback nếu lỗi
+          }
+        })
+        .catch(() => setCompletedToastShown(false));
+      }
+    }
+  };
+
   const handleRestart = () => {
     if (storageKey) {
       localStorage.setItem(storageKey, "0");
@@ -175,7 +245,8 @@ export function VideoPlayer({ url, playing = false, controls = true }: { url: st
     setShowToast(false);
     setHasResumed(false);
     setSavedTime(0);
-    setIframeKey((prev) => prev + 1); // Reset iframe về mốc 0 giây
+    setIframeKey((prev) => prev + 1); // Reset trình phát
+    setLastLoggedProgress(0);
   };
 
   const formatDuration = (seconds: number) => {
@@ -193,7 +264,6 @@ export function VideoPlayer({ url, playing = false, controls = true }: { url: st
     );
   }
 
-  // Ưu tiên mốc thời gian lưu trữ nếu có, nếu không sử dụng mốc thời gian gốc của URL
   const targetStartSeconds = hasResumed && savedTime > 5 ? Math.floor(savedTime) : urlStartTime;
 
   return (
@@ -212,35 +282,42 @@ export function VideoPlayer({ url, playing = false, controls = true }: { url: st
           )}
           <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px] group-hover:bg-black/20 transition-all" />
           
-          {/* Nút Play YouTube Gốc Tuyệt Đẹp */}
           <div className="absolute w-16 h-12 bg-red-600 rounded-xl flex items-center justify-center shadow-2xl group-hover:bg-red-500 group-hover:scale-110 transition-all">
-            <Play className="w-6 h-6 text-white fill-white" />
+             <Play className="w-6 h-6 text-white fill-white" />
           </div>
 
           <div className="absolute bottom-3 left-3 bg-black/85 backdrop-blur-sm border border-white/10 px-2.5 py-1 rounded-lg text-[11px] font-bold text-amber-400">
             🔒 Nhấp để xem video ({!user ? "Khách: 1 video/ngày" : "Miễn phí: 2 video/ngày"})
           </div>
         </div>
-      ) : ytId ? (
-        /* Native YouTube Embed Iframe Architecture guarantees perfect UI controls */
-        <iframe
-          key={iframeKey}
-          src={`https://www.youtube.com/embed/${ytId}?start=${targetStartSeconds}&autoplay=1&rel=0&modestbranding=1&controls=${controls ? "1" : "0"}`}
-          title="YouTube Video Player"
-          className="w-full h-full absolute inset-0 border-0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          allowFullScreen
-        />
       ) : (
-        /* Fallback cho các tệp video dạng chuỗi MP4/WebM tĩnh */
+        /* ReactPlayer xử lý đa năng cho cả YouTube và tệp MP4, giúp theo dõi logs JS chuẩn chỉnh */
         <ReactPlayer
+          key={iframeKey}
           url={cleanUrl}
           width="100%"
           height="100%"
-          playing={playing}
+          playing={true}
           controls={controls}
           className="absolute inset-0"
+          config={{
+            youtube: {
+              playerVars: { start: targetStartSeconds, autoplay: 1, rel: 0, modestbranding: 1 }
+            }
+          }}
+          onProgress={handleProgress}
+          onDuration={(d: number) => setDuration(d)}
         />
+      )}
+
+      {/* Giao diện Success Toast nhỏ chúc mừng ở góc trình phát */}
+      {showSuccessBadge && (
+        <div className="absolute bottom-3 right-3 z-50 pointer-events-none animate-slide-up">
+          <div className="bg-emerald-500/95 text-black border border-emerald-400 px-3 py-1.5 rounded-xl font-bold text-[11px] shadow-[0_0_15px_rgba(16,185,129,0.3)] flex items-center gap-1.5">
+            <span className="animate-bounce">🏆</span>
+            <span>Đã xem >90%! Đủ điều kiện nhận Points!</span>
+          </div>
+        </div>
       )}
 
       {/* Giao diện Overlay thông báo Ghi nhớ Mốc thời gian */}

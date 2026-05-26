@@ -43,6 +43,80 @@ export function FileViewerModal({
   const scrollRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
 
+  // States và Refs hỗ trợ cơ chế Anti-bypass đọc Ebook
+  const [secondsRead, setSecondsRead] = useState(0);
+  const [maxScrollPercent, setMaxScrollPercent] = useState(0);
+  const [docCompletedToastShown, setDocCompletedToastShown] = useState(false);
+  const [showDocSuccessBadge, setShowDocSuccessBadge] = useState(false);
+  const maxScrollRef = useRef(0);
+
+  // Reset tracking states khi mở modal mới
+  useEffect(() => {
+    if (isOpen) {
+      setSecondsRead(0);
+      setMaxScrollPercent(0);
+      maxScrollRef.current = 0;
+      setDocCompletedToastShown(false);
+      setShowDocSuccessBadge(false);
+    }
+  }, [isOpen]);
+
+  // Bộ lắng nghe sự kiện cuộn trang Ebook để tính độ sâu cuộn tối đa
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container || !isOpen) return;
+
+    const handleScroll = () => {
+      const scrollTop = container.scrollTop;
+      const scrollHeight = container.scrollHeight;
+      const clientHeight = container.clientHeight;
+      if (scrollHeight <= clientHeight) return;
+
+      const pct = Math.round((scrollTop / (scrollHeight - clientHeight)) * 100);
+      maxScrollRef.current = Math.max(maxScrollRef.current, pct);
+      setMaxScrollPercent(maxScrollRef.current);
+    };
+
+    container.addEventListener("scroll", handleScroll);
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, [isOpen, pageImages]);
+
+  // Bộ đếm thời gian và định kỳ gửi logs tiến độ đọc tài liệu lên API mỗi 15 giây
+  useEffect(() => {
+    if (!isOpen || !resourceId || !user?.email) return;
+
+    const interval = setInterval(() => {
+      setSecondsRead((prev) => {
+        const nextSeconds = prev + 15;
+
+        fetch("/api/learning/progress", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "DOCUMENT",
+            userEmail: user.email,
+            documentId: resourceId,
+            secondsRead: 15,
+            maxScrollPercent: maxScrollRef.current
+          })
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.isCompleted && !docCompletedToastShown) {
+            setDocCompletedToastShown(true);
+            setShowDocSuccessBadge(true);
+            setTimeout(() => setShowDocSuccessBadge(false), 6000);
+          }
+        })
+        .catch(err => console.error("Error logging document progress:", err));
+
+        return nextSeconds;
+      });
+    }, 15000);
+
+    return () => clearInterval(interval);
+  }, [isOpen, resourceId, user?.email, docCompletedToastShown]);
+
   // Load PDF and render pages
   useEffect(() => {
     if (!isOpen || !fileUrl) return;
@@ -157,6 +231,16 @@ export function FileViewerModal({
       <div className="absolute inset-0 bg-black/85 backdrop-blur-sm" onClick={onClose} />
 
       <div className="relative w-full max-w-5xl h-[92vh] bg-surface border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+        {/* Success toast overlay inside modal */}
+        {showDocSuccessBadge && (
+          <div className="absolute top-16 right-4 z-50 pointer-events-none animate-slide-down">
+            <div className="bg-emerald-500/95 text-black border border-emerald-400 px-4 py-2 rounded-xl font-bold text-xs shadow-[0_0_20px_rgba(16,185,129,0.4)] flex items-center gap-1.5">
+              <span>🏆</span>
+              <span>Đọc sách hoàn thành! Đủ điều kiện nhận Points!</span>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-border bg-surface/90 shrink-0">
           <div className="flex items-center gap-3 min-w-0">
@@ -319,11 +403,18 @@ export function FileViewerModal({
 
         {/* Footer */}
         <div className="flex items-center justify-between px-4 sm:px-6 py-2.5 border-t border-border bg-surface/90 shrink-0">
-          <p className="text-xs text-foreground/40">
-            {totalPages > 0
-              ? `Xem trước ${Math.min(maxPreviewPages, totalPages)}/${totalPages} trang`
-              : "Chế độ xem trước"}
-          </p>
+          <div className="flex items-center gap-3">
+            <p className="text-xs text-foreground/40">
+              {totalPages > 0
+                ? `Xem trước ${Math.min(maxPreviewPages, totalPages)}/${totalPages} trang`
+                : "Chế độ xem trước"}
+            </p>
+            {user?.email && (
+              <span className="text-[10px] bg-orange-500/10 border border-orange-500/20 text-orange-400 px-2 py-0.5 rounded-md font-mono flex items-center gap-1">
+                ⏱️ {Math.floor(secondsRead / 60)}m {secondsRead % 60}s | 📜 {maxScrollPercent}% cuộn
+              </span>
+            )}
+          </div>
           {viewStats && (
             <p className="text-xs text-foreground/40 flex items-center gap-1.5">
               <Eye className="w-3 h-3" />{fmt(viewStats.total)} lượt xem
