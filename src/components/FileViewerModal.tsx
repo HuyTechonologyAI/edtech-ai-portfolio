@@ -4,6 +4,7 @@ import { X, ExternalLink, Lock, Eye, Calendar, CalendarDays, CalendarRange, Cale
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { CommentSection } from "./CommentSection";
+import { LeadCaptureModal } from "./LeadCaptureModal";
 
 interface ViewStats {
   today: number;
@@ -42,6 +43,9 @@ export function FileViewerModal({
   const [hasRecordedView, setHasRecordedView] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
+
+  // Lead Capture Modal state
+  const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
 
   // States và Refs hỗ trợ cơ chế Anti-bypass đọc Ebook
   const [secondsRead, setSecondsRead] = useState(0);
@@ -375,10 +379,17 @@ export function FileViewerModal({
                           ) : (
                             <button 
                               onClick={() => {
-                                if (resourceId) {
-                                  window.open(`/api/resources/get-signed-url?id=${resourceId}`, "_blank");
+                                // Nếu là Admin/Premium hoặc đã đăng ký lead trước đó, cho phép tải trực tiếp
+                                const isLeadRegistered = typeof window !== "undefined" && localStorage.getItem("zentra_lead_registered") === "true";
+                                if (canDownloadPremium || isLeadRegistered) {
+                                  if (resourceId) {
+                                    window.open(`/api/resources/get-signed-url?id=${resourceId}`, "_blank");
+                                  } else {
+                                    window.open(fileUrl, "_blank");
+                                  }
                                 } else {
-                                  window.open(fileUrl, "_blank");
+                                  // Chặn và hiện Modal thu thập thông tin
+                                  setIsLeadModalOpen(true);
                                 }
                               }}
                               className="flex items-center justify-center gap-2 px-5 py-3 bg-secondary text-black hover:bg-secondary/90 rounded-xl font-bold text-sm transition-all shadow-[0_0_20px_rgba(0,255,133,0.25)] cursor-pointer"
@@ -421,6 +432,22 @@ export function FileViewerModal({
             </p>
           )}
         </div>
+
+        {/* Lead Capture Modal Funnel */}
+        <LeadCaptureModal
+          isOpen={isLeadModalOpen}
+          onClose={() => setIsLeadModalOpen(false)}
+          onSuccess={(fullName, email, phone) => {
+            setIsLeadModalOpen(false);
+            if (resourceId) {
+              window.open(`/api/resources/get-signed-url?id=${resourceId}`, "_blank");
+            } else {
+              window.open(fileUrl, "_blank");
+            }
+          }}
+          targetItemTitle={title}
+          source="DOWNLOAD_RESOURCE"
+        />
       </div>
     </div>
   );
