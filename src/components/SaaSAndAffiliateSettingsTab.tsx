@@ -44,30 +44,36 @@ export default function SaaSAndAffiliateSettingsTab() {
   const fetchSettings = useCallback(async () => {
     setIsLoading(true);
     try {
-      // Ưu tiên nạp cấu hình ghi đè từ LocalStorage trước để giữ nguyên trạng thái Admin đã lưu
+      // 1. Nạp nhanh từ LocalStorage trước để phản hồi tức thì
       const cachedTiers = localStorage.getItem("custom_saas_tiers");
       const cachedAff = localStorage.getItem("custom_affiliate_config");
       const cachedMatrix = localStorage.getItem("custom_matrix_features");
 
-      let hasCache = false;
       if (cachedTiers) {
-        try { setSaasTiers(JSON.parse(cachedTiers)); hasCache = true; } catch {}
+        try { setSaasTiers(JSON.parse(cachedTiers)); } catch {}
       }
       if (cachedAff) {
-        try { setAffiliateConfig(JSON.parse(cachedAff)); hasCache = true; } catch {}
+        try { setAffiliateConfig(JSON.parse(cachedAff)); } catch {}
       }
       if (cachedMatrix) {
-        try { setMatrixFeatures(JSON.parse(cachedMatrix)); hasCache = true; } catch {}
+        try { setMatrixFeatures(JSON.parse(cachedMatrix)); } catch {}
       }
 
-      // Nếu chưa có dữ liệu đệm, nạp từ Server API
-      if (!hasCache) {
-        const res = await fetch(`/api/admin/settings?t=${Date.now()}`, { cache: "no-store", headers: { "Cache-Control": "no-cache" } });
-        const data = await res.json();
-        if (data.success && data.settings) {
-          if (data.settings.saas_tiers) setSaasTiers(data.settings.saas_tiers);
-          if (data.settings.affiliate_config) setAffiliateConfig(data.settings.affiliate_config);
-          if (data.settings.matrix_features) setMatrixFeatures(data.settings.matrix_features);
+      // 2. Luôn nạp từ Server API để đồng bộ hóa bản mới nhất từ DB
+      const res = await fetch(`/api/admin/settings?t=${Date.now()}`, { cache: "no-store", headers: { "Cache-Control": "no-cache" } });
+      const data = await res.json();
+      if (data.success && data.settings) {
+        if (data.settings.saas_tiers) {
+          setSaasTiers(data.settings.saas_tiers);
+          localStorage.setItem("custom_saas_tiers", JSON.stringify(data.settings.saas_tiers));
+        }
+        if (data.settings.affiliate_config) {
+          setAffiliateConfig(data.settings.affiliate_config);
+          localStorage.setItem("custom_affiliate_config", JSON.stringify(data.settings.affiliate_config));
+        }
+        if (data.settings.matrix_features) {
+          setMatrixFeatures(data.settings.matrix_features);
+          localStorage.setItem("custom_matrix_features", JSON.stringify(data.settings.matrix_features));
         }
       }
     } catch (err) {

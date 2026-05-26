@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -48,7 +48,7 @@ const DEFAULT_SETTINGS = {
 
 export async function GET() {
   try {
-    const { data, error } = await supabase.from("cms_settings").select("*");
+    const { data, error } = await supabaseAdmin.from("cms_settings").select("*");
 
     // Gộp dữ liệu mẫu với dữ liệu đã lưu trong bộ đệm Node.js toàn cục
     const settingsMap: Record<string, any> = { 
@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
     // Luôn cập nhật vào bộ đệm Node.js toàn cục trước để phản hồi tức thì cho mọi thiết bị
     globalMemorySettings[key_name] = setting_value;
 
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
       .from("cms_settings")
       .upsert({
         key_name,

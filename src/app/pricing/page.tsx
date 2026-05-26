@@ -12,36 +12,37 @@ export default function PricingPage() {
   const [customMatrixList, setCustomMatrixList] = useState<any[] | null>(null);
 
   useEffect(() => {
-    // Ưu tiên nạp đệm ghi đè từ LocalStorage trước để phản hồi tức thì với thao tác lưu của Admin
+    // 1. Nạp nhanh từ LocalStorage trước để phản hồi tức thì
     const cachedTiers = localStorage.getItem("custom_saas_tiers");
     const cachedMatrix = localStorage.getItem("custom_matrix_features");
 
-    let loadedFromCache = false;
     if (cachedTiers) {
       try {
         setCustomTiersList(JSON.parse(cachedTiers));
-        loadedFromCache = true;
       } catch { /* ignore */ }
     }
     if (cachedMatrix) {
       try {
         setCustomMatrixList(JSON.parse(cachedMatrix));
-        loadedFromCache = true;
       } catch { /* ignore */ }
     }
 
-    // Nếu chưa có ghi đè cục bộ, thử nạp từ API máy chủ
-    if (!loadedFromCache) {
-      fetch(`/api/admin/settings?t=${Date.now()}`, { cache: "no-store", headers: { "Cache-Control": "no-cache" } })
-        .then(res => res.json())
-        .then(data => {
-          if (data.success && data.settings) {
-            if (data.settings.saas_tiers) setCustomTiersList(data.settings.saas_tiers);
-            if (data.settings.matrix_features) setCustomMatrixList(data.settings.matrix_features);
+    // 2. Luôn nạp từ Server API để cập nhật bản mới nhất từ database
+    fetch(`/api/admin/settings?t=${Date.now()}`, { cache: "no-store", headers: { "Cache-Control": "no-cache" } })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.settings) {
+          if (data.settings.saas_tiers) {
+            setCustomTiersList(data.settings.saas_tiers);
+            localStorage.setItem("custom_saas_tiers", JSON.stringify(data.settings.saas_tiers));
           }
-        })
-        .catch(() => {});
-    }
+          if (data.settings.matrix_features) {
+            setCustomMatrixList(data.settings.matrix_features);
+            localStorage.setItem("custom_matrix_features", JSON.stringify(data.settings.matrix_features));
+          }
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const baseTiers = [
