@@ -115,6 +115,138 @@ export default function PricingPage() {
     { name: "Hỗ trợ Kỹ thuật & Cố vấn", free: "Cộng đồng", pro: "Kênh riêng", enterprise: "Trực tiếp 1-1" }
   ];
 
+  const getDynamicFeatures = (tierId: string, defaultFeatures: string[] = []) => {
+    const matrix = customMatrixList || matrixFeatures;
+    if (!matrix || matrix.length === 0) return defaultFeatures;
+
+    const features: string[] = [];
+    const matchedRowNames = new Set<string>();
+
+    const findRow = (queries: string[]) => {
+      const found = matrix.find(r => 
+        queries.some(q => r.name.toLowerCase().includes(q))
+      );
+      if (found) {
+        matchedRowNames.add(found.name);
+      }
+      return found;
+    };
+
+    // 1. Xem trước Tài liệu
+    const docPreviewRow = findRow(["xem trước tài liệu", "xem trước"]);
+    if (docPreviewRow) {
+      const val = docPreviewRow[tierId];
+      if (val !== false && val !== "false" && val !== "-") {
+        if (val === "5 trang đầu") {
+          features.push("Xem trước 5 trang đầu Ebook & Slide");
+        } else if (val === "Không giới hạn") {
+          features.push("Xem trước tài liệu không giới hạn số trang");
+        } else if (typeof val === "string" && val.trim() !== "") {
+          features.push(val);
+        }
+      }
+    }
+
+    // 2. Tải tài nguyên Ebook/Slide Premium
+    const downloadRow = findRow(["tải tài nguyên", "ebook/slide"]);
+    if (downloadRow) {
+      const val = downloadRow[tierId];
+      if (val === true || val === "true") {
+        features.push("Tải không giới hạn Ebook & Slide Premium");
+      } else if (typeof val === "string" && val !== "false" && val !== "-") {
+        features.push(val);
+      }
+    }
+
+    // 3. Truy cập Kho Prompt chuyên sâu
+    const promptRow = findRow(["kho prompt", "prompt"]);
+    if (promptRow) {
+      const val = promptRow[tierId];
+      if (val === true || val === "true") {
+        features.push("Truy cập kho Prompt thực chiến x10 hiệu suất");
+      } else if (typeof val === "string" && val !== "false" && val !== "-") {
+        features.push(val);
+      }
+    }
+
+    // 4. Tải kịch bản JSON Make.com / n8n
+    const jsonRow = findRow(["kịch bản json", "make.com", "n8n"]);
+    if (jsonRow) {
+      const val = jsonRow[tierId];
+      if (val === true || val === "true") {
+        features.push("Tải mã nguồn JSON Make/n8n nhập thẳng app");
+      } else if (typeof val === "string" && val !== "false" && val !== "-") {
+        features.push(val);
+      }
+    }
+
+    // 5. Tốc độ Tích lũy Point Gamification
+    const pointRow = findRow(["tốc độ", "point"]);
+    if (pointRow) {
+      const val = pointRow[tierId];
+      if (val !== false && val !== "false" && val !== "-") {
+        if (val === "Tiêu chuẩn (x1)") {
+          features.push("Tốc độ tích lũy thưởng tiêu chuẩn (x1)");
+        } else if (val === "Nhanh (x2)") {
+          features.push("Tốc độ đào Point nhanh gấp đôi (x2)");
+        } else if (val === "Siêu tốc (x5)") {
+          features.push("Tốc độ đào Point siêu tốc x5 lần");
+        } else if (typeof val === "string" && val.trim() !== "") {
+          features.push(`Tốc độ tích lũy Point: ${val}`);
+        }
+      }
+    }
+
+    // 6. Hỗ trợ Kỹ thuật & Cố vấn
+    const supportRow = findRow(["hỗ trợ", "cố vấn"]);
+    if (supportRow) {
+      const val = supportRow[tierId];
+      if (val !== false && val !== "false" && val !== "-") {
+        if (val === "Kênh riêng") {
+          features.push("Hỗ trợ giải đáp ưu tiên qua kênh riêng");
+        } else if (val === "Trực tiếp 1-1") {
+          features.push("Tư vấn quy trình tự động hóa doanh nghiệp 1-1");
+        } else if (val === "Cộng đồng") {
+          features.push("Tham gia cộng đồng ZentraTech chung");
+        } else if (typeof val === "string" && val.trim() !== "") {
+          features.push(val);
+        }
+      }
+    }
+
+    // Custom/unmatched rows
+    matrix.forEach(row => {
+      if (!matchedRowNames.has(row.name)) {
+        const val = row[tierId];
+        if (val === true || val === "true") {
+          features.push(row.name);
+        } else if (typeof val === "string" && val !== "false" && val !== "-" && val.trim() !== "") {
+          if (val.toLowerCase() === "có") {
+            features.push(row.name);
+          } else {
+            features.push(`${row.name}: ${val}`);
+          }
+        }
+      }
+    });
+
+    // Static features that are not in the matrix to keep pricing cards complete
+    if (tierId === "free") {
+      if (!features.some(f => f.toLowerCase().includes("nhiệm vụ"))) {
+        features.push("Làm nhiệm vụ hàng ngày tích lũy Point");
+      }
+    } else if (tierId === "enterprise") {
+      if (!features.some(f => f.toLowerCase().includes("toàn bộ đặc quyền"))) {
+        features.unshift("Toàn bộ đặc quyền của gói Pro Creator");
+      }
+      if (!features.some(f => f.toLowerCase().includes("mastermind"))) {
+        features.push("Tham gia nhóm Mastermind hỗ trợ chuyên sâu");
+      }
+    }
+
+    return features;
+  };
+
   return (
     <main className="flex-1 py-12 md:py-20 bg-background relative overflow-hidden animate-fade-in">
       {/* Nền Gradient ánh sáng Neon */}
@@ -229,7 +361,7 @@ export default function PricingPage() {
                   {/* Danh sách checkmark */}
                   <div className="space-y-2.5 pt-2">
                     <div className="text-[11px] font-bold uppercase tracking-wider text-foreground/40">Đặc quyền bao gồm:</div>
-                    {tier.features?.map((feat: any, idx: number) => (
+                    {getDynamicFeatures(tier.id, baseTiers.find((t: any) => t.id === tier.id)?.features || []).map((feat: any, idx: number) => (
                       <div key={idx} className="flex items-start gap-2 text-xs text-foreground/80">
                         <Check className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${isFeatured ? 'text-secondary' : 'text-secondary/60'}`} />
                         <span>{feat}</span>
