@@ -315,7 +315,7 @@ export function VideoPlayer({ url, playing = false, controls = true }: { url: st
         <div className="absolute bottom-3 right-3 z-50 pointer-events-none animate-slide-up">
           <div className="bg-emerald-500/95 text-black border border-emerald-400 px-3 py-1.5 rounded-xl font-bold text-[11px] shadow-[0_0_15px_rgba(16,185,129,0.3)] flex items-center gap-1.5">
             <span className="animate-bounce">🏆</span>
-            <span>Đã xem >90%! Đủ điều kiện nhận Points!</span>
+            <span>Đã xem &gt;90%! Đủ điều kiện nhận Points!</span>
           </div>
         </div>
       )}
