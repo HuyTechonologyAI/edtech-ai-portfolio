@@ -16,11 +16,13 @@ interface DailyTask {
 interface StudentBalance {
   points: number;
   redeemed_courses: string[];
+  streak_count?: number;
+  last_checkin_date?: string | null;
 }
 
 export default function RewardsGamificationPage() {
   const { user } = useAuth();
-  const [balance, setBalance] = useState<StudentBalance>({ points: 0, redeemed_courses: [] });
+  const [balance, setBalance] = useState<StudentBalance>({ points: 0, redeemed_courses: [], streak_count: 0, last_checkin_date: null });
   const [tasks, setTasks] = useState<DailyTask[]>([]);
   const [completedToday, setCompletedToday] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,13 +66,13 @@ export default function RewardsGamificationPage() {
       const res = await fetch(`/api/rewards?email=${encodeURIComponent(user.email || "")}`);
       const data = await res.json();
       if (data.success) {
-        setBalance(data.balance || { points: 0, redeemed_courses: [] });
+        setBalance(data.balance || { points: 0, redeemed_courses: [], streak_count: 0, last_checkin_date: null });
         setTasks(data.tasks || []);
         setCompletedToday(data.completedToday || []);
       }
     } catch {
       // fallback local demo state
-      setBalance({ points: 20, redeemed_courses: [] });
+      setBalance({ points: 20, redeemed_courses: [], streak_count: 0, last_checkin_date: null });
     } finally {
       setLoading(false);
     }
@@ -103,10 +105,17 @@ export default function RewardsGamificationPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
 
-      // Cập nhật state tức thì
-      setBalance(prev => ({ ...prev, points: prev.points + task.reward_points }));
-      setCompletedToday(prev => [...prev, task.id]);
-      alert(`🎉 Chúc mừng! Bạn đã tích lũy thành công +${task.reward_points} Points!`);
+      // Kích hoạt sự kiện để Header Streak Widget tự động cập nhật
+      window.dispatchEvent(new Event("checkin-completed"));
+
+      // Tải lại toàn bộ dữ liệu để cập nhật điểm và streak chính xác từ server
+      await fetchHubData();
+
+      alert(`🎉 Chúc mừng! Bạn đã tích lũy thành công +${data.pointsAwarded || task.reward_points} Points! ${
+        task.target_type === "DAILY_CHECKIN"
+          ? `Chuỗi điểm danh hiện tại của bạn: 🔥 ${data.streakCount || 1} ngày.`
+          : ""
+      }`);
     } catch (err: any) {
       alert("Lỗi: " + err.message);
     } finally {
@@ -170,12 +179,12 @@ export default function RewardsGamificationPage() {
           <div className="absolute top-0 right-0 w-80 h-80 bg-orange-500/10 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute bottom-0 left-0 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
 
-          <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6 text-center md:text-left">
+          <div className="relative z-10 flex flex-col lg:flex-row justify-between items-center gap-8 text-center lg:text-left">
             <div className="space-y-3 max-w-xl">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/30 text-orange-400 text-xs font-extrabold uppercase tracking-widest">
                 <Trophy className="w-4 h-4 text-amber-400 animate-bounce" /> ZentraTech Gamification Hub
               </div>
-              <h1 className="text-3xl md:text-4xl font-black tracking-tight text-foreground">
+              <h1 className="text-3xl md:text-4xl font-black tracking-tight text-foreground leading-tight">
                 Hoàn Thành Nhiệm Vụ Hàng Ngày <br />
                 <span className="text-orange-400 neon-glow-text">Đổi Khóa Học Bản Quyền</span>
               </h1>
@@ -184,26 +193,72 @@ export default function RewardsGamificationPage() {
               </p>
             </div>
 
-            {/* Points Identity Card Badge */}
-            <div className="w-full md:w-80 bg-surface/90 backdrop-blur-md border-2 border-orange-500/40 rounded-2xl p-6 shadow-[0_0_30px_rgba(249,115,22,0.2)] flex flex-col items-center shrink-0 space-y-2">
-              <span className="text-xs font-bold text-foreground/60 uppercase tracking-wider">Số dư tài sản của bạn</span>
-              <div className="flex items-baseline gap-2">
-                <span className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-amber-300">
-                  {balance.points}
-                </span>
-                <span className="text-lg font-extrabold text-orange-400">Points</span>
+            {/* Points Identity & Streak Card Badge */}
+            <div className="w-full lg:w-96 flex flex-col sm:flex-row lg:flex-col gap-4 shrink-0 justify-center">
+              {/* Thẻ Điểm */}
+              <div className="w-full sm:w-1/2 lg:w-full bg-surface/90 backdrop-blur-md border border-orange-500/20 rounded-2xl p-5 shadow-[0_0_30px_rgba(249,115,22,0.1)] flex flex-col items-center space-y-2">
+                <span className="text-[10px] font-bold text-foreground/50 uppercase tracking-wider">Số dư tài sản của bạn</span>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-amber-300">
+                    {balance.points}
+                  </span>
+                  <span className="text-sm font-bold text-orange-400 font-mono">Points</span>
+                </div>
+
+                <div className="w-full pt-2 border-t border-white/5 text-center">
+                  <span className="text-[9px] text-foreground/40 block">Định giá quy đổi tương đương:</span>
+                  <span className="text-xs font-bold text-emerald-400 font-mono tracking-tight">{formattedVND}</span>
+                </div>
               </div>
 
-              <div className="w-full pt-2 border-t border-white/5 text-center">
-                <span className="text-[10px] text-foreground/40 block">Định giá quy đổi tương đương:</span>
-                <span className="text-sm font-bold text-emerald-400 font-mono tracking-tight">{formattedVND}</span>
-              </div>
+              {/* Thẻ Streak */}
+              <div className="w-full sm:w-1/2 lg:w-full bg-gradient-to-br from-amber-500/10 via-surface to-orange-500/5 backdrop-blur-md border border-amber-500/30 rounded-2xl p-5 shadow-[0_0_30px_rgba(245,158,11,0.15)] space-y-3 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl pointer-events-none group-hover:bg-amber-500/10 transition-colors duration-500" />
+                
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="relative flex items-center justify-center">
+                      <span className="absolute inline-flex h-4 w-4 rounded-full bg-amber-500/20 animate-ping" />
+                      <Flame className="w-5 h-5 text-amber-500 fill-amber-500/20 animate-pulse" />
+                    </div>
+                    <div className="text-left">
+                      <h4 className="text-xs font-bold text-foreground/80 leading-none">Daily Streak</h4>
+                      <p className="text-[9px] text-foreground/40 mt-0.5">Điểm danh liên tục</p>
+                    </div>
+                  </div>
+                  
+                  <span className="text-2xl font-black text-amber-400 font-mono">
+                    {balance.streak_count || 0} <span className="text-xs font-normal text-foreground/60">ngày</span>
+                  </span>
+                </div>
 
-              {!user && (
-                <Link href="/roadmap" className="w-full mt-2 block text-center py-1.5 bg-orange-500/20 text-orange-400 text-[11px] font-bold rounded-lg border border-orange-500/30">
-                  Đăng nhập để đồng bộ
-                </Link>
-              )}
+                {/* 7-day Milestone Progress Bar */}
+                <div className="space-y-1.5 pt-1">
+                  <div className="flex justify-between text-[9px] text-foreground/50 font-bold uppercase">
+                    <span>Mốc thưởng lũy tiến</span>
+                    <span className="text-amber-400 font-mono">{(balance.streak_count || 0) % 7}/7 ngày</span>
+                  </div>
+                  <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
+                    <div 
+                      className="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(245,158,11,0.5)]"
+                      style={{ width: `${Math.min((((balance.streak_count || 0) % 7 === 0 && (balance.streak_count || 0) > 0) ? 7 : (balance.streak_count || 0) % 7) / 7 * 100, 100)}%` }}
+                    />
+                  </div>
+                  
+                  {/* Indicators for milestones */}
+                  <div className="flex justify-between text-[8px] font-bold text-foreground/40 font-mono px-0.5">
+                    <span className={balance.streak_count && balance.streak_count % 7 >= 1 ? "text-amber-500/70" : ""}>Ngày 1 (+2)</span>
+                    <span className={balance.streak_count && balance.streak_count % 7 >= 3 ? "text-amber-500/70 font-black" : ""}>Ngày 3 (+5) 🔥</span>
+                    <span className={balance.streak_count && balance.streak_count % 7 === 0 && balance.streak_count > 0 ? "text-amber-400 font-black animate-pulse" : ""}>Ngày 7 (+10) 👑</span>
+                  </div>
+                </div>
+
+                {!user && (
+                  <Link href="/auth" className="w-full mt-1 block text-center py-1.5 bg-amber-500/20 text-amber-400 text-[10px] font-bold rounded-lg border border-amber-500/30">
+                    Đăng nhập để đồng bộ
+                  </Link>
+                )}
+              </div>
             </div>
           </div>
         </div>

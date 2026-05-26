@@ -10,6 +10,7 @@ import { FloatingOrbs } from "@/components/FloatingOrbs";
 import { AuthProvider } from "@/components/AuthProvider";
 import { UserMenu } from "@/components/UserMenu";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { StreakWidget } from "@/components/StreakWidget";
 import { ReferralTracker } from "@/components/ReferralTracker";
 import { MobileNavMenu } from "@/components/MobileNavMenu";
 
@@ -109,6 +110,7 @@ export default function RootLayout({
                   <Link href="/rewards" className="text-sm font-bold text-orange-400 bg-orange-500/10 px-3 py-1 rounded-full border border-orange-500/30 hover:scale-105 transition-all shadow-[0_0_15px_rgba(249,115,22,0.2)]">🎁 Đổi Quà</Link>
                 </nav>
                 <div className="flex items-center gap-2 md:gap-2.5">
+                  <StreakWidget />
                   <LanguageSwitcher />
                   <Link href="/contact" className="px-4 py-2 bg-secondary/10 text-secondary border border-secondary/50 rounded-full text-sm font-bold hover:bg-secondary hover:text-black hover:shadow-[0_0_20px_rgba(0,255,133,0.4)] transition-all hidden sm:block">
                     Liên hệ
