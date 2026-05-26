@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export async function GET(req: NextRequest) {
   try {
@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
     }
 
     // 1. Fetch current student's points balance ledger
-    let { data: balData, error: balErr } = await supabase
+    let { data: balData, error: balErr } = await supabaseAdmin
       .from("student_points_balance")
       .select("*")
       .eq("user_email", userEmail)
@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
 
     // Nếu chưa từng có row, khởi tạo ngầm cho học viên
     if (!balData && !balErr) {
-      const { data: newBal } = await supabase
+      const { data: newBal } = await supabaseAdmin
         .from("student_points_balance")
         .insert([{ user_email: userEmail, points: 0, redeemed_courses: [], streak_count: 0, last_checkin_date: null }])
         .select()
@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
     };
 
     // 2. Fetch active daily tasks
-    const { data: tasksData } = await supabase
+    const { data: tasksData } = await supabaseAdmin
       .from("daily_tasks")
       .select("*")
       .eq("is_active", true)
@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
     // 3. Fetch completed task records for TODAY (múi giờ GMT+7)
     const tzOffset = 7 * 60 * 60 * 1000;
     const todayStr = new Date(new Date().getTime() + tzOffset).toISOString().split("T")[0]; // YYYY-MM-DD
-    const { data: compData } = await supabase
+    const { data: compData } = await supabaseAdmin
       .from("task_completions")
       .select("task_id")
       .eq("user_email", userEmail)
@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
     const completedTaskIds = (compData || []).map(c => c.task_id);
 
     // Dữ liệu mẫu (fallback) trong trường hợp bảng trống
-    const activeTasks = tasksData || [
+    const activeTasks = (tasksData && tasksData.length > 0) ? tasksData : [
       { id: 1, title: "Đọc Ebook Tối ưu hóa Workflow chuyên sâu trong 10 phút", reward_points: 10, target_type: "READ_EBOOK" },
       { id: 2, title: "Xem hết Video Hướng dẫn n8n & Telegram Bot", reward_points: 10, target_type: "WATCH_VIDEO" },
       { id: 3, title: "Điểm danh truy cập hệ thống học tập hôm nay", reward_points: 2, target_type: "DAILY_CHECKIN" }
@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
       if (!taskId) return NextResponse.json({ error: "Missing Task ID" }, { status: 400 });
 
       // 1. Kiểm tra thông tin nhiệm vụ từ CSDL daily_tasks
-      const { data: taskInfo } = await supabase
+      const { data: taskInfo } = await supabaseAdmin
         .from("daily_tasks")
         .select("*")
         .eq("id", taskId)
@@ -116,7 +116,7 @@ export async function POST(req: NextRequest) {
       const startOfTodayUtc = new Date(dateObj.getTime() - 7 * 60 * 60 * 1000).toISOString();
 
       if (taskType === "READ_EBOOK") {
-        const { data: docProgress, error: docErr } = await supabase
+        const { data: docProgress, error: docErr } = await supabaseAdmin
           .from("user_document_progress")
           .select("id")
           .eq("user_email", userEmail)
@@ -130,7 +130,7 @@ export async function POST(req: NextRequest) {
           }, { status: 400 });
         }
       } else if (taskType === "WATCH_VIDEO") {
-        const { data: videoProgress, error: vidErr } = await supabase
+        const { data: videoProgress, error: vidErr } = await supabaseAdmin
           .from("user_video_progress")
           .select("id")
           .eq("user_email", userEmail)
@@ -146,7 +146,7 @@ export async function POST(req: NextRequest) {
       }
 
       // 3. Ghi nhận hoàn thành (sẽ văng lỗi unique nếu bấm 2 lần/ngày)
-      const { error: compErr } = await supabase
+      const { error: compErr } = await supabaseAdmin
         .from("task_completions")
         .insert([{
           user_email: userEmail,
@@ -164,14 +164,14 @@ export async function POST(req: NextRequest) {
       const isCheckinTask = (taskType === "DAILY_CHECKIN");
 
       // Lấy số dư hiện tại của học viên
-      let { data: curBal, error: balFetchErr } = await supabase
+      let { data: curBal, error: balFetchErr } = await supabaseAdmin
         .from("student_points_balance")
         .select("*")
         .eq("user_email", userEmail)
         .maybeSingle();
 
       if (!curBal && !balFetchErr) {
-        const { data: newBal } = await supabase
+        const { data: newBal } = await supabaseAdmin
           .from("student_points_balance")
           .insert([{ user_email: userEmail, points: 0, redeemed_courses: [], streak_count: 0, last_checkin_date: null }])
           .select()
@@ -213,7 +213,7 @@ export async function POST(req: NextRequest) {
         pointsToAdd = basePoints + bonusPoints;
 
         // Cập nhật số dư điểm, streak_count và last_checkin_date
-        await supabase
+        await supabaseAdmin
           .from("student_points_balance")
           .update({
             points: curPoints + pointsToAdd,
@@ -225,7 +225,7 @@ export async function POST(req: NextRequest) {
       } else {
         // Các nhiệm vụ khác: giữ nguyên streak_count, chỉ cộng điểm
         newStreak = currentStreak;
-        await supabase
+        await supabaseAdmin
           .from("student_points_balance")
           .update({
             points: curPoints + pointsToAdd,
@@ -251,7 +251,7 @@ export async function POST(req: NextRequest) {
       const requiredPoints = Number(rewardPoints) || 50;
 
       // Lấy số dư hiện tại
-      const { data: curBal } = await supabase
+      const { data: curBal } = await supabaseAdmin
         .from("student_points_balance")
         .select("*")
         .eq("user_email", userEmail)
@@ -269,7 +269,7 @@ export async function POST(req: NextRequest) {
 
       // Trừ điểm và nối mảng
       const updatedCourses = [...redeemedList, courseId];
-      const { error: updErr } = await supabase
+      const { error: updErr } = await supabaseAdmin
         .from("student_points_balance")
         .update({
           points: curBal.points - requiredPoints,

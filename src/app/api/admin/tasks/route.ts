@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 // Helper authentication verification
 function isAuthenticatedAdminOrStaff(req: NextRequest): boolean {
@@ -9,7 +9,7 @@ function isAuthenticatedAdminOrStaff(req: NextRequest): boolean {
 
 export async function GET() {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from("daily_tasks")
       .select("*")
       .order("created_at", { ascending: false });
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Thiếu thông tin bắt buộc" }, { status: 400 });
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from("daily_tasks")
       .insert([{
         title,
@@ -71,7 +71,7 @@ export async function PUT(req: NextRequest) {
 
     if (!id) return NextResponse.json({ error: "Missing Task ID" }, { status: 400 });
 
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
       .from("daily_tasks")
       .update(body)
       .eq("id", id);
@@ -94,7 +94,7 @@ export async function DELETE(req: NextRequest) {
 
     if (!id) return NextResponse.json({ error: "Missing Task ID" }, { status: 400 });
 
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
       .from("daily_tasks")
       .delete()
       .eq("id", id);
