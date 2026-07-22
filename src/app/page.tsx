@@ -1,9 +1,81 @@
 "use client";
 
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { ArrowRight, Bot, Zap, BookOpen, Brain } from "lucide-react";
+import { ArrowRight, Bot, Zap, BookOpen, Brain, Users, Star, FileText, Workflow } from "lucide-react";
 import { motion, Variants } from "framer-motion";
 import { TiltCard } from "@/components/TiltCard";
+
+// === Animated Counter Component ===
+function AnimatedCounter({ target, suffix = "", prefix = "", duration = 2000 }: { target: number; suffix?: string; prefix?: string; duration?: number }) {
+  const [count, setCount] = useState(0);
+  const [started, setStarted] = useState(false);
+  const ref = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting && !started) setStarted(true); },
+      { threshold: 0.5 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [started]);
+
+  useEffect(() => {
+    if (!started) return;
+    const startTime = performance.now();
+    const step = (now: number) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      // Easing: ease-out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setCount(Math.floor(eased * target));
+      if (progress < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }, [started, target, duration]);
+
+  return (
+    <span ref={ref}>
+      {prefix}{count.toLocaleString("vi-VN")}{suffix}
+    </span>
+  );
+}
+
+// === Typewriter Text Component ===
+function TypewriterText({ phrases, delay = 2500 }: { phrases: string[]; delay?: number }) {
+  const [index, setIndex] = useState(0);
+  const [subIndex, setSubIndex] = useState(0);
+  const [reverse, setReverse] = useState(false);
+
+  useEffect(() => {
+    if (subIndex === phrases[index].length + 1 && !reverse) {
+      const timeout = setTimeout(() => setReverse(true), delay);
+      return () => clearTimeout(timeout);
+    }
+
+    if (subIndex === 0 && reverse) {
+      setReverse(false);
+      setIndex((prev) => (prev + 1) % phrases.length);
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      setSubIndex((prev) => prev + (reverse ? -1 : 1));
+    }, reverse ? 40 : 80);
+
+    return () => clearTimeout(timeout);
+  }, [subIndex, index, reverse, phrases, delay]);
+
+  return (
+    <span className="text-secondary neon-glow-text inline-block min-w-[280px] text-left">
+      {phrases[index].substring(0, subIndex)}
+      <span className="typewriter-cursor" />
+    </span>
+  );
+}
 
 export default function Home() {
   const containerVariants: Variants = {
@@ -60,7 +132,7 @@ export default function Home() {
               transition={{ duration: 0.8, delay: 0.2, type: "spring" }}
               className="inline-block"
             >
-              Làm Chủ <span className="text-secondary neon-glow-text">Trí Tuệ Nhân Tạo</span> & Tự Động Hóa
+              Làm Chủ <TypewriterText phrases={["Trí Tuệ Nhân Tạo", "Tự Động Hóa n8n", "Quy Trình Doanh Nghiệp", "Trợ Lý AI Agent"]} /> & Tự Động Hóa
             </motion.span>
           </motion.h1>
           
@@ -102,7 +174,7 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <motion.div variants={itemVariants} className="h-full">
               <TiltCard>
-                <div className="glass-panel h-full p-8 rounded-3xl flex flex-col items-start text-left shadow-2xl relative overflow-hidden group">
+                <div className="glass-panel gradient-border-card h-full p-8 rounded-3xl flex flex-col items-start text-left shadow-2xl relative overflow-hidden group">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-secondary/10 rounded-full blur-3xl -z-10 group-hover:bg-secondary/20 transition-all"></div>
                   <div 
                     className="p-4 rounded-2xl bg-secondary/10 text-secondary mb-6 border border-secondary/20 shadow-[0_0_15px_rgba(0,255,133,0.3)] transition-transform duration-300"
@@ -118,7 +190,7 @@ export default function Home() {
             
             <motion.div variants={itemVariants} className="h-full">
               <TiltCard>
-                <div className="glass-panel h-full p-8 rounded-3xl flex flex-col items-start text-left shadow-2xl relative overflow-hidden group">
+                <div className="glass-panel gradient-border-card h-full p-8 rounded-3xl flex flex-col items-start text-left shadow-2xl relative overflow-hidden group">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-secondary/10 rounded-full blur-3xl -z-10 group-hover:bg-secondary/20 transition-all"></div>
                   <div 
                     className="p-4 rounded-2xl bg-secondary/10 text-secondary mb-6 border border-secondary/20 shadow-[0_0_15px_rgba(0,255,133,0.3)] transition-transform duration-300"
@@ -165,6 +237,58 @@ export default function Home() {
                 </TiltCard>
               </Link>
             </motion.div>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* Social Proof — Stats Counter Section */}
+      <section className="w-full py-16 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-secondary/5 via-transparent to-secondary/5 -z-10" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[1px] bg-gradient-to-r from-transparent via-secondary/30 to-transparent" />
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[500px] h-[1px] bg-gradient-to-r from-transparent via-secondary/20 to-transparent" />
+
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-80px" }}
+          variants={containerVariants}
+          className="container px-4 md:px-6 max-w-6xl mx-auto"
+        >
+          <motion.div variants={itemVariants} className="text-center mb-12">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary/10 border border-secondary/20 text-secondary text-xs font-bold uppercase tracking-wider mb-4">
+              <Star className="w-3.5 h-3.5 fill-secondary" /> Con số biết nói
+            </div>
+            <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">
+              Cộng đồng <span className="text-secondary neon-glow-text">ZentraTech</span> đang lớn mạnh
+            </h2>
+          </motion.div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+            {[
+              { icon: <Users className="w-6 h-6" />, target: 1200, suffix: "+", label: "Học viên", sublabel: "Đang học tập", color: "text-secondary", glow: "shadow-[0_0_20px_rgba(0,255,133,0.1)]", displayValue: null },
+              { icon: <FileText className="w-6 h-6" />, target: 150, suffix: "+", label: "Tài liệu Premium", sublabel: "Ebook & Slide", color: "text-blue-400", glow: "shadow-[0_0_20px_rgba(96,165,250,0.1)]", displayValue: null },
+              { icon: <Star className="w-6 h-6 fill-amber-400" />, target: 0, suffix: "", label: "Đánh giá trung bình", sublabel: "Từ học viên", color: "text-amber-400", glow: "shadow-[0_0_20px_rgba(251,191,36,0.1)]", displayValue: "4.9★" },
+              { icon: <Workflow className="w-6 h-6" />, target: 50, suffix: "+", label: "Kịch bản n8n / Make", sublabel: "Tự động hóa thực chiến", color: "text-purple-400", glow: "shadow-[0_0_20px_rgba(192,132,252,0.1)]", displayValue: null },
+            ].map((stat, idx) => (
+              <motion.div
+                key={idx}
+                variants={itemVariants}
+                className={`relative rounded-2xl bg-surface/50 border border-white/5 p-6 text-center group hover:border-white/10 transition-all ${stat.glow} hover:scale-105`}
+              >
+                <div className={`flex justify-center mb-3 ${stat.color} opacity-70 group-hover:opacity-100 transition-opacity`}>
+                  {stat.icon}
+                </div>
+                <div className={`text-3xl md:text-4xl font-black tracking-tight mb-1 ${stat.color}`}>
+                  {stat.displayValue ? (
+                    <span>{stat.displayValue}</span>
+                  ) : (
+                    <AnimatedCounter target={stat.target} suffix={stat.suffix} duration={2000 + idx * 200} />
+                  )}
+                </div>
+                <p className="text-sm font-bold text-foreground/80">{stat.label}</p>
+                <p className="text-[11px] text-foreground/40 mt-0.5">{stat.sublabel}</p>
+              </motion.div>
+            ))}
           </div>
         </motion.div>
       </section>

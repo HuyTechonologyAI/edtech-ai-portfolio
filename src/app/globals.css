@@ -176,3 +176,74 @@ body {
   margin: 0.4em 0;
   opacity: 0.85;
 }
+
+/* === Scroll Progress Bar === */
+.scroll-progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #00ff85, #00d4ff, #00ff85);
+  background-size: 200% auto;
+  z-index: 9999;
+  transition: width 0.1s linear;
+  box-shadow: 0 0 8px rgba(0, 255, 133, 0.6);
+  animation: shimmer-bar 2s linear infinite;
+}
+
+@keyframes shimmer-bar {
+  0% { background-position: 0% center; }
+  100% { background-position: 200% center; }
+}
+
+/* === Gradient border card animation === */
+@keyframes gradient-border-spin {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.gradient-border-card {
+  position: relative;
+}
+.gradient-border-card::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, #00ff85, #0066ff, #a855f7, #00ff85);
+  background-size: 300% 300%;
+  animation: gradient-border-spin 4s ease infinite;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.gradient-border-card:hover::before {
+  opacity: 0.6;
+}
+
+/* === Typewriter cursor blink === */
+@keyframes cursor-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+.typewriter-cursor {
+  display: inline-block;
+  width: 3px;
+  height: 1em;
+  background: var(--secondary);
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  animation: cursor-blink 0.8s step-end infinite;
+  border-radius: 1px;
+  box-shadow: 0 0 8px rgba(0, 255, 133, 0.8);
+}
+
+/* === Animate fade-in utility === */
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fade-in-up 0.6s ease-out;
+}

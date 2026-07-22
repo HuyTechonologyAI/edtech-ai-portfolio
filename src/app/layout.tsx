@@ -16,6 +16,8 @@ import { MobileNavMenu } from "@/components/MobileNavMenu";
 
 import { GoogleTagManager } from "@next/third-parties/google";
 import Link from "next/link";
+import ZaloFloatingButton from "@/components/ZaloFloatingButton";
+import ScrollProgressBar from "@/components/ScrollProgressBar";
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-inter", // Keep variable name to avoid breaking css
@@ -98,6 +100,7 @@ export default function RootLayout({
             <Suspense fallback={null}>
               <ReferralTracker />
             </Suspense>
+            <ScrollProgressBar />
             <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-xl">
               <div className="container mx-auto px-4 h-16 flex items-center justify-between">
                 <div className="font-bold text-2xl tracking-tight">AI & Auto<span className="text-secondary neon-glow-text">Expert</span></div>
@@ -130,6 +133,7 @@ export default function RootLayout({
             </footer>
           
             <AIChatbot />
+            <ZaloFloatingButton />
           </AuthProvider>
         </ThemeProvider>
       </body>

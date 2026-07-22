@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Gift, Zap, CheckCircle2, Flame, Trophy, Lock, Unlock, ArrowRight, Loader2, RefreshCw, BookOpen, Video, ExternalLink, Play } from "lucide-react";
+import { Gift, Zap, CheckCircle2, Flame, Trophy, Lock, Unlock, ArrowRight, Loader2, RefreshCw, BookOpen, Video, ExternalLink, Play, Crown } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
 import Link from "next/link";
 import { TiltCard } from "@/components/TiltCard";
+import LeaderboardWidget from "@/components/LeaderboardWidget";
 
 interface DailyTask {
   id: number;
@@ -20,8 +21,11 @@ interface StudentBalance {
   last_checkin_date?: string | null;
 }
 
+type Tab = "tasks" | "store" | "leaderboard";
+
 export default function RewardsGamificationPage() {
   const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState<Tab>("tasks");
   const [balance, setBalance] = useState<StudentBalance>({ points: 0, redeemed_courses: [], streak_count: 0, last_checkin_date: null });
   const [tasks, setTasks] = useState<DailyTask[]>([]);
   const [completedToday, setCompletedToday] = useState<number[]>([]);
@@ -263,7 +267,45 @@ export default function RewardsGamificationPage() {
           </div>
         </div>
 
-        {/* Section 1: Daily Tasks Checklist */}
+        {/* Tab Navigation */}
+        <div className="flex items-center gap-1 p-1 rounded-2xl bg-surface/60 border border-white/5 w-fit">
+          <button
+            onClick={() => setActiveTab("tasks")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+              activeTab === "tasks"
+                ? "bg-orange-500 text-white shadow-[0_0_15px_rgba(249,115,22,0.4)]"
+                : "text-foreground/50 hover:text-foreground"
+            }`}
+          >
+            <Flame className="w-4 h-4" />
+            <span className="hidden sm:inline">Nhiệm Vụ</span>
+          </button>
+          <button
+            onClick={() => setActiveTab("store")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+              activeTab === "store"
+                ? "bg-amber-500 text-black shadow-[0_0_15px_rgba(245,158,11,0.4)]"
+                : "text-foreground/50 hover:text-foreground"
+            }`}
+          >
+            <Gift className="w-4 h-4" />
+            <span className="hidden sm:inline">Đổi Quà</span>
+          </button>
+          <button
+            onClick={() => setActiveTab("leaderboard")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+              activeTab === "leaderboard"
+                ? "bg-gradient-to-r from-amber-400 to-yellow-500 text-black shadow-[0_0_15px_rgba(234,179,8,0.4)]"
+                : "text-foreground/50 hover:text-foreground"
+            }`}
+          >
+            <Crown className="w-4 h-4" />
+            <span className="hidden sm:inline">Bảng Xếp Hạng</span>
+          </button>
+        </div>
+
+        {/* TAB: Daily Tasks Checklist */}
+        {activeTab === "tasks" && (
         <div className="space-y-4">
           <div className="flex justify-between items-center border-b border-white/5 pb-2">
             <div>
@@ -358,8 +400,10 @@ export default function RewardsGamificationPage() {
             </div>
           )}
         </div>
+        )}
 
-        {/* Section 2: Store Redeem Showcase */}
+        {/* TAB: Store Redeem Showcase */}
+        {activeTab === "store" && (
         <div className="space-y-4 pt-4">
           <div>
             <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
@@ -378,7 +422,6 @@ export default function RewardsGamificationPage() {
                 <TiltCard key={course.id}>
                   <div className="bg-surface rounded-2xl overflow-hidden border border-white/5 flex flex-col justify-between h-full group shadow-xl">
                     <div className="relative aspect-video w-full bg-surface border-b border-white/5 overflow-hidden">
-                      {/* Using safe path rendering standard image tag format */}
                       <img src={course.image} alt={course.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                       <div className="absolute inset-0 bg-gradient-to-t from-surface via-transparent to-transparent" />
                       
@@ -432,6 +475,23 @@ export default function RewardsGamificationPage() {
             })}
           </div>
         </div>
+        )}
+
+        {/* TAB: Leaderboard */}
+        {activeTab === "leaderboard" && (
+        <div className="space-y-4">
+          <div className="border-b border-white/5 pb-2">
+            <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+              <Crown className="w-5 h-5 text-amber-400" />
+              <span>Bảng Xếp Hạng Học Viên</span>
+            </h2>
+            <p className="text-xs text-foreground/40 mt-0.5">Top học viên tích cực nhất theo tổng số Points tích lũy và chuỗi điểm danh</p>
+          </div>
+          <div className="max-w-2xl">
+            <LeaderboardWidget />
+          </div>
+        </div>
+        )}
       </div>
     </main>
   );
