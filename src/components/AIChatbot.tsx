@@ -302,7 +302,7 @@ export function AIChatbot() {
       {/* ─── Floating Trigger Button ─── */}
       <button
         onClick={() => setIsOpen(true)}
-        className={`fixed bottom-24 right-6 w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center shadow-[0_0_25px_rgba(0,255,133,0.4)] hover:scale-110 hover:shadow-[0_0_35px_rgba(0,255,133,0.6)] transition-all z-50 ${isOpen ? "hidden" : "flex"} bg-gradient-to-br from-secondary to-emerald-400 text-black`}
+        className={`fixed bottom-24 right-6 w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center shadow-[0_0_25px_rgba(0,255,133,0.4)] hover:scale-110 hover:shadow-[0_0_35px_rgba(0,255,133,0.6)] transition-all z-[51] pointer-events-auto ${isOpen ? "hidden" : "flex"} bg-gradient-to-br from-secondary to-emerald-400 text-black`}
         aria-label="Open AI Tutor"
         title="Trợ lý AI Hỗ Trợ"
       >

@@ -111,8 +111,8 @@ export default function ZaloFloatingButton() {
         />
       )}
 
-      {/* Container fixed góc phải */}
-      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+      {/* Container fixed góc phải — pointer-events-none để không chặn các nút khác phía sau */}
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3 pointer-events-none">
         {/* Social Menu — hiện khi isOpen */}
         <div
           className={`flex flex-col gap-2 transition-all duration-300 origin-bottom-right ${
@@ -144,7 +144,7 @@ export default function ZaloFloatingButton() {
         <button
           onClick={() => setIsOpen(!isOpen)}
           aria-label="Mở menu hỗ trợ"
-          className={`relative w-14 h-14 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(0,104,255,0.4)] transition-all duration-300 ${
+          className={`relative w-14 h-14 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(0,104,255,0.4)] transition-all duration-300 pointer-events-auto ${
             isOpen
               ? "bg-surface border border-white/10 rotate-0"
               : "bg-[#0068FF] hover:bg-[#0057d9] hover:scale-110"
