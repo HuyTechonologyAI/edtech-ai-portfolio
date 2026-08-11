@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { revalidatePath, revalidateTag } from "next/cache";
+import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 
 export async function POST(request: Request) {
@@ -11,17 +11,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { path, tag } = await request.json();
+    const { path } = await request.json();
 
     if (path) {
       revalidatePath(path);
       return NextResponse.json({ success: true, message: `Revalidated path: ${path}` });
     }
 
-    if (tag) {
-      revalidateTag(tag);
-      return NextResponse.json({ success: true, message: `Revalidated tag: ${tag}` });
-    }
 
     // Default: revalidate the whole app layout (layout)
     revalidatePath("/", "layout");
