@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MessageCircle, Users, X, Phone } from "lucide-react";
 
 // Icon Zalo SVG thuần — không cần thư viện ngoài
@@ -43,47 +43,48 @@ function FacebookIcon({ className }: { className?: string }) {
   );
 }
 
-interface SocialLink {
-  id: string;
-  label: string;
-  sublabel: string;
-  href: string;
-  icon: React.ReactNode;
-  colorClass: string;
-  hoverClass: string;
-  borderClass: string;
-}
+const DEFAULT_CONTACT = {
+  contactZalo: "https://zalo.me/0941214544",
+  contactFacebook: "https://facebook.com/NgoQuocHuy",
+  contactPhone: "0941214544",
+};
 
 export default function ZaloFloatingButton() {
   const [isOpen, setIsOpen] = useState(false);
+  const [contact, setContact] = useState(DEFAULT_CONTACT);
 
-  // ⚠️ TODO: Thay các link placeholder bằng link thật của bạn
-  const socialLinks: SocialLink[] = [
+  useEffect(() => {
+    // Tải cấu hình liên hệ từ CMS
+    fetch("/api/admin/content?id=home_page")
+      .then((r) => r.json())
+      .then((json) => {
+        if (json.data) {
+          setContact({
+            contactZalo: json.data.contactZalo || DEFAULT_CONTACT.contactZalo,
+            contactFacebook: json.data.contactFacebook || DEFAULT_CONTACT.contactFacebook,
+            contactPhone: json.data.contactPhone || DEFAULT_CONTACT.contactPhone,
+          });
+        }
+      })
+      .catch(() => {/* giữ fallback mặc định */});
+  }, []);
+
+  const socialLinks = [
     {
       id: "zalo-oa",
       label: "Zalo Official",
       sublabel: "Nhắn tin tư vấn ngay",
-      href: "https://zalo.me/0000000000", // TODO: Thay link Zalo OA thật
+      href: contact.contactZalo,
       icon: <ZaloIcon className="w-5 h-5" />,
       colorClass: "text-white",
       hoverClass: "hover:bg-blue-600",
       borderClass: "border-blue-500/30",
     },
     {
-      id: "zalo-group",
-      label: "Nhóm Zalo",
-      sublabel: "Cộng đồng học viên",
-      href: "https://zalo.me/g/xxxxxx", // TODO: Thay link nhóm Zalo thật
-      icon: <Users className="w-5 h-5 text-blue-400" />,
-      colorClass: "text-blue-400",
-      hoverClass: "hover:bg-blue-500/10",
-      borderClass: "border-blue-500/20",
-    },
-    {
       id: "facebook",
-      label: "Facebook Group",
+      label: "Facebook",
       sublabel: "ZentraTech Community",
-      href: "https://facebook.com/groups/zentratech", // TODO: Thay link FB Group thật
+      href: contact.contactFacebook,
       icon: <FacebookIcon className="w-5 h-5 text-blue-500" />,
       colorClass: "text-blue-500",
       hoverClass: "hover:bg-blue-500/10",
@@ -93,7 +94,7 @@ export default function ZaloFloatingButton() {
       id: "phone",
       label: "Hotline",
       sublabel: "Hỗ trợ 8:00 – 22:00",
-      href: "tel:+84000000000", // TODO: Thay số điện thoại thật
+      href: `tel:+84${contact.contactPhone.replace(/^0/, "")}`,
       icon: <Phone className="w-5 h-5 text-secondary" />,
       colorClass: "text-secondary",
       hoverClass: "hover:bg-secondary/10",

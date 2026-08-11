@@ -5,6 +5,26 @@ import Link from "next/link";
 import { ArrowRight, Bot, Zap, BookOpen, Brain, Users, Star, FileText, Workflow } from "lucide-react";
 import { motion, Variants } from "framer-motion";
 import { TiltCard } from "@/components/TiltCard";
+import type { HomePageContent } from "@/components/PageBuilderTab";
+
+const DEFAULT_CONTENT: HomePageContent = {
+  heroTitlePrefix: "Làm Chủ",
+  heroTypewriter: ["Trí Tuệ Nhân Tạo", "Tự Động Hóa n8n", "Quy Trình Doanh Nghiệp", "Trợ Lý AI Agent"],
+  heroTitleSuffix: "& Tự Động Hóa",
+  heroDescription: "Tối ưu hóa quy trình, x10 hiệu suất làm việc và bứt phá doanh thu với các giải pháp ứng dụng AI & Automation thực chiến.",
+  stats: [
+    { target: 1200, suffix: "+", label: "Học viên", sublabel: "Đang học tập", displayValue: null },
+    { target: 150, suffix: "+", label: "Tài liệu Premium", sublabel: "Ebook & Slide", displayValue: null },
+    { target: 0, suffix: "", label: "Đánh giá trung bình", sublabel: "Từ học viên", displayValue: "4.9★" },
+    { target: 50, suffix: "+", label: "Kịch bản n8n / Make", sublabel: "Tự động hóa thực chiến", displayValue: null },
+  ],
+  aboutName: "Ngô Quốc Huy",
+  aboutTitle: "CEO Vạn Hoả Long Technology",
+  aboutDescription: "Là Kỹ sư Cơ khí Chế tạo (ĐH Sư Phạm Kỹ Thuật TP.HCM) và nhà giáo dục, tôi kết hợp giữa chuyên môn kỹ thuật sâu rộng và niềm đam mê truyền đạt kiến thức. Chuyển mình từ giảng viên sang vai trò người sáng lập kiêm CEO của Công ty TNHH Giải Pháp Công Nghệ Vạn Hoả Long, tôi luôn khát khao nâng tầm ngành công nghiệp Việt Nam bằng những giải pháp công nghệ và tự động hóa tiên tiến nhất.",
+  contactZalo: "https://zalo.me/0941214544",
+  contactFacebook: "https://facebook.com/NgoQuocHuy",
+  contactPhone: "0941214544",
+};
 
 // === Animated Counter Component ===
 function AnimatedCounter({ target, suffix = "", prefix = "", duration = 2000 }: { target: number; suffix?: string; prefix?: string; duration?: number }) {
@@ -29,7 +49,6 @@ function AnimatedCounter({ target, suffix = "", prefix = "", duration = 2000 }: 
     const step = (now: number) => {
       const elapsed = now - startTime;
       const progress = Math.min(elapsed / duration, 1);
-      // Easing: ease-out cubic
       const eased = 1 - Math.pow(1 - progress, 3);
       setCount(Math.floor(eased * target));
       if (progress < 1) requestAnimationFrame(step);
@@ -78,6 +97,19 @@ function TypewriterText({ phrases, delay = 2500 }: { phrases: string[]; delay?: 
 }
 
 export default function Home() {
+  const [pageContent, setPageContent] = useState<HomePageContent>(DEFAULT_CONTENT);
+
+  useEffect(() => {
+    fetch("/api/admin/content?id=home_page")
+      .then((r) => r.json())
+      .then((json) => {
+        if (json.data) {
+          setPageContent({ ...DEFAULT_CONTENT, ...json.data });
+        }
+      })
+      .catch(() => {/* giữ fallback mặc định */});
+  }, []);
+
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: {
@@ -96,6 +128,19 @@ export default function Home() {
       transition: { duration: 0.6 }
     }
   };
+
+  const statIcons = [
+    <Users key="users" className="w-6 h-6" />,
+    <FileText key="docs" className="w-6 h-6" />,
+    <Star key="star" className="w-6 h-6 fill-amber-400" />,
+    <Workflow key="workflow" className="w-6 h-6" />,
+  ];
+  const statColors = [
+    { color: "text-secondary", glow: "shadow-[0_0_20px_rgba(0,255,133,0.1)]" },
+    { color: "text-blue-400", glow: "shadow-[0_0_20px_rgba(96,165,250,0.1)]" },
+    { color: "text-amber-400", glow: "shadow-[0_0_20px_rgba(251,191,36,0.1)]" },
+    { color: "text-purple-400", glow: "shadow-[0_0_20px_rgba(192,132,252,0.1)]" },
+  ];
 
   return (
     <main className="flex-1 overflow-hidden">
@@ -132,7 +177,9 @@ export default function Home() {
               transition={{ duration: 0.8, delay: 0.2, type: "spring" }}
               className="inline-block"
             >
-              Làm Chủ <TypewriterText phrases={["Trí Tuệ Nhân Tạo", "Tự Động Hóa n8n", "Quy Trình Doanh Nghiệp", "Trợ Lý AI Agent"]} /> & Tự Động Hóa
+              {pageContent.heroTitlePrefix}{" "}
+              <TypewriterText phrases={pageContent.heroTypewriter} />{" "}
+              {pageContent.heroTitleSuffix}
             </motion.span>
           </motion.h1>
           
@@ -140,7 +187,7 @@ export default function Home() {
             variants={itemVariants} 
             className="text-lg md:text-xl text-foreground/70 mb-10 max-w-2xl"
           >
-            Tối ưu hóa quy trình, x10 hiệu suất làm việc và bứt phá doanh thu với các giải pháp ứng dụng AI & Automation thực chiến.
+            {pageContent.heroDescription}
           </motion.p>
           
           <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-6 w-full sm:w-auto mt-4">
@@ -264,21 +311,16 @@ export default function Home() {
           </motion.div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-            {[
-              { icon: <Users className="w-6 h-6" />, target: 1200, suffix: "+", label: "Học viên", sublabel: "Đang học tập", color: "text-secondary", glow: "shadow-[0_0_20px_rgba(0,255,133,0.1)]", displayValue: null },
-              { icon: <FileText className="w-6 h-6" />, target: 150, suffix: "+", label: "Tài liệu Premium", sublabel: "Ebook & Slide", color: "text-blue-400", glow: "shadow-[0_0_20px_rgba(96,165,250,0.1)]", displayValue: null },
-              { icon: <Star className="w-6 h-6 fill-amber-400" />, target: 0, suffix: "", label: "Đánh giá trung bình", sublabel: "Từ học viên", color: "text-amber-400", glow: "shadow-[0_0_20px_rgba(251,191,36,0.1)]", displayValue: "4.9★" },
-              { icon: <Workflow className="w-6 h-6" />, target: 50, suffix: "+", label: "Kịch bản n8n / Make", sublabel: "Tự động hóa thực chiến", color: "text-purple-400", glow: "shadow-[0_0_20px_rgba(192,132,252,0.1)]", displayValue: null },
-            ].map((stat, idx) => (
+            {pageContent.stats.map((stat, idx) => (
               <motion.div
                 key={idx}
                 variants={itemVariants}
-                className={`relative rounded-2xl bg-surface/50 border border-white/5 p-6 text-center group hover:border-white/10 transition-all ${stat.glow} hover:scale-105`}
+                className={`relative rounded-2xl bg-surface/50 border border-white/5 p-6 text-center group hover:border-white/10 transition-all ${statColors[idx]?.glow ?? ""} hover:scale-105`}
               >
-                <div className={`flex justify-center mb-3 ${stat.color} opacity-70 group-hover:opacity-100 transition-opacity`}>
-                  {stat.icon}
+                <div className={`flex justify-center mb-3 ${statColors[idx]?.color ?? "text-secondary"} opacity-70 group-hover:opacity-100 transition-opacity`}>
+                  {statIcons[idx]}
                 </div>
-                <div className={`text-3xl md:text-4xl font-black tracking-tight mb-1 ${stat.color}`}>
+                <div className={`text-3xl md:text-4xl font-black tracking-tight mb-1 ${statColors[idx]?.color ?? "text-secondary"}`}>
                   {stat.displayValue ? (
                     <span>{stat.displayValue}</span>
                   ) : (
@@ -312,12 +354,12 @@ export default function Home() {
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img 
                   src="/profile.jpg" 
-                  alt="Ngô Quốc Huy" 
+                  alt={pageContent.aboutName}
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 />
                 <div className="absolute bottom-8 left-6 right-6 z-20" style={{ transform: "translateZ(80px)" }}>
-                  <h3 className="text-4xl font-bold text-white mb-2 drop-shadow-lg">Ngô Quốc Huy</h3>
-                  <p className="text-secondary font-medium text-xl neon-glow-text">CEO Vạn Hoả Long Technology</p>
+                  <h3 className="text-4xl font-bold text-white mb-2 drop-shadow-lg">{pageContent.aboutName}</h3>
+                  <p className="text-secondary font-medium text-xl neon-glow-text">{pageContent.aboutTitle}</p>
                 </div>
               </TiltCard>
               
@@ -339,7 +381,7 @@ export default function Home() {
               </motion.div>
 
               <motion.p variants={itemVariants} className="text-foreground/80 leading-relaxed text-lg text-justify">
-                Là Kỹ sư Cơ khí Chế tạo (ĐH Sư Phạm Kỹ Thuật TP.HCM) và nhà giáo dục, tôi kết hợp giữa chuyên môn kỹ thuật sâu rộng và niềm đam mê truyền đạt kiến thức. Chuyển mình từ giảng viên sang vai trò người sáng lập kiêm CEO của <strong className="text-foreground">Công ty TNHH Giải Pháp Công Nghệ Vạn Hoả Long</strong>, tôi luôn khát khao nâng tầm ngành công nghiệp Việt Nam bằng những giải pháp công nghệ và tự động hóa tiên tiến nhất.
+                {pageContent.aboutDescription}
               </motion.p>
               
               <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6">

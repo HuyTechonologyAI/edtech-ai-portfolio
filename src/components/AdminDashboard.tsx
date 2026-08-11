@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { LogOut, Video, FileText, Plus, Trash2, Pencil, Loader2, X, Save, Eye, BarChart3, Users, Crown, MessageSquare, Shield, ClipboardList, Sparkles, Gift, Layers, Smartphone, Award, TrendingUp, Activity, Bell, Globe, ToggleLeft, FolderOpen } from "lucide-react";
+import { LogOut, Video, FileText, Plus, Trash2, Pencil, Loader2, X, Save, Eye, BarChart3, Users, Crown, MessageSquare, Shield, ClipboardList, Sparkles, Gift, Layers, Smartphone, Award, TrendingUp, Activity, Bell, Globe, ToggleLeft, FolderOpen, LayoutTemplate } from "lucide-react";
 import UserManagementTab from "./UserManagementTab";
 import CommentModerationTab from "./CommentModerationTab";
 import RoleDelegationTab from "./RoleDelegationTab";
@@ -21,6 +21,7 @@ import NotificationCenterTab from "./NotificationCenterTab";
 import SeoManagerTab from "./SeoManagerTab";
 import FeatureFlagsTab from "./FeatureFlagsTab";
 import MediaLibraryTab from "./MediaLibraryTab";
+import PageBuilderTab from "./PageBuilderTab";
 import { useAuth } from "@/components/AuthProvider";
 
 interface ViewStats {
@@ -34,7 +35,7 @@ interface ViewStats {
 export default function AdminDashboard() {
   const router = useRouter();
   const { user, loading: authLoading, signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState<"videos" | "resources" | "users" | "premium" | "comments" | "roles" | "logs" | "trends" | "tasks" | "settings" | "simulator" | "certificates" | "growth" | "knowledge" | "leads" | "health" | "notifications" | "seo" | "flags" | "media">("videos");
+  const [activeTab, setActiveTab] = useState<"videos" | "resources" | "users" | "premium" | "comments" | "roles" | "logs" | "trends" | "tasks" | "settings" | "simulator" | "certificates" | "growth" | "knowledge" | "leads" | "health" | "notifications" | "seo" | "flags" | "media" | "builder">("videos");
   const [items, setItems] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -591,6 +592,12 @@ export default function AdminDashboard() {
           >
             <FolderOpen className="w-4 h-4 md:w-5 md:h-5 shrink-0 text-cyan-400" /> 📁 Media Library
           </button>
+          <button 
+            onClick={() => {setActiveTab("builder"); setIsAdding(false); setEditingId(null);}}
+            className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "builder" ? "bg-secondary/10 border border-secondary/30 text-secondary font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
+          >
+            <LayoutTemplate className="w-4 h-4 md:w-5 md:h-5 shrink-0 text-secondary" /> 📝 Trình Kiến Tạo Trang
+          </button>
         </div>
 
 
@@ -630,6 +637,8 @@ export default function AdminDashboard() {
             <FeatureFlagsTab />
           ) : activeTab === "media" ? (
             <MediaLibraryTab />
+          ) : activeTab === "builder" ? (
+            <PageBuilderTab />
           ) : (
 
           <>
