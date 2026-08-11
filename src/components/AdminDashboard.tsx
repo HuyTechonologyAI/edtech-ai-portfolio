@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { LogOut, Video, FileText, Plus, Trash2, Pencil, Loader2, X, Save, Eye, BarChart3, Users, Crown, MessageSquare, Shield, ClipboardList, Sparkles, Gift, Layers, Smartphone, Award, TrendingUp } from "lucide-react";
+import { LogOut, Video, FileText, Plus, Trash2, Pencil, Loader2, X, Save, Eye, BarChart3, Users, Crown, MessageSquare, Shield, ClipboardList, Sparkles, Gift, Layers, Smartphone, Award, TrendingUp, Activity } from "lucide-react";
 import UserManagementTab from "./UserManagementTab";
 import CommentModerationTab from "./CommentModerationTab";
 import RoleDelegationTab from "./RoleDelegationTab";
@@ -16,6 +16,7 @@ import { CertificateManagementTab } from "./CertificateManagementTab";
 import { GrowthAnalyticsTab } from "./GrowthAnalyticsTab";
 import { KnowledgeBaseTab } from "./KnowledgeBaseTab";
 import LeadsManagementTab from "./LeadsManagementTab";
+import SystemHealthTab from "./SystemHealthTab";
 import { useAuth } from "@/components/AuthProvider";
 
 interface ViewStats {
@@ -29,7 +30,7 @@ interface ViewStats {
 export default function AdminDashboard() {
   const router = useRouter();
   const { user, loading: authLoading, signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState<"videos" | "resources" | "users" | "premium" | "comments" | "roles" | "logs" | "trends" | "tasks" | "settings" | "simulator" | "certificates" | "growth" | "knowledge" | "leads">("videos");
+  const [activeTab, setActiveTab] = useState<"videos" | "resources" | "users" | "premium" | "comments" | "roles" | "logs" | "trends" | "tasks" | "settings" | "simulator" | "certificates" | "growth" | "knowledge" | "leads" | "health">("videos");
   const [items, setItems] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -556,6 +557,12 @@ export default function AdminDashboard() {
           >
             <Users className="w-4 h-4 md:w-5 md:h-5 shrink-0 text-orange-400" /> 📋 Quản lý Leads
           </button>
+          <button 
+            onClick={() => {setActiveTab("health"); setIsAdding(false); setEditingId(null);}}
+            className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "health" ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
+          >
+            <Activity className="w-4 h-4 md:w-5 md:h-5 shrink-0 text-emerald-400" /> 🚦 Sức khỏe hệ thống
+          </button>
         </div>
 
 
@@ -585,6 +592,8 @@ export default function AdminDashboard() {
             <KnowledgeBaseTab />
           ) : activeTab === "leads" ? (
             <LeadsManagementTab />
+          ) : activeTab === "health" ? (
+            <SystemHealthTab />
           ) : (
 
           <>
