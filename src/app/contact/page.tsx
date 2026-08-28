@@ -1,13 +1,39 @@
 "use client";
 
 import { Mail, Phone, MapPin, Calendar, ArrowRight, CheckCircle2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { submitContact } from "@/actions/contact";
+import type { HomePageContent } from "@/components/PageBuilderTab";
+
+const DEFAULT: Partial<HomePageContent> = {
+  contactPageTitle: "Sẵn sàng chuyển đổi số cùng AI & Automation?",
+  contactPageDescription:
+    "Để lại thông tin về vấn đề hoặc quy trình bạn muốn tối ưu. Chúng tôi sẽ phân tích và phản hồi giải pháp tự động hóa phù hợp nhất trong 24h.",
+  contactEmail: "huytechnologyai2025@gmail.com",
+  contactHotline: "096.136.4600",
+  contactAddress: "K6A, Tổ 15D, Khu phố 30, Phường Tam Hiệp, Thành phố Đồng Nai",
+  contactCalendlyUrl: "",
+  contactCalendlyLabel: "Mở lịch Calendly",
+  contactFormTitle: "Gửi yêu cầu giải pháp",
+  contactFormButtonText: "Gửi yêu cầu phân tích",
+};
 
 export default function ContactPage() {
   const [isPending, setIsPending] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [cms, setCms] = useState(DEFAULT);
+
+  useEffect(() => {
+    fetch("/api/admin/content?id=home_page")
+      .then((r) => r.json())
+      .then((json) => {
+        if (json.data) {
+          setCms({ ...DEFAULT, ...json.data });
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -23,7 +49,7 @@ export default function ContactPage() {
     } else {
       setErrorMsg(result.error || "Đã có lỗi xảy ra. Vui lòng thử lại.");
     }
-    
+
     setIsPending(false);
   };
 
@@ -36,20 +62,28 @@ export default function ContactPage() {
       <div className="container px-4 md:px-6 max-w-6xl mx-auto">
         <div className="text-center mb-16">
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">
-            Sẵn sàng chuyển đổi số cùng <span className="text-secondary">AI & Automation?</span>
+            {cms.contactPageTitle?.split("AI & Automation").length === 2 ? (
+              <>
+                {cms.contactPageTitle?.split("AI & Automation")[0]}
+                <span className="text-secondary">AI & Automation</span>
+                {cms.contactPageTitle?.split("AI & Automation")[1]}
+              </>
+            ) : (
+              <span>{cms.contactPageTitle}</span>
+            )}
           </h1>
           <p className="text-lg text-foreground/70 max-w-2xl mx-auto">
-            Để lại thông tin về vấn đề hoặc quy trình bạn muốn tối ưu. Chúng tôi sẽ phân tích và phản hồi giải pháp tự động hóa phù hợp nhất trong 24h.
+            {cms.contactPageDescription}
           </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-          
+
           {/* Left Column - Contact Info */}
           <div className="flex flex-col space-y-8">
             <div className="glass-panel p-8 rounded-3xl">
               <h3 className="text-2xl font-bold mb-6">Thông tin liên hệ</h3>
-              
+
               <div className="space-y-6">
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 bg-secondary/10 text-secondary border border-secondary/20 rounded-xl flex items-center justify-center shrink-0">
@@ -57,8 +91,11 @@ export default function ContactPage() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="font-bold mb-1">Email chuyên gia</div>
-                    <a href="mailto:huytechnologyai2025@gmail.com" className="text-foreground/70 hover:text-secondary transition-colors break-all block text-xs sm:text-base font-mono">
-                      huytechnologyai2025@gmail.com
+                    <a
+                      href={`mailto:${cms.contactEmail}`}
+                      className="text-foreground/70 hover:text-secondary transition-colors break-all block text-xs sm:text-base font-mono"
+                    >
+                      {cms.contactEmail}
                     </a>
                   </div>
                 </div>
@@ -69,7 +106,12 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <div className="font-bold mb-1">Hotline tư vấn</div>
-                    <a href="tel:0961364600" className="text-foreground/70 hover:text-secondary transition-colors">096.136.4600</a>
+                    <a
+                      href={`tel:${cms.contactHotline?.replace(/\./g, "")}`}
+                      className="text-foreground/70 hover:text-secondary transition-colors"
+                    >
+                      {cms.contactHotline}
+                    </a>
                   </div>
                 </div>
 
@@ -79,7 +121,7 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <div className="font-bold mb-1">Văn phòng</div>
-                    <div className="text-foreground/70">K6A, Tổ 15D, Khu phố 30, Phường Tam Hiệp, Thành phố Đồng Nai</div>
+                    <div className="text-foreground/70">{cms.contactAddress}</div>
                   </div>
                 </div>
               </div>
@@ -90,10 +132,27 @@ export default function ContactPage() {
                 <Calendar className="w-6 h-6" />
               </div>
               <h3 className="text-2xl font-bold mb-3">Đặt lịch 1-1 ngay</h3>
-              <p className="text-foreground/70 mb-6">Bạn muốn trao đổi trực tiếp qua Google Meet? Hãy chọn thời gian rảnh của bạn trên lịch của tôi.</p>
-              <button className="w-full flex items-center justify-center gap-2 py-3 rounded-full bg-transparent border border-secondary text-secondary font-bold hover:bg-secondary hover:text-black hover:shadow-[0_0_15px_rgba(0,255,133,0.3)] transition-all">
-                Mở lịch Calendly
-              </button>
+              <p className="text-foreground/70 mb-6">
+                Bạn muốn trao đổi trực tiếp qua Google Meet? Hãy chọn thời gian rảnh của bạn trên lịch của tôi.
+              </p>
+              {cms.contactCalendlyUrl ? (
+                <a
+                  href={cms.contactCalendlyUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-full bg-transparent border border-secondary text-secondary font-bold hover:bg-secondary hover:text-black hover:shadow-[0_0_15px_rgba(0,255,133,0.3)] transition-all"
+                >
+                  {cms.contactCalendlyLabel}
+                  <ArrowRight className="w-4 h-4" />
+                </a>
+              ) : (
+                <button
+                  disabled
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-full bg-transparent border border-secondary/30 text-secondary/50 font-bold cursor-not-allowed"
+                >
+                  {cms.contactCalendlyLabel} (Chưa cấu hình)
+                </button>
+              )}
             </div>
           </div>
 
@@ -106,7 +165,7 @@ export default function ContactPage() {
                 <p className="text-foreground/70 mb-8">
                   Cảm ơn bạn đã liên hệ. Hệ thống đã ghi nhận thông tin và chuyên gia sẽ liên lạc với bạn sớm nhất.
                 </p>
-                <button 
+                <button
                   onClick={() => setIsSuccess(false)}
                   className="px-6 py-2 bg-secondary text-black font-bold rounded-full hover-glow transition-all"
                 >
@@ -115,8 +174,8 @@ export default function ContactPage() {
               </div>
             ) : null}
 
-            <h2 className="text-2xl font-bold mb-8">Gửi yêu cầu giải pháp</h2>
-            
+            <h2 className="text-2xl font-bold mb-8">{cms.contactFormTitle}</h2>
+
             {errorMsg && (
               <div className="mb-6 p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-sm">
                 {errorMsg}
@@ -127,9 +186,9 @@ export default function ContactPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label htmlFor="name" className="text-sm font-medium text-foreground/80">Họ và Tên *</label>
-                  <input 
-                    type="text" 
-                    id="name" 
+                  <input
+                    type="text"
+                    id="name"
                     name="name"
                     required
                     className="w-full px-4 py-3 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-secondary/50 transition-shadow"
@@ -138,9 +197,9 @@ export default function ContactPage() {
                 </div>
                 <div className="space-y-2">
                   <label htmlFor="email" className="text-sm font-medium text-foreground/80">Email doanh nghiệp *</label>
-                  <input 
-                    type="email" 
-                    id="email" 
+                  <input
+                    type="email"
+                    id="email"
                     name="email"
                     required
                     className="w-full px-4 py-3 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-secondary/50 transition-shadow"
@@ -151,9 +210,9 @@ export default function ContactPage() {
 
               <div className="space-y-2">
                 <label htmlFor="company" className="text-sm font-medium text-foreground/80">Tên doanh nghiệp / Đơn vị công tác</label>
-                <input 
-                  type="text" 
-                  id="company" 
+                <input
+                  type="text"
+                  id="company"
                   name="company"
                   className="w-full px-4 py-3 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-secondary/50 transition-shadow"
                   placeholder="Công ty CP Công nghệ..."
@@ -162,8 +221,8 @@ export default function ContactPage() {
 
               <div className="space-y-2">
                 <label htmlFor="message" className="text-sm font-medium text-foreground/80">Mô tả vấn đề/Quy trình cần tự động hóa *</label>
-                <textarea 
-                  id="message" 
+                <textarea
+                  id="message"
                   name="message"
                   required
                   rows={5}
@@ -172,15 +231,15 @@ export default function ContactPage() {
                 ></textarea>
               </div>
 
-              <button 
+              <button
                 type="submit"
                 disabled={isPending}
                 className="w-full flex items-center justify-center gap-2 py-4 rounded-full bg-secondary text-black font-bold text-lg hover-glow transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
               >
-                {isPending ? 'Đang gửi...' : 'Gửi yêu cầu phân tích'}
+                {isPending ? "Đang gửi..." : cms.contactFormButtonText}
                 {!isPending && <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />}
               </button>
-              
+
               <p className="text-xs text-center text-foreground/50 mt-4">
                 Bằng việc gửi form này, bạn đồng ý với chính sách bảo mật thông tin của chúng tôi.
               </p>

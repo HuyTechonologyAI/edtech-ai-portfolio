@@ -24,6 +24,16 @@ const DEFAULT_CONTENT: HomePageContent = {
   contactZalo: "https://zalo.me/0941214544",
   contactFacebook: "https://facebook.com/NgoQuocHuy",
   contactPhone: "0941214544",
+  // Contact Page
+  contactPageTitle: "Sẵn sàng chuyển đổi số cùng AI & Automation?",
+  contactPageDescription: "Để lại thông tin về vấn đề hoặc quy trình bạn muốn tối ưu. Chúng tôi sẽ phân tích và phản hồi giải pháp tự động hóa phù hợp nhất trong 24h.",
+  contactEmail: "huytechnologyai2025@gmail.com",
+  contactHotline: "096.136.4600",
+  contactAddress: "K6A, Tổ 15D, Khu phố 30, Phường Tam Hiệp, Thành phố Đồng Nai",
+  contactCalendlyUrl: "",
+  contactCalendlyLabel: "Mở lịch Calendly",
+  contactFormTitle: "Gửi yêu cầu giải pháp",
+  contactFormButtonText: "Gửi yêu cầu phân tích",
 };
 
 // === Animated Counter Component ===

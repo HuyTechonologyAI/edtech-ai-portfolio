@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { LayoutTemplate, Save, CheckCircle2, Loader2, Type, Hash, Info, Link as LinkIcon, Phone } from "lucide-react";
+import { LayoutTemplate, Save, CheckCircle2, Loader2, Type, Hash, Info, Link as LinkIcon, Phone, Mail, MapPin, CalendarDays } from "lucide-react";
 
 export interface HomePageContent {
   heroTitlePrefix: string;
@@ -21,6 +21,16 @@ export interface HomePageContent {
   contactZalo: string;
   contactFacebook: string;
   contactPhone: string;
+  // Contact Page fields
+  contactPageTitle: string;
+  contactPageDescription: string;
+  contactEmail: string;
+  contactHotline: string;
+  contactAddress: string;
+  contactCalendlyUrl: string;
+  contactCalendlyLabel: string;
+  contactFormTitle: string;
+  contactFormButtonText: string;
 }
 
 const DEFAULT_CONTENT: HomePageContent = {
@@ -39,7 +49,17 @@ const DEFAULT_CONTENT: HomePageContent = {
   aboutDescription: "Là Kỹ sư Cơ khí Chế tạo (ĐH Sư Phạm Kỹ Thuật TP.HCM) và nhà giáo dục, tôi kết hợp giữa chuyên môn kỹ thuật sâu rộng và niềm đam mê truyền đạt kiến thức. Chuyển mình từ giảng viên sang vai trò người sáng lập kiêm CEO của Công ty TNHH Giải Pháp Công Nghệ Vạn Hoả Long, tôi luôn khát khao nâng tầm ngành công nghiệp Việt Nam bằng những giải pháp công nghệ và tự động hóa tiên tiến nhất.",
   contactZalo: "https://zalo.me/0941214544",
   contactFacebook: "https://facebook.com/NgoQuocHuy",
-  contactPhone: "0941214544"
+  contactPhone: "0941214544",
+  // Contact Page
+  contactPageTitle: "Sẵn sàng chuyển đổi số cùng AI & Automation?",
+  contactPageDescription: "Để lại thông tin về vấn đề hoặc quy trình bạn muốn tối ưu. Chúng tôi sẽ phân tích và phản hồi giải pháp tự động hóa phù hợp nhất trong 24h.",
+  contactEmail: "huytechnologyai2025@gmail.com",
+  contactHotline: "096.136.4600",
+  contactAddress: "K6A, Tổ 15D, Khu phố 30, Phường Tam Hiệp, Thành phố Đồng Nai",
+  contactCalendlyUrl: "",
+  contactCalendlyLabel: "Mở lịch Calendly",
+  contactFormTitle: "Gửi yêu cầu giải pháp",
+  contactFormButtonText: "Gửi yêu cầu phân tích",
 };
 
 export default function PageBuilderTab() {
@@ -318,6 +338,123 @@ export default function PageBuilderTab() {
             rows={5}
             className="w-full bg-background border border-white/10 rounded-lg p-3 focus:border-secondary/50 focus:outline-none resize-none"
           />
+        </div>
+      </div>
+
+      {/* Contact Page Section */}
+      <div className="bg-surface rounded-xl p-6 border border-white/5 space-y-5">
+        <h3 className="text-lg font-bold flex items-center gap-2 border-b border-white/10 pb-3 text-cyan-400">
+          <Mail className="w-5 h-5" /> 5. Trang Liên Hệ (/contact)
+        </h3>
+
+        {/* Page header */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="md:col-span-2">
+            <label className="block text-sm font-bold mb-2">Tiêu đề trang</label>
+            <input
+              type="text"
+              value={content.contactPageTitle}
+              onChange={(e) => setContent({ ...content, contactPageTitle: e.target.value })}
+              className="w-full bg-background border border-white/10 rounded-lg p-3 focus:border-secondary/50 focus:outline-none"
+            />
+          </div>
+          <div className="md:col-span-2">
+            <label className="block text-sm font-bold mb-2">Mô tả trang</label>
+            <textarea
+              value={content.contactPageDescription}
+              onChange={(e) => setContent({ ...content, contactPageDescription: e.target.value })}
+              rows={3}
+              className="w-full bg-background border border-white/10 rounded-lg p-3 focus:border-secondary/50 focus:outline-none resize-none"
+            />
+          </div>
+        </div>
+
+        {/* Contact info block */}
+        <div className="bg-background/60 rounded-xl p-4 border border-white/5 space-y-4">
+          <p className="text-xs font-bold text-foreground/50 uppercase tracking-wider flex items-center gap-2"><Mail className="w-3.5 h-3.5" /> Thông tin liên hệ hiển thị</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-bold mb-2 flex items-center gap-1"><Mail className="w-3.5 h-3.5 text-secondary" /> Email</label>
+              <input
+                type="email"
+                value={content.contactEmail}
+                onChange={(e) => setContent({ ...content, contactEmail: e.target.value })}
+                placeholder="example@email.com"
+                className="w-full bg-surface border border-white/10 rounded-lg p-3 text-sm focus:border-secondary/50 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold mb-2 flex items-center gap-1"><Phone className="w-3.5 h-3.5 text-secondary" /> Hotline tư vấn</label>
+              <input
+                type="text"
+                value={content.contactHotline}
+                onChange={(e) => setContent({ ...content, contactHotline: e.target.value })}
+                placeholder="096.136.4600"
+                className="w-full bg-surface border border-white/10 rounded-lg p-3 text-sm focus:border-secondary/50 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold mb-2 flex items-center gap-1"><MapPin className="w-3.5 h-3.5 text-secondary" /> Địa chỉ văn phòng</label>
+              <input
+                type="text"
+                value={content.contactAddress}
+                onChange={(e) => setContent({ ...content, contactAddress: e.target.value })}
+                placeholder="Địa chỉ văn phòng..."
+                className="w-full bg-surface border border-white/10 rounded-lg p-3 text-sm focus:border-secondary/50 focus:outline-none"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Calendly block */}
+        <div className="bg-background/60 rounded-xl p-4 border border-white/5 space-y-4">
+          <p className="text-xs font-bold text-foreground/50 uppercase tracking-wider flex items-center gap-2"><CalendarDays className="w-3.5 h-3.5" /> Đặt lịch 1-1</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-bold mb-2">Link Calendly</label>
+              <input
+                type="url"
+                value={content.contactCalendlyUrl}
+                onChange={(e) => setContent({ ...content, contactCalendlyUrl: e.target.value })}
+                placeholder="https://calendly.com/your-link"
+                className="w-full bg-surface border border-white/10 rounded-lg p-3 text-sm focus:border-secondary/50 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold mb-2">Nhãn nút Calendly</label>
+              <input
+                type="text"
+                value={content.contactCalendlyLabel}
+                onChange={(e) => setContent({ ...content, contactCalendlyLabel: e.target.value })}
+                className="w-full bg-surface border border-white/10 rounded-lg p-3 text-sm focus:border-secondary/50 focus:outline-none"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Form labels */}
+        <div className="bg-background/60 rounded-xl p-4 border border-white/5 space-y-4">
+          <p className="text-xs font-bold text-foreground/50 uppercase tracking-wider">📋 Form gửi yêu cầu</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-bold mb-2">Tiêu đề Form</label>
+              <input
+                type="text"
+                value={content.contactFormTitle}
+                onChange={(e) => setContent({ ...content, contactFormTitle: e.target.value })}
+                className="w-full bg-surface border border-white/10 rounded-lg p-3 text-sm focus:border-secondary/50 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold mb-2">Text nút gửi Form</label>
+              <input
+                type="text"
+                value={content.contactFormButtonText}
+                onChange={(e) => setContent({ ...content, contactFormButtonText: e.target.value })}
+                className="w-full bg-surface border border-white/10 rounded-lg p-3 text-sm focus:border-secondary/50 focus:outline-none"
+              />
+            </div>
+          </div>
         </div>
       </div>
 
