@@ -35,6 +35,35 @@ interface ViewStats {
 export default function AdminDashboard() {
   const router = useRouter();
   const { user, loading: authLoading, signOut } = useAuth();
+
+  const isSuperAdmin = !!(user && (user.app_metadata?.role === "admin" || (user as any).user_metadata?.role === "admin"));
+  const canManageContent = !!(user && (user as any).user_metadata?.can_manage_content === true);
+  const canModerateComments = !!(user && (user as any).user_metadata?.can_moderate_comments === true);
+  const canGrantPremium = !!(user && (user as any).user_metadata?.can_grant_premium === true);
+
+  const isTabAllowed = (tab: string) => {
+    if (!user) return true; // fallback
+    if (isSuperAdmin) return true;
+    
+    switch (tab) {
+      case "videos":
+      case "resources":
+      case "media":
+      case "builder":
+      case "simulator":
+        return canManageContent;
+      case "comments":
+        return canModerateComments;
+      case "users":
+      case "premium":
+      case "certificates":
+      case "leads":
+      case "tasks":
+        return canGrantPremium;
+      default:
+        return false; // other settings are superadmin only
+    }
+  };
   const [activeTab, setActiveTab] = useState<"videos" | "resources" | "users" | "premium" | "comments" | "roles" | "logs" | "trends" | "tasks" | "settings" | "simulator" | "certificates" | "growth" | "knowledge" | "leads" | "health" | "notifications" | "seo" | "flags" | "media" | "builder">("videos");
   const [items, setItems] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -107,6 +136,20 @@ export default function AdminDashboard() {
       fetchFoldersList("VIDEO");
     }
   }, [activeTab]);
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      if (!isTabAllowed(activeTab)) {
+        const tabs: ("videos" | "resources" | "users" | "premium" | "comments" | "roles" | "logs" | "trends" | "tasks" | "settings" | "simulator" | "certificates" | "growth" | "knowledge" | "leads" | "health" | "notifications" | "seo" | "flags" | "media" | "builder")[] = [
+          "videos", "resources", "media", "builder", "simulator", "comments", "users", "premium", "certificates", "leads", "tasks"
+        ];
+        const firstAllowed = tabs.find(t => isTabAllowed(t));
+        if (firstAllowed) {
+          setActiveTab(firstAllowed);
+        }
+      }
+    }
+  }, [authLoading, user, activeTab]);
 
   const logAudit = async (actionType: string, targetResource: string, details: any = {}) => {
     if (!user) return;
@@ -409,7 +452,7 @@ export default function AdminDashboard() {
     </>
   );
 
-  const isStudentAccount = user && user.app_metadata?.role !== "admin" && (user as any).user_metadata?.role !== "admin";
+  const isStudentAccount = user && !isSuperAdmin && !canManageContent && !canModerateComments && !canGrantPremium;
 
   if (authLoading) {
     return (
@@ -472,132 +515,174 @@ export default function AdminDashboard() {
       <main className="container mx-auto p-4 py-8 flex flex-col md:flex-row gap-8">
         {/* Sidebar */}
         <div className="w-full md:w-64 flex md:flex-col gap-2 overflow-x-auto pb-3 md:pb-0 scrollbar-none shrink-0 border-b border-white/5 md:border-b-0">
-          <button 
-            onClick={() => {setActiveTab("videos"); setIsAdding(false); setEditingId(null);}}
-            className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "videos" ? "bg-secondary/10 border border-secondary/30 text-secondary font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
-          >
-            <Video className="w-4 h-4 md:w-5 md:h-5 shrink-0" /> Quản lý Video
-          </button>
-          <button 
-            onClick={() => {setActiveTab("resources"); setIsAdding(false); setEditingId(null);}}
-            className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "resources" ? "bg-secondary/10 border border-secondary/30 text-secondary font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
-          >
-            <FileText className="w-4 h-4 md:w-5 md:h-5 shrink-0" /> Quản lý Tài liệu
-          </button>
-          <button 
-            onClick={() => {setActiveTab("users"); setIsAdding(false); setEditingId(null);}}
-            className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "users" ? "bg-secondary/10 border border-secondary/30 text-secondary font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
-          >
-            <Users className="w-4 h-4 md:w-5 md:h-5 shrink-0" /> Quản lý User
-          </button>
-          <button 
-            onClick={() => {setActiveTab("roles"); setIsAdding(false); setEditingId(null);}}
-            className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "roles" ? "bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
-          >
-            <Shield className="w-4 h-4 md:w-5 md:h-5 shrink-0 text-cyan-400" /> Phân quyền
-          </button>
-          <button 
-            onClick={() => {setActiveTab("premium"); setIsAdding(false); setEditingId(null);}}
-            className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "premium" ? "bg-amber-500/10 border border-amber-500/30 text-amber-400 font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
-          >
-            <Crown className="w-4 h-4 md:w-5 md:h-5 shrink-0 text-amber-400" /> Premium
-          </button>
-          <button 
-            onClick={() => {setActiveTab("comments"); setIsAdding(false); setEditingId(null);}}
-            className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "comments" ? "bg-secondary/10 border border-secondary/30 text-secondary font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
-          >
-            <MessageSquare className="w-4 h-4 md:w-5 md:h-5 shrink-0" /> Bình luận
-          </button>
-          <button 
-            onClick={() => {setActiveTab("logs"); setIsAdding(false); setEditingId(null);}}
-            className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "logs" ? "bg-blue-500/10 border border-blue-500/30 text-blue-400 font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
-          >
-            <ClipboardList className="w-4 h-4 md:w-5 md:h-5 shrink-0 text-blue-400" /> Nhật ký
-          </button>
-          <button 
-            onClick={() => {setActiveTab("trends"); setIsAdding(false); setEditingId(null);}}
-            className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "trends" ? "bg-purple-500/10 border border-purple-500/30 text-purple-400 font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
-          >
-            <Sparkles className="w-4 h-4 md:w-5 md:h-5 shrink-0 text-purple-400" /> AI Xu hướng
-          </button>
-          <button 
-            onClick={() => {setActiveTab("tasks"); setIsAdding(false); setEditingId(null);}}
-            className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "tasks" ? "bg-orange-500/10 border border-orange-500/30 text-orange-400 font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
-          >
-            <Gift className="w-4 h-4 md:w-5 md:h-5 shrink-0 text-orange-400" /> Đổi thưởng
-          </button>
-          <button 
-            onClick={() => {setActiveTab("settings"); setIsAdding(false); setEditingId(null);}}
-            className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "settings" ? "bg-secondary/10 border border-secondary/30 text-secondary font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
-          >
-            <Layers className="w-4 h-4 md:w-5 md:h-5 shrink-0 text-secondary" /> Cấu hình SaaS
-          </button>
-          <button 
-            onClick={() => {setActiveTab("simulator"); setIsAdding(false); setEditingId(null);}}
-            className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "simulator" ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
-          >
-            <Smartphone className="w-4 h-4 md:w-5 md:h-5 shrink-0 text-emerald-400" /> Giả lập Giao diện
-          </button>
-          <button 
-            onClick={() => {setActiveTab("certificates"); setIsAdding(false); setEditingId(null);}}
-            className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "certificates" ? "bg-rose-500/10 border border-rose-500/30 text-rose-400 font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
-          >
-            <Award className="w-4 h-4 md:w-5 md:h-5 shrink-0 text-rose-400" /> Quản lý Chứng chỉ
-          </button>
-          <button 
-            onClick={() => {setActiveTab("growth"); setIsAdding(false); setEditingId(null);}}
-            className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "growth" ? "bg-amber-500/10 border border-amber-500/30 text-amber-400 font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
-          >
-            <TrendingUp className="w-4 h-4 md:w-5 md:h-5 shrink-0 text-amber-400" /> Phân tích Tăng trưởng
-          </button>
-          <button 
-            onClick={() => {setActiveTab("knowledge"); setIsAdding(false); setEditingId(null);}}
-            className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "knowledge" ? "bg-purple-500/10 border border-purple-500/30 text-purple-400 font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
-          >
-            <Sparkles className="w-4 h-4 md:w-5 md:h-5 shrink-0 text-purple-400" /> 🧠 Tri thức AI
-          </button>
-          <button 
-            onClick={() => {setActiveTab("leads"); setIsAdding(false); setEditingId(null);}}
-            className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "leads" ? "bg-orange-500/10 border border-orange-500/30 text-orange-400 font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
-          >
-            <Users className="w-4 h-4 md:w-5 md:h-5 shrink-0 text-orange-400" /> 📋 Quản lý Leads
-          </button>
-          <button 
-            onClick={() => {setActiveTab("health"); setIsAdding(false); setEditingId(null);}}
-            className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "health" ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
-          >
-            <Activity className="w-4 h-4 md:w-5 md:h-5 shrink-0 text-emerald-400" /> 🚦 Sức khỏe hệ thống
-          </button>
-          <button 
-            onClick={() => {setActiveTab("notifications"); setIsAdding(false); setEditingId(null);}}
-            className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "notifications" ? "bg-blue-500/10 border border-blue-500/30 text-blue-400 font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
-          >
-            <Bell className="w-4 h-4 md:w-5 md:h-5 shrink-0 text-blue-400" /> 📢 Thông báo Broadcast
-          </button>
-          <button 
-            onClick={() => {setActiveTab("seo"); setIsAdding(false); setEditingId(null);}}
-            className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "seo" ? "bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
-          >
-            <Globe className="w-4 h-4 md:w-5 md:h-5 shrink-0 text-indigo-400" /> 🔍 SEO Manager
-          </button>
-          <button 
-            onClick={() => {setActiveTab("flags"); setIsAdding(false); setEditingId(null);}}
-            className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "flags" ? "bg-red-500/10 border border-red-500/30 text-red-400 font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
-          >
-            <ToggleLeft className="w-4 h-4 md:w-5 md:h-5 shrink-0 text-red-400" /> 🎛️ Feature Flags
-          </button>
-          <button 
-            onClick={() => {setActiveTab("media"); setIsAdding(false); setEditingId(null);}}
-            className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "media" ? "bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
-          >
-            <FolderOpen className="w-4 h-4 md:w-5 md:h-5 shrink-0 text-cyan-400" /> 📁 Media Library
-          </button>
-          <button 
-            onClick={() => {setActiveTab("builder"); setIsAdding(false); setEditingId(null);}}
-            className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "builder" ? "bg-secondary/10 border border-secondary/30 text-secondary font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
-          >
-            <LayoutTemplate className="w-4 h-4 md:w-5 md:h-5 shrink-0 text-secondary" /> 📝 Trình Kiến Tạo Trang
-          </button>
+          {isTabAllowed("videos") && (
+            <button 
+              onClick={() => {setActiveTab("videos"); setIsAdding(false); setEditingId(null);}}
+              className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "videos" ? "bg-secondary/10 border border-secondary/30 text-secondary font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
+            >
+              <Video className="w-4 h-4 md:w-5 md:h-5 shrink-0" /> Quản lý Video
+            </button>
+          )}
+          {isTabAllowed("resources") && (
+            <button 
+              onClick={() => {setActiveTab("resources"); setIsAdding(false); setEditingId(null);}}
+              className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "resources" ? "bg-secondary/10 border border-secondary/30 text-secondary font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
+            >
+              <FileText className="w-4 h-4 md:w-5 md:h-5 shrink-0" /> Quản lý Tài liệu
+            </button>
+          )}
+          {isTabAllowed("users") && (
+            <button 
+              onClick={() => {setActiveTab("users"); setIsAdding(false); setEditingId(null);}}
+              className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "users" ? "bg-secondary/10 border border-secondary/30 text-secondary font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
+            >
+              <Users className="w-4 h-4 md:w-5 md:h-5 shrink-0" /> Quản lý User
+            </button>
+          )}
+          {isTabAllowed("roles") && (
+            <button 
+              onClick={() => {setActiveTab("roles"); setIsAdding(false); setEditingId(null);}}
+              className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "roles" ? "bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
+            >
+              <Shield className="w-4 h-4 md:w-5 md:h-5 shrink-0 text-cyan-400" /> Phân quyền
+            </button>
+          )}
+          {isTabAllowed("premium") && (
+            <button 
+              onClick={() => {setActiveTab("premium"); setIsAdding(false); setEditingId(null);}}
+              className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "premium" ? "bg-amber-500/10 border border-amber-500/30 text-amber-400 font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
+            >
+              <Crown className="w-4 h-4 md:w-5 md:h-5 shrink-0 text-amber-400" /> Premium
+            </button>
+          )}
+          {isTabAllowed("comments") && (
+            <button 
+              onClick={() => {setActiveTab("comments"); setIsAdding(false); setEditingId(null);}}
+              className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "comments" ? "bg-secondary/10 border border-secondary/30 text-secondary font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
+            >
+              <MessageSquare className="w-4 h-4 md:w-5 md:h-5 shrink-0" /> Bình luận
+            </button>
+          )}
+          {isTabAllowed("logs") && (
+            <button 
+              onClick={() => {setActiveTab("logs"); setIsAdding(false); setEditingId(null);}}
+              className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "logs" ? "bg-blue-500/10 border border-blue-500/30 text-blue-400 font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
+            >
+              <ClipboardList className="w-4 h-4 md:w-5 md:h-5 shrink-0 text-blue-400" /> Nhật ký
+            </button>
+          )}
+          {isTabAllowed("trends") && (
+            <button 
+              onClick={() => {setActiveTab("trends"); setIsAdding(false); setEditingId(null);}}
+              className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "trends" ? "bg-purple-500/10 border border-purple-500/30 text-purple-400 font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
+            >
+              <Sparkles className="w-4 h-4 md:w-5 md:h-5 shrink-0 text-purple-400" /> AI Xu hướng
+            </button>
+          )}
+          {isTabAllowed("tasks") && (
+            <button 
+              onClick={() => {setActiveTab("tasks"); setIsAdding(false); setEditingId(null);}}
+              className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "tasks" ? "bg-orange-500/10 border border-orange-500/30 text-orange-400 font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
+            >
+              <Gift className="w-4 h-4 md:w-5 md:h-5 shrink-0 text-orange-400" /> Đổi thưởng
+            </button>
+          )}
+          {isTabAllowed("settings") && (
+            <button 
+              onClick={() => {setActiveTab("settings"); setIsAdding(false); setEditingId(null);}}
+              className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "settings" ? "bg-secondary/10 border border-secondary/30 text-secondary font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
+            >
+              <Layers className="w-4 h-4 md:w-5 md:h-5 shrink-0 text-secondary" /> Cấu hình SaaS
+            </button>
+          )}
+          {isTabAllowed("simulator") && (
+            <button 
+              onClick={() => {setActiveTab("simulator"); setIsAdding(false); setEditingId(null);}}
+              className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "simulator" ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
+            >
+              <Smartphone className="w-4 h-4 md:w-5 md:h-5 shrink-0 text-emerald-400" /> Giả lập Giao diện
+            </button>
+          )}
+          {isTabAllowed("certificates") && (
+            <button 
+              onClick={() => {setActiveTab("certificates"); setIsAdding(false); setEditingId(null);}}
+              className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "certificates" ? "bg-rose-500/10 border border-rose-500/30 text-rose-400 font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
+            >
+              <Award className="w-4 h-4 md:w-5 md:h-5 shrink-0 text-rose-400" /> Quản lý Chứng chỉ
+            </button>
+          )}
+          {isTabAllowed("growth") && (
+            <button 
+              onClick={() => {setActiveTab("growth"); setIsAdding(false); setEditingId(null);}}
+              className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "growth" ? "bg-amber-500/10 border border-amber-500/30 text-amber-400 font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
+            >
+              <TrendingUp className="w-4 h-4 md:w-5 md:h-5 shrink-0 text-amber-400" /> Phân tích Tăng trưởng
+            </button>
+          )}
+          {isTabAllowed("knowledge") && (
+            <button 
+              onClick={() => {setActiveTab("knowledge"); setIsAdding(false); setEditingId(null);}}
+              className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "knowledge" ? "bg-purple-500/10 border border-purple-500/30 text-purple-400 font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
+            >
+              <Sparkles className="w-4 h-4 md:w-5 md:h-5 shrink-0 text-purple-400" /> 🧠 Tri thức AI
+            </button>
+          )}
+          {isTabAllowed("leads") && (
+            <button 
+              onClick={() => {setActiveTab("leads"); setIsAdding(false); setEditingId(null);}}
+              className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "leads" ? "bg-orange-500/10 border border-orange-500/30 text-orange-400 font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
+            >
+              <Users className="w-4 h-4 md:w-5 md:h-5 shrink-0 text-orange-400" /> 📋 Quản lý Leads
+            </button>
+          )}
+          {isTabAllowed("health") && (
+            <button 
+              onClick={() => {setActiveTab("health"); setIsAdding(false); setEditingId(null);}}
+              className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "health" ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
+            >
+              <Activity className="w-4 h-4 md:w-5 md:h-5 shrink-0 text-emerald-400" /> 🚦 Sức khỏe hệ thống
+            </button>
+          )}
+          {isTabAllowed("notifications") && (
+            <button 
+              onClick={() => {setActiveTab("notifications"); setIsAdding(false); setEditingId(null);}}
+              className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "notifications" ? "bg-blue-500/10 border border-blue-500/30 text-blue-400 font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
+            >
+              <Bell className="w-4 h-4 md:w-5 md:h-5 shrink-0 text-blue-400" /> 📢 Thông báo Broadcast
+            </button>
+          )}
+          {isTabAllowed("seo") && (
+            <button 
+              onClick={() => {setActiveTab("seo"); setIsAdding(false); setEditingId(null);}}
+              className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "seo" ? "bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
+            >
+              <Globe className="w-4 h-4 md:w-5 md:h-5 shrink-0 text-indigo-400" /> 🔍 SEO Manager
+            </button>
+          )}
+          {isTabAllowed("flags") && (
+            <button 
+              onClick={() => {setActiveTab("flags"); setIsAdding(false); setEditingId(null);}}
+              className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "flags" ? "bg-red-500/10 border border-red-500/30 text-red-400 font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
+            >
+              <ToggleLeft className="w-4 h-4 md:w-5 md:h-5 shrink-0 text-red-400" /> 🎛️ Feature Flags
+            </button>
+          )}
+          {isTabAllowed("media") && (
+            <button 
+              onClick={() => {setActiveTab("media"); setIsAdding(false); setEditingId(null);}}
+              className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "media" ? "bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
+            >
+              <FolderOpen className="w-4 h-4 md:w-5 md:h-5 shrink-0 text-cyan-400" /> 📁 Media Library
+            </button>
+          )}
+          {isTabAllowed("builder") && (
+            <button 
+              onClick={() => {setActiveTab("builder"); setIsAdding(false); setEditingId(null);}}
+              className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "builder" ? "bg-secondary/10 border border-secondary/30 text-secondary font-bold" : "bg-surface text-foreground/70 hover:bg-surface/80"}`}
+            >
+              <LayoutTemplate className="w-4 h-4 md:w-5 md:h-5 shrink-0 text-secondary" /> 📝 Trình Kiến Tạo Trang
+            </button>
+          )}
         </div>
 
 
