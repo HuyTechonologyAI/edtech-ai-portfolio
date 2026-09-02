@@ -35,14 +35,31 @@ interface ViewStats {
 export default function AdminDashboard() {
   const router = useRouter();
   const { user, loading: authLoading, signOut } = useAuth();
+  const [hasAdminCookie, setHasAdminCookie] = useState<boolean | null>(null);
 
-  const isSuperAdmin = !!(user && (user.app_metadata?.role === "admin" || (user as any).user_metadata?.role === "admin"));
-  const canManageContent = !!(user && (user as any).user_metadata?.can_manage_content === true);
-  const canModerateComments = !!(user && (user as any).user_metadata?.can_moderate_comments === true);
-  const canGrantPremium = !!(user && (user as any).user_metadata?.can_grant_premium === true);
+  useEffect(() => {
+    const hasCookie = typeof document !== "undefined" && document.cookie.split(";").some(c => c.trim().startsWith("admin_session=authenticated"));
+    setHasAdminCookie(hasCookie);
+  }, []);
+
+  const isSuperAdmin = (hasAdminCookie === true) || !!(user && (user.app_metadata?.role === "admin" || (user as any).user_metadata?.role === "admin"));
+  const canManageContent = isSuperAdmin || !!(user && (user as any).user_metadata?.can_manage_content === true);
+  const canModerateComments = isSuperAdmin || !!(user && (user as any).user_metadata?.can_moderate_comments === true);
+  const canGrantPremium = isSuperAdmin || !!(user && (user as any).user_metadata?.can_grant_premium === true);
+
+  const isAssistant = !hasAdminCookie && !isSuperAdmin && (canManageContent || canModerateComments || canGrantPremium);
+
+  // User is student account if logged in via Supabase, but has no admin cookie and no sub-admin flags
+  const isStudentAccount = !authLoading && !!user && hasAdminCookie === false && !isSuperAdmin && !canManageContent && !canModerateComments && !canGrantPremium;
+
+  // Not logged in at all (no user and no admin cookie) -> Redirect to /admin/login
+  useEffect(() => {
+    if (!authLoading && hasAdminCookie === false && !user) {
+      router.push("/admin/login");
+    }
+  }, [authLoading, hasAdminCookie, user, router]);
 
   const isTabAllowed = (tab: string) => {
-    if (!user) return true; // fallback
     if (isSuperAdmin) return true;
     
     switch (tab) {
@@ -452,8 +469,6 @@ export default function AdminDashboard() {
     </>
   );
 
-  const isStudentAccount = user && !isSuperAdmin && !canManageContent && !canModerateComments && !canGrantPremium;
-
   if (authLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -688,6 +703,42 @@ export default function AdminDashboard() {
 
         {/* Content */}
         <div className="flex-1 bg-surface rounded-2xl border border-border p-6 min-h-[500px]">
+          {/* Dedicated Assistant Workspace Banner */}
+          {isAssistant && (
+            <div className="bg-gradient-to-r from-cyan-950/60 via-surface to-background p-4 rounded-2xl border border-cyan-500/30 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 shadow-lg animate-fade-in">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 flex items-center justify-center font-bold text-lg shrink-0">
+                  🛡️
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-sm font-bold text-cyan-400">Giao diện Quản trị Trợ lý Ủy quyền</h2>
+                    <span className="bg-cyan-500/20 text-cyan-300 text-[10px] px-2 py-0.5 rounded-full font-mono border border-cyan-500/30">Assistant Workspace</span>
+                  </div>
+                  <p className="text-xs text-foreground/70 mt-0.5">
+                    Xin chào <strong className="text-secondary">{(user as any)?.user_metadata?.full_name || user?.email}</strong>. Bạn đang truy cập hệ thống bằng tài khoản Trợ lý được cấp phép.
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-1.5 shrink-0">
+                {(user as any)?.user_metadata?.can_manage_content && (
+                  <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded-lg font-semibold flex items-center gap-1">
+                    📁 Quản lý Nội dung
+                  </span>
+                )}
+                {(user as any)?.user_metadata?.can_moderate_comments && (
+                  <span className="text-[10px] bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2.5 py-1 rounded-lg font-semibold flex items-center gap-1">
+                    💬 Kiểm duyệt Bình luận
+                  </span>
+                )}
+                {(user as any)?.user_metadata?.can_grant_premium && (
+                  <span className="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-1 rounded-lg font-semibold flex items-center gap-1">
+                    👑 Quản lý VIP & Leads
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
           {activeTab === "settings" ? (
             <SaaSAndAffiliateSettingsTab />
           ) : activeTab === "users" ? (
