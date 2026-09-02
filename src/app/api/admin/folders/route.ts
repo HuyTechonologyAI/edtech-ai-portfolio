@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
-
-// Helper check admin auth session
-function isAuthenticatedAdmin(req: NextRequest): boolean {
-  const session = req.cookies.get("admin_session")?.value;
-  return session === "authenticated";
-}
+import { verifyAdminAuth } from "@/lib/admin-auth";
 
 export async function GET(req: NextRequest) {
   try {
@@ -36,7 +31,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  if (!isAuthenticatedAdmin(req)) {
+  if (!(await verifyAdminAuth(req))) {
     return NextResponse.json({ error: "Unauthorized access" }, { status: 401 });
   }
 
@@ -65,7 +60,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  if (!isAuthenticatedAdmin(req)) {
+  if (!(await verifyAdminAuth(req))) {
     return NextResponse.json({ error: "Unauthorized access" }, { status: 401 });
   }
 

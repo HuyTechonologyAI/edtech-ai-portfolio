@@ -1,11 +1,6 @@
-import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-
-async function isAuthenticated() {
-  const cookieStore = await cookies();
-  return cookieStore.get("admin_session")?.value === "authenticated";
-}
+import { verifyAdminAuth } from "@/lib/admin-auth";
 
 function getAdminClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -15,8 +10,8 @@ function getAdminClient() {
   });
 }
 
-export async function GET() {
-  if (!(await isAuthenticated())) {
+export async function GET(req: NextRequest) {
+  if (!(await verifyAdminAuth(req))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -35,8 +30,8 @@ export async function GET() {
   }
 }
 
-export async function PUT(req: Request) {
-  if (!(await isAuthenticated())) {
+export async function PUT(req: NextRequest) {
+  if (!(await verifyAdminAuth(req))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -62,8 +57,8 @@ export async function PUT(req: Request) {
   }
 }
 
-export async function DELETE(req: Request) {
-  if (!(await isAuthenticated())) {
+export async function DELETE(req: NextRequest) {
+  if (!(await verifyAdminAuth(req))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { verifyAdminAuth } from "@/lib/admin-auth";
 
 export async function POST(req: NextRequest) {
+  if (!(await verifyAdminAuth(req))) {
+    return NextResponse.json({ error: "Unauthorized access" }, { status: 401 });
+  }
   try {
     const apiKey = process.env.GEMINI_API_KEY;
 

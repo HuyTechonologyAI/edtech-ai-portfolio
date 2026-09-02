@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
-
-// Helper authentication verification
-function isAuthenticatedAdminOrStaff(req: NextRequest): boolean {
-  const session = req.cookies.get("admin_session")?.value;
-  return session === "authenticated";
-}
+import { verifyAdminAuth } from "@/lib/admin-auth";
 
 export async function GET() {
   try {
@@ -28,7 +23,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  if (!isAuthenticatedAdminOrStaff(req)) {
+  if (!(await verifyAdminAuth(req))) {
     return NextResponse.json({ error: "Unauthorized access" }, { status: 401 });
   }
 
@@ -60,7 +55,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
-  if (!isAuthenticatedAdminOrStaff(req)) {
+  if (!(await verifyAdminAuth(req))) {
     return NextResponse.json({ error: "Unauthorized access" }, { status: 401 });
   }
 
@@ -84,7 +79,7 @@ export async function PUT(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  if (!isAuthenticatedAdminOrStaff(req)) {
+  if (!(await verifyAdminAuth(req))) {
     return NextResponse.json({ error: "Unauthorized access" }, { status: 401 });
   }
 

@@ -21,7 +21,7 @@ interface UserItem {
 }
 
 export default function RoleDelegationTab() {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const [users, setUsers] = useState<UserItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -38,13 +38,21 @@ export default function RoleDelegationTab() {
   const [canGrantPremium, setCanGrantPremium] = useState(false);
   const [assignRoleAdmin, setAssignRoleAdmin] = useState(false);
 
+  const getHeaders = useCallback(() => {
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (session?.access_token) {
+      headers["Authorization"] = `Bearer ${session.access_token}`;
+    }
+    return headers;
+  }, [session?.access_token]);
+
   const logAudit = async (actionType: string, targetResource: string, details: any = {}) => {
     if (!user) return;
     try {
       const uMeta = (user as any).user_metadata || {};
       await fetch("/api/admin/audit-logs", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getHeaders(),
         body: JSON.stringify({
           userId: user.id,
           userEmail: user.email,
@@ -63,7 +71,7 @@ export default function RoleDelegationTab() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/admin/users");
+      const res = await fetch("/api/admin/users", { headers: getHeaders() });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setUsers(data.users || []);
@@ -72,7 +80,7 @@ export default function RoleDelegationTab() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [getHeaders]);
 
   useEffect(() => {
     fetchUsers();
@@ -82,7 +90,7 @@ export default function RoleDelegationTab() {
   const patchUserProperty = async (userId: string, action: string, value: any) => {
     const res = await fetch("/api/admin/users", {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: getHeaders(),
       body: JSON.stringify({ userId, action, value }),
     });
     const data = await res.json();

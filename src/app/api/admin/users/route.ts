@@ -18,15 +18,11 @@ function getAdminClient() {
   });
 }
 
-// Helper to verify admin session
-function isAuthenticatedAdmin(req: NextRequest): boolean {
-  const session = req.cookies.get("admin_session")?.value;
-  return session === "authenticated";
-}
+import { verifyAdminAuth } from "@/lib/admin-auth";
 
 // GET: Lấy danh sách users
 export async function GET(req: NextRequest) {
-  if (!isAuthenticatedAdmin(req)) {
+  if (!(await verifyAdminAuth(req))) {
     return NextResponse.json({ error: "Unauthorized access: Admin authentication required" }, { status: 401 });
   }
 
@@ -98,7 +94,7 @@ export async function GET(req: NextRequest) {
 
 // PATCH: Cập nhật user (role, premium status, ban/unban)
 export async function PATCH(req: NextRequest) {
-  if (!isAuthenticatedAdmin(req)) {
+  if (!(await verifyAdminAuth(req))) {
     return NextResponse.json({ error: "Unauthorized access: Admin authentication required" }, { status: 401 });
   }
 
@@ -175,7 +171,7 @@ export async function PATCH(req: NextRequest) {
 
 // DELETE: Xóa user
 export async function DELETE(req: NextRequest) {
-  if (!isAuthenticatedAdmin(req)) {
+  if (!(await verifyAdminAuth(req))) {
     return NextResponse.json({ error: "Unauthorized access: Admin authentication required" }, { status: 401 });
   }
 

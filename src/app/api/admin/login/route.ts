@@ -72,10 +72,9 @@ export async function POST(req: Request) {
       cookieStore.set("admin_session", "authenticated", {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
+        sameSite: "lax",
         path: "/",
-        // SEC-08: Rút ngắn xuống 4 giờ thay vì 7 ngày
-        maxAge: 60 * 60 * 4,
+        maxAge: 60 * 60 * 24 * 7, // 7 days
       });
 
       return NextResponse.json({ success: true });
