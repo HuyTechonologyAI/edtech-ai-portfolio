@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Shield, Search, UserCheck, UserX, Plus, RefreshCw, Loader2, CheckCircle2, AlertTriangle, Eye, X, Crown, FileText, Video, MessageSquare, Trash2 } from "lucide-react";
+import { Shield, Search, UserCheck, UserX, Plus, RefreshCw, Loader2, CheckCircle2, AlertTriangle, Eye, X, Crown, FileText, Video, MessageSquare, Trash2, Pencil, Sliders } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
 
 interface UserItem {
@@ -328,14 +328,28 @@ export default function RoleDelegationTab() {
                       {isActing ? (
                         <div className="flex justify-end"><Loader2 className="w-4 h-4 animate-spin text-red-400" /></div>
                       ) : (
-                        <button
-                          onClick={() => handleRevokeAccess(user)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white rounded-lg transition-all font-medium border border-red-500/20 text-[11px]"
-                          title="Tước bỏ toàn bộ đặc quyền quản lý"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                          <span>Xóa quyền</span>
-                        </button>
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => {
+                              handleSelectCandidate(user);
+                              setIsModalOpen(true);
+                            }}
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500 hover:text-black rounded-lg transition-all font-medium border border-cyan-500/20 text-[11px]"
+                            title="Thêm hoặc giảm quyền hạn cho trợ lý này"
+                          >
+                            <Sliders className="w-3 h-3" />
+                            <span>Thêm/Giảm quyền</span>
+                          </button>
+
+                          <button
+                            onClick={() => handleRevokeAccess(user)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white rounded-lg transition-all font-medium border border-red-500/20 text-[11px]"
+                            title="Tước bỏ toàn bộ đặc quyền quản lý"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                            <span>Xóa quyền</span>
+                          </button>
+                        </div>
                       )}
                     </td>
                   </tr>
@@ -352,7 +366,8 @@ export default function RoleDelegationTab() {
           <div className="bg-surface border border-border rounded-2xl p-6 w-full max-w-md shadow-2xl space-y-4 text-left" onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-center border-b border-white/5 pb-3">
               <h3 className="text-sm font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-2">
-                <UserCheck className="w-4 h-4" /> Bổ nhiệm Trợ lý Quản lý
+                <Sliders className="w-4 h-4" />
+                {selectedCandidate ? "Cấu hình & Tăng/Giảm Quyền Trợ lý" : "Bổ nhiệm Trợ lý Quản lý Mới"}
               </h3>
               <button onClick={() => setIsModalOpen(false)} className="p-1 hover:bg-white/5 rounded-lg"><X className="w-4 h-4" /></button>
             </div>
