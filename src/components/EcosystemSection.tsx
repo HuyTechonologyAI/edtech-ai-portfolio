@@ -86,7 +86,7 @@ export function EcosystemSection() {
             Huy Technology <span className="text-secondary neon-glow-text">AI Hub</span>
           </h2>
           <p className="text-foreground/70 text-sm md:text-base leading-relaxed">
-            Hệ sinh thái chuyển đổi số đa ngành do Kỹ sư <strong>Ngô Quốc Huy</strong> sáng lập, kết nối mật thiết giữa <strong>Giáo dục Sư phạm (EduViet)</strong>, <strong>Tài chính Thuế (SmartTax AI)</strong> và <strong>Tự động hóa Quy trình (AI &amp; AutoExpert)</strong> để mang lại giá trị gia tăng tối đa cho người học và đối tác.
+            Hệ sinh thái chuyển đổi số đa ngành do Chuyên gia AI <strong>Ngô Quốc Huy</strong> sáng lập, kết nối mật thiết giữa <strong>Giáo dục Sư phạm (EduViet)</strong>, <strong>Tài chính Thuế (SmartTax AI)</strong> và <strong>Tự động hóa Quy trình (AI &amp; AutoExpert)</strong> để mang lại giá trị gia tăng tối đa cho người học và đối tác.
           </p>
         </div>
 

@@ -82,7 +82,7 @@ export function EcosystemFooter() {
             </div>
             <p className="text-sm text-foreground/70 leading-relaxed max-w-sm">
               Nền tảng đào tạo thực chiến & giải pháp Trí tuệ nhân tạo (AI Agent, n8n, Make.com) được sáng lập bởi 
-              <strong className="text-foreground"> ThS. Ngô Quốc Huy</strong> thuộc hệ sinh thái công nghệ 
+              <strong className="text-foreground"> Chuyên gia AI Ngô Quốc Huy</strong> thuộc hệ sinh thái công nghệ 
               <strong className="text-secondary"> Huy Technology AI Hub</strong> (Vạn Hỏa Long Tech).
             </p>
 
@@ -240,7 +240,7 @@ export function EcosystemFooter() {
         {/* Bottom copyright & attribution */}
         <div className="border-t border-border/30 mt-10 pt-6 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-foreground/50">
           <div>
-            &copy; {currentYear} <strong className="text-foreground/80">Huy Technology AI Hub</strong> — Vạn Hỏa Long Tech. Bản quyền thuộc về ThS. Ngô Quốc Huy.
+            &copy; {currentYear} <strong className="text-foreground/80">Huy Technology AI Hub</strong> — Vạn Hỏa Long Tech. Bản quyền thuộc về Chuyên gia AI Ngô Quốc Huy.
           </div>
           <div className="flex items-center gap-4">
             <span className="inline-flex items-center gap-1">

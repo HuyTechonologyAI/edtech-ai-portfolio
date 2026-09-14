@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     default: "AI & Automation Expert | Chuyên gia Chuyển Đổi Số - Huy Technology AI Hub",
     template: "%s | Huy Technology AI Hub",
   },
-  description: "Hệ sinh thái đào tạo thực chiến & giải pháp Trí tuệ Nhân tạo, AI Agent, n8n, Make.com sáng lập bởi ThS. Ngô Quốc Huy (Huy Technology AI Hub kết nối EduViet AI và SmartTax AI).",
+  description: "Hệ sinh thái đào tạo thực chiến & giải pháp Trí tuệ Nhân tạo, AI Agent, n8n, Make.com sáng lập bởi Chuyên gia AI Ngô Quốc Huy (Huy Technology AI Hub kết nối EduViet AI và SmartTax AI).",
   keywords: [
     "AI", 
     "Automation", 
@@ -51,7 +51,7 @@ export const metadata: Metadata = {
     "EduViet AI", 
     "SmartTax AI"
   ],
-  authors: [{ name: "ThS. Ngô Quốc Huy", url: "https://huycncdsai.io.vn" }],
+  authors: [{ name: "Ngô Quốc Huy (Chuyên gia AI)", url: "https://huycncdsai.io.vn" }],
   creator: "Ngô Quốc Huy",
   publisher: "Huy Technology AI Hub",
   openGraph: {
