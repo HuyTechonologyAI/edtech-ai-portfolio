@@ -58,8 +58,10 @@ function CheckoutContent() {
   const [isSuccess, setIsSuccess] = useState(false);
 
   // Read environment dynamic configs safely
-  const bankId = process.env.NEXT_PUBLIC_BANK_ID || "MB";
-  const accountNo = process.env.NEXT_PUBLIC_ACCOUNT_NO || "0941214544";
+  const bankId = process.env.NEXT_PUBLIC_BANK_ID || "ACB";
+  const bankName = process.env.NEXT_PUBLIC_BANK_NAME || "Ngân hàng TMCP Á Châu (ACB)";
+  const bankBranch = process.env.NEXT_PUBLIC_BANK_BRANCH || "Chi nhánh Tân Mai";
+  const accountNo = process.env.NEXT_PUBLIC_ACCOUNT_NO || "37780997";
   const accountName = process.env.NEXT_PUBLIC_ACCOUNT_NAME || "NGO QUOC HUY";
 
   // Trigger backend Order generation payload reactive to plan selections
@@ -333,7 +335,12 @@ function CheckoutContent() {
                   <div className="space-y-2 text-xs">
                     <div className="flex justify-between items-center bg-background/60 p-2.5 rounded-xl border border-border">
                       <span className="text-foreground/50">Ngân hàng:</span>
-                      <span className="font-bold text-foreground">{bankId} Bank</span>
+                      <span className="font-bold text-foreground">{bankName}</span>
+                    </div>
+
+                    <div className="flex justify-between items-center bg-background/60 p-2.5 rounded-xl border border-border">
+                      <span className="text-foreground/50">Chi nhánh:</span>
+                      <span className="font-semibold text-foreground">{bankBranch}</span>
                     </div>
 
                     <div className="flex justify-between items-center bg-background/60 p-2.5 rounded-xl border border-border">

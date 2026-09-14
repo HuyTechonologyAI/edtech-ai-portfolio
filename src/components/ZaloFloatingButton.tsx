@@ -44,9 +44,9 @@ function FacebookIcon({ className }: { className?: string }) {
 }
 
 const DEFAULT_CONTACT = {
-  contactZalo: "https://zalo.me/0941214544",
+  contactZalo: "https://zalo.me/0961364600",
   contactFacebook: "https://facebook.com/NgoQuocHuy",
-  contactPhone: "0941214544",
+  contactPhone: "0961364600",
 };
 
 export default function ZaloFloatingButton() {

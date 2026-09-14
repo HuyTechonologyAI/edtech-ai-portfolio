@@ -162,7 +162,7 @@ export function LeadCaptureModal({ isOpen, onClose, onSuccess, targetItemTitle, 
                 required
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
-                placeholder="Ví dụ: 0941214544"
+                placeholder="Ví dụ: 0961364600"
                 className="w-full bg-background border border-border focus:border-secondary rounded-xl pl-10 pr-4 py-2.5 text-xs text-foreground placeholder:text-foreground/20 focus:outline-none transition-colors"
               />
             </div>

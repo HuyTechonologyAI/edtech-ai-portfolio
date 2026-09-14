@@ -49,9 +49,9 @@ const defaultContent = {
   aboutTitle: "CEO Vạn Hoả Long Technology",
   aboutDescription:
     "Là Kỹ sư Cơ khí Chế tạo (ĐH Sư Phạm Kỹ Thuật TP.HCM) và nhà giáo dục, tôi kết hợp giữa chuyên môn kỹ thuật sâu rộng và niềm đam mê truyền đạt kiến thức. Chuyển mình từ giảng viên sang vai trò người sáng lập kiêm CEO của Công ty TNHH Giải Pháp Công Nghệ Vạn Hoả Long, tôi luôn khát khao nâng tầm ngành công nghiệp Việt Nam bằng những giải pháp công nghệ và tự động hóa tiên tiến nhất.",
-  contactZalo: "https://zalo.me/0941214544",
+  contactZalo: "https://zalo.me/0961364600",
   contactFacebook: "https://facebook.com/NgoQuocHuy",
-  contactPhone: "0941214544",
+  contactPhone: "0961364600",
   // Contact Page
   contactPageTitle: "Sẵn sàng chuyển đổi số cùng AI & Automation?",
   contactPageDescription: "Để lại thông tin về vấn đề hoặc quy trình bạn muốn tối ưu. Chúng tôi sẽ phân tích và phản hồi giải pháp tự động hóa phù hợp nhất trong 24h.",

@@ -97,9 +97,9 @@ export default function RootLayout({
     ],
     "contactPoint": {
       "@type": "ContactPoint",
-      "telephone": "+84-973-898-830",
+      "telephone": "+84-961-364-600",
       "contactType": "customer service",
-      "email": "hotro@huycncdsai.io.vn",
+      "email": "huytechnologyai2025@gmail.com",
       "areaServed": "VN"
     }
   };

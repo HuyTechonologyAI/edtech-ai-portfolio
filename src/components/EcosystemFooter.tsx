@@ -89,11 +89,11 @@ export function EcosystemFooter() {
             <div className="pt-2 space-y-2 text-xs text-foreground/60">
               <div className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-[#00ff85]" />
-                <span>Hotline / Zalo: <strong className="text-foreground/90">0973 898 830</strong></span>
+                <span>Hotline / Zalo: <a href="tel:0961364600" className="text-foreground/90 font-bold hover:text-secondary transition-colors">0961 364 600</a></span>
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-cyan-400" />
-                <span>Hỗ trợ kỹ thuật: <strong className="text-foreground/90">hotro@huycncdsai.io.vn</strong></span>
+                <span>Hỗ trợ kỹ thuật: <a href="mailto:huytechnologyai2025@gmail.com" className="text-foreground/90 font-bold hover:text-cyan-400 transition-colors">huytechnologyai2025@gmail.com</a></span>
               </div>
               <div className="flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-rose-400" />
@@ -225,6 +225,13 @@ export function EcosystemFooter() {
                 <Link href="/admin/login" className="text-foreground/40 hover:text-foreground/80 transition-colors text-xs flex items-center gap-1">
                   <span>🔒 Cổng Quản trị Admin</span>
                 </Link>
+              </li>
+              <li className="pt-2 border-t border-border/20 text-xs text-foreground/70">
+                <div className="font-semibold text-foreground/90 mb-0.5 flex items-center gap-1">
+                  <span>💳 Tài khoản ACB:</span>
+                  <span className="font-mono text-[#00ff85]">37780997</span>
+                </div>
+                <div className="text-[11px] text-foreground/50">Chủ TK: NGO QUOC HUY • CN Tân Mai</div>
               </li>
             </ul>
           </div>
