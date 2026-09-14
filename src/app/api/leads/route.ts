@@ -1,22 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { supabaseAdmin } from "@/lib/supabase-admin";
-
-/**
- * Kiểm tra quyền admin thông qua cookie phiên đăng nhập
- */
-async function isAuthenticated(): Promise<boolean> {
-  const cookieStore = await cookies();
-  return cookieStore.get("admin_session")?.value === "authenticated";
-}
+import { verifyAdminAuth } from "@/lib/admin-auth";
 
 // ----------------------------------------------------------------------------
 // GET /api/leads
-// Trả về danh sách leads đã đăng ký (Dành riêng cho Admin CMS)
+// Trả về danh sách leads đã đăng ký (Dành riêng cho Admin & Trợ lý VIP/Leads)
 // ----------------------------------------------------------------------------
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    if (!(await isAuthenticated())) {
+    if (!(await verifyAdminAuth(req))) {
       return NextResponse.json({ error: "Unauthorized access" }, { status: 401 });
     }
 

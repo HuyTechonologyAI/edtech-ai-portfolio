@@ -1,8 +1,8 @@
-import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { supabase } from "@/lib/supabase";
 import { processContentForIngestion } from "@/lib/embeddings";
+import { verifyAdminAuth } from "@/lib/admin-auth";
 
 // ============================================================================
 // Knowledge Auto-Ingestion Pipeline API
@@ -11,29 +11,11 @@ import { processContentForIngestion } from "@/lib/embeddings";
 // GET : Trả về thống kê trạng thái ingestion hiện tại
 // ============================================================================
 
-/**
- * Kiểm tra quyền admin thông qua cookie phiên đăng nhập
- */
-async function isAuthenticated(): Promise<boolean> {
-  const cookieStore = await cookies();
-  return cookieStore.get("admin_session")?.value === "authenticated";
-}
-
-// ----------------------------------------------------------------------------
-// POST /api/knowledge/ingest
-// Pipeline tự động nạp tri thức:
-//   1. Đọc tất cả resources từ bảng 'resources'
-//   2. Đọc tất cả videos từ bảng 'videos'
-//   3. Với mỗi resource/video: ghép title + description → chunk → embed → insert
-//   4. Trước khi insert, xóa chunks cũ (source_type + source_id) để tránh trùng lặp
-//   5. Trả về thống kê tổng hợp
-// Yêu cầu đăng nhập admin
-// ----------------------------------------------------------------------------
-export async function POST() {
+export async function POST(req: NextRequest) {
   // Kiểm tra quyền admin
-  if (!(await isAuthenticated())) {
+  if (!(await verifyAdminAuth(req))) {
     return NextResponse.json(
-      { success: false, error: "Unauthorized - Yêu cầu đăng nhập admin" },
+      { success: false, error: "Unauthorized - Yêu cầu quyền quản trị" },
       { status: 401 }
     );
   }
@@ -211,11 +193,11 @@ export async function POST() {
 // Đếm số chunks theo từng source_type để biết dữ liệu đã nạp
 // Yêu cầu đăng nhập admin
 // ----------------------------------------------------------------------------
-export async function GET() {
+export async function GET(req: NextRequest) {
   // Kiểm tra quyền admin
-  if (!(await isAuthenticated())) {
+  if (!(await verifyAdminAuth(req))) {
     return NextResponse.json(
-      { success: false, error: "Unauthorized - Yêu cầu đăng nhập admin" },
+      { success: false, error: "Unauthorized - Yêu cầu quyền quản trị" },
       { status: 401 }
     );
   }

@@ -1,11 +1,7 @@
-import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
-
-async function isAuthenticated() {
-  const cookieStore = await cookies();
-  return cookieStore.get("admin_session")?.value === "authenticated";
-}
+import { supabaseAdmin } from "@/lib/supabase-admin";
+import { verifyAdminAuth } from "@/lib/admin-auth";
 
 // Ánh xạ chính xác tuyệt đối các cột Database đã được xác thực qua Schema Cache
 // Bảng "resources": title, description, link, type, is_premium (gạch dưới), folder_id (gạch dưới)
@@ -51,13 +47,13 @@ export async function GET() {
   }
 }
 
-export async function POST(req: Request) {
-  if (!(await isAuthenticated())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export async function POST(req: NextRequest) {
+  if (!(await verifyAdminAuth(req))) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   
   try {
     const body = await req.json();
     const dbBody = mapToDbFields(body);
-    const { data, error } = await supabase.from("resources").insert([dbBody]).select();
+    const { data, error } = await supabaseAdmin.from("resources").insert([dbBody]).select();
     if (error) throw error;
     return NextResponse.json({ success: true, resource: mapToFrontend(data[0]) });
   } catch (error: any) {
@@ -65,8 +61,8 @@ export async function POST(req: Request) {
   }
 }
 
-export async function PUT(req: Request) {
-  if (!(await isAuthenticated())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export async function PUT(req: NextRequest) {
+  if (!(await verifyAdminAuth(req))) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
     const { searchParams } = new URL(req.url);
@@ -75,7 +71,7 @@ export async function PUT(req: Request) {
 
     const body = await req.json();
     const dbBody = mapToDbFields(body);
-    const { data, error } = await supabase.from("resources").update(dbBody).eq("id", id).select();
+    const { data, error } = await supabaseAdmin.from("resources").update(dbBody).eq("id", id).select();
     if (error) throw error;
     return NextResponse.json({ success: true, resource: mapToFrontend(data[0]) });
   } catch (error: any) {
@@ -83,15 +79,15 @@ export async function PUT(req: Request) {
   }
 }
 
-export async function DELETE(req: Request) {
-  if (!(await isAuthenticated())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export async function DELETE(req: NextRequest) {
+  if (!(await verifyAdminAuth(req))) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
     if (!id) return NextResponse.json({ error: "Missing ID" }, { status: 400 });
 
-    const { error } = await supabase.from("resources").delete().eq("id", id);
+    const { error } = await supabaseAdmin.from("resources").delete().eq("id", id);
     if (error) throw error;
     return NextResponse.json({ success: true });
   } catch (error: any) {

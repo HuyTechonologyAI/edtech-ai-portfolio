@@ -8,7 +8,9 @@ import { useAuth } from "@/components/AuthProvider";
 
 export function MobileNavMenu() {
   const { user, signOut } = useAuth();
-  const isAdmin = user?.app_metadata?.role === "admin" || (user as any)?.user_metadata?.role === "admin";
+  const isSuperAdmin = user?.app_metadata?.role === "admin" || (user as any)?.user_metadata?.role === "admin";
+  const isAssistant = !!((user as any)?.user_metadata?.can_manage_content || (user as any)?.user_metadata?.can_moderate_comments || (user as any)?.user_metadata?.can_grant_premium);
+  const canAccessAdmin = isSuperAdmin || isAssistant;
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
 
@@ -157,14 +159,18 @@ export function MobileNavMenu() {
                 </div>
 
                 <div className="space-y-2.5 pt-1">
-                  {/* Link Admin (nếu có quyền) */}
-                  {isAdmin && (
+                  {/* Link Admin (nếu có quyền Super Admin hoặc Trợ lý) */}
+                  {canAccessAdmin && (
                     <Link
                       href="/admin"
-                      className="flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-bold bg-amber-500/10 border border-amber-500/30 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.1)]"
+                      className={`flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-bold ${
+                        isSuperAdmin 
+                          ? "bg-amber-500/10 border border-amber-500/30 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.1)]"
+                          : "bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.1)]"
+                      }`}
                     >
-                      <ShieldCheck className="w-4 h-4 shrink-0 text-amber-400" />
-                      <span>Bảng Điều Khiển Admin CMS</span>
+                      <ShieldCheck className={`w-4 h-4 shrink-0 ${isSuperAdmin ? "text-amber-400" : "text-cyan-400"}`} />
+                      <span>{isSuperAdmin ? "Bảng Điều Khiển Admin CMS" : "Không Gian Quản Trị Trợ Lý"}</span>
                     </Link>
                   )}
 

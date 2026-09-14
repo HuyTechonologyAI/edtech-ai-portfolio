@@ -1,11 +1,7 @@
-import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
-
-async function isAuthenticated() {
-  const cookieStore = await cookies();
-  return cookieStore.get("admin_session")?.value === "authenticated";
-}
+import { supabaseAdmin } from "@/lib/supabase-admin";
+import { verifyAdminAuth } from "@/lib/admin-auth";
 
 export async function GET() {
   try {
@@ -21,8 +17,8 @@ export async function GET() {
   }
 }
 
-export async function POST(req: Request) {
-  if (!(await isAuthenticated())) {
+export async function POST(req: NextRequest) {
+  if (!(await verifyAdminAuth(req))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -34,7 +30,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Tiêu đề và Link là bắt buộc" }, { status: 400 });
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from("premium_contents")
       .insert([{ title, description, category: category || "Workflow", link }])
       .select();
@@ -46,8 +42,8 @@ export async function POST(req: Request) {
   }
 }
 
-export async function PUT(req: Request) {
-  if (!(await isAuthenticated())) {
+export async function PUT(req: NextRequest) {
+  if (!(await verifyAdminAuth(req))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -65,7 +61,7 @@ export async function PUT(req: Request) {
     if (category !== undefined) payload.category = category;
     if (link !== undefined) payload.link = link;
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from("premium_contents")
       .update(payload)
       .eq("id", id)
@@ -78,8 +74,8 @@ export async function PUT(req: Request) {
   }
 }
 
-export async function DELETE(req: Request) {
-  if (!(await isAuthenticated())) {
+export async function DELETE(req: NextRequest) {
+  if (!(await verifyAdminAuth(req))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -88,7 +84,7 @@ export async function DELETE(req: Request) {
     const id = searchParams.get("id");
     if (!id) return NextResponse.json({ error: "Missing ID" }, { status: 400 });
 
-    const { error } = await supabase.from("premium_contents").delete().eq("id", id);
+    const { error } = await supabaseAdmin.from("premium_contents").delete().eq("id", id);
     if (error) throw error;
     return NextResponse.json({ success: true });
   } catch (error: any) {

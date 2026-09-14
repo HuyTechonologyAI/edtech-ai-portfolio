@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 import { Check, Copy, Sparkles, ShieldCheck, QrCode, RefreshCw, ArrowRight, CheckCircle2, Zap } from "lucide-react";
 import Link from "next/link";
@@ -38,9 +39,13 @@ const PLANS = [
   }
 ];
 
-export default function CheckoutPage() {
+function CheckoutContent() {
   const { user } = useAuth();
-  const [selectedPlan, setSelectedPlan] = useState(PLANS[0]);
+  const searchParams = useSearchParams();
+  const planParam = searchParams.get("plan");
+  const [selectedPlan, setSelectedPlan] = useState(() => {
+    return PLANS.find(p => p.id === planParam) || PLANS[0];
+  });
   
   // Backend interactive state tracking
   const [orderId, setOrderId] = useState<number | null>(null);
@@ -92,6 +97,15 @@ export default function CheckoutPage() {
   useEffect(() => {
     selectedPriceRef.current = selectedPlan.price;
   }, [selectedPlan.price]);
+
+  useEffect(() => {
+    if (planParam) {
+      const matched = PLANS.find(p => p.id === planParam);
+      if (matched && matched.id !== selectedPlan.id) {
+        setSelectedPlan(matched);
+      }
+    }
+  }, [planParam, selectedPlan.id]);
 
   useEffect(() => {
     initOrder(selectedPriceRef.current);
@@ -401,5 +415,17 @@ export default function CheckoutPage() {
         )}
       </div>
     </main>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex-1 min-h-[60vh] flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-2 border-secondary border-t-transparent animate-spin" />
+      </div>
+    }>
+      <CheckoutContent />
+    </Suspense>
   );
 }

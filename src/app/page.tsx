@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowRight, Bot, Zap, BookOpen, Brain, Users, Star, FileText, Workflow } from "lucide-react";
 import { motion, Variants } from "framer-motion";
 import { TiltCard } from "@/components/TiltCard";
+import { EcosystemSection } from "@/components/EcosystemSection";
 import type { HomePageContent } from "@/components/PageBuilderTab";
 
 const DEFAULT_CONTENT: HomePageContent = {
@@ -344,6 +345,9 @@ export default function Home() {
           </div>
         </motion.div>
       </section>
+
+      {/* 3-Pillar Cross-Ecosystem Showcase: EduViet - SmartTax AI - AI & AutoExpert */}
+      <EcosystemSection />
 
       {/* About Me Section */}
       <section className="w-full py-24 relative overflow-hidden">

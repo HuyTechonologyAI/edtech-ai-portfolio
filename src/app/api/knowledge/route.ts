@@ -1,24 +1,11 @@
-import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { processContentForIngestion } from "@/lib/embeddings";
+import { verifyAdminAuth } from "@/lib/admin-auth";
 
 // ============================================================================
 // Knowledge CRUD API - Quản lý tri thức cho hệ thống EdTech
 // ============================================================================
-// GET  : Liệt kê tất cả knowledge chunks (phân trang, nhóm theo source)
-// POST : Nạp nội dung mới → tách chunk → tạo embedding → lưu DB
-// DELETE: Xóa chunks theo source_type + source_id
-// ============================================================================
-
-/**
- * Kiểm tra quyền admin thông qua cookie phiên đăng nhập
- * Cookie "admin_session" phải có giá trị "authenticated"
- */
-async function isAuthenticated(): Promise<boolean> {
-  const cookieStore = await cookies();
-  return cookieStore.get("admin_session")?.value === "authenticated";
-}
 
 // ----------------------------------------------------------------------------
 // GET /api/knowledge
@@ -116,11 +103,11 @@ export async function GET(req: Request) {
 // Pipeline: content → chunk text → generate embeddings → insert knowledge_chunks
 // Yêu cầu đăng nhập admin
 // ----------------------------------------------------------------------------
-export async function POST(req: Request) {
-  // Kiểm tra quyền admin trước khi xử lý
-  if (!(await isAuthenticated())) {
+export async function POST(req: NextRequest) {
+  // Kiểm tra quyền admin/trợ lý trước khi xử lý
+  if (!(await verifyAdminAuth(req))) {
     return NextResponse.json(
-      { success: false, error: "Unauthorized - Yêu cầu đăng nhập admin" },
+      { success: false, error: "Unauthorized - Yêu cầu quyền quản trị" },
       { status: 401 }
     );
   }
@@ -217,11 +204,11 @@ export async function POST(req: Request) {
 // Query params: source_type (bắt buộc), source_id (bắt buộc)
 // Yêu cầu đăng nhập admin
 // ----------------------------------------------------------------------------
-export async function DELETE(req: Request) {
-  // Kiểm tra quyền admin trước khi xử lý
-  if (!(await isAuthenticated())) {
+export async function DELETE(req: NextRequest) {
+  // Kiểm tra quyền admin/trợ lý trước khi xử lý
+  if (!(await verifyAdminAuth(req))) {
     return NextResponse.json(
-      { success: false, error: "Unauthorized - Yêu cầu đăng nhập admin" },
+      { success: false, error: "Unauthorized - Yêu cầu quyền quản trị" },
       { status: 401 }
     );
   }

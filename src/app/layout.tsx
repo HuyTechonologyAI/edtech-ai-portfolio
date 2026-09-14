@@ -13,6 +13,8 @@ import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { StreakWidget } from "@/components/StreakWidget";
 import { ReferralTracker } from "@/components/ReferralTracker";
 import { MobileNavMenu } from "@/components/MobileNavMenu";
+import { EcosystemHeaderBar } from "@/components/EcosystemHeaderBar";
+import { EcosystemFooter } from "@/components/EcosystemFooter";
 
 import { GoogleTagManager } from "@next/third-parties/google";
 import Link from "next/link";
@@ -30,25 +32,46 @@ const space = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "AI & Automation Expert | Chuyên gia chuyển đổi số",
-  description: "Trang web cá nhân của chuyên gia đào tạo AI và Automation. Cung cấp các giải pháp tối ưu hóa quy trình, x10 hiệu suất làm việc bằng Make, n8n và ChatGPT.",
-  keywords: ["AI", "Automation", "Tự động hóa", "Chuyển đổi số", "Khóa học AI", "n8n", "Make.com"],
-  authors: [{ name: "AI Expert" }],
+  metadataBase: new URL("https://huycncdsai.io.vn"),
+  title: {
+    default: "AI & Automation Expert | Chuyên gia Chuyển Đổi Số - Huy Technology AI Hub",
+    template: "%s | Huy Technology AI Hub",
+  },
+  description: "Hệ sinh thái đào tạo thực chiến & giải pháp Trí tuệ Nhân tạo, AI Agent, n8n, Make.com sáng lập bởi ThS. Ngô Quốc Huy (Huy Technology AI Hub kết nối EduViet AI và SmartTax AI).",
+  keywords: [
+    "AI", 
+    "Automation", 
+    "Tự động hóa", 
+    "Chuyển đổi số", 
+    "Khóa học AI", 
+    "n8n", 
+    "Make.com", 
+    "Huy Technology AI Hub", 
+    "Ngô Quốc Huy", 
+    "EduViet AI", 
+    "SmartTax AI"
+  ],
+  authors: [{ name: "ThS. Ngô Quốc Huy", url: "https://huycncdsai.io.vn" }],
+  creator: "Ngô Quốc Huy",
+  publisher: "Huy Technology AI Hub",
   openGraph: {
-    title: "AI & Automation Expert | Chuyên gia chuyển đổi số",
+    title: "AI & Automation Expert | Huy Technology AI Hub",
     description: "Tối ưu hóa quy trình, x10 hiệu suất làm việc và bứt phá doanh thu với các giải pháp ứng dụng AI & Automation thực chiến.",
-    url: "https://ten-ban.vercel.app",
-    siteName: "AI & AutoExpert",
+    url: "https://huycncdsai.io.vn",
+    siteName: "AI & AutoExpert Hub",
     images: [
       {
-        url: "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=1200&auto=format&fit=crop", // Placeholder đẹp, chuẩn kích thước
+        url: "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=1200&auto=format&fit=crop",
         width: 1200,
         height: 630,
-        alt: "AI & Automation Cover",
+        alt: "AI & Automation Hub - Huy Technology AI",
       },
     ],
     locale: "vi_VN",
     type: "website",
+  },
+  alternates: {
+    canonical: "https://huycncdsai.io.vn",
   },
 };
 
@@ -57,9 +80,33 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Huy Technology AI Hub",
+    "alternateName": "Vạn Hỏa Long Tech",
+    "url": "https://huycncdsai.io.vn",
+    "founder": {
+      "@type": "Person",
+      "name": "Ngô Quốc Huy",
+      "jobTitle": "Chuyên gia AI & Automation, Giảng viên Chuyển đổi số"
+    },
+    "sameAs": [
+      "https://gvcncdsai.io.vn",
+      "https://smarttax-ai.vercel.app"
+    ],
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "telephone": "+84-973-898-830",
+      "contactType": "customer service",
+      "email": "hotro@huycncdsai.io.vn",
+      "areaServed": "VN"
+    }
+  };
+
   return (
     <html
-      lang="en"
+      lang="vi"
       className={`${jakarta.variable} ${space.variable} h-full antialiased dark`}
       suppressHydrationWarning
     >
@@ -67,6 +114,10 @@ export default function RootLayout({
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#00ff85" />
         <link rel="apple-touch-icon" href="/globe.svg" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -101,6 +152,10 @@ export default function RootLayout({
               <ReferralTracker />
             </Suspense>
             <ScrollProgressBar />
+            
+            {/* Top Cross-Ecosystem Navigation Bar */}
+            <EcosystemHeaderBar />
+
             <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-xl">
               <div className="container mx-auto px-4 h-16 flex items-center justify-between">
                 <div className="font-bold text-2xl tracking-tight">AI & Auto<span className="text-secondary neon-glow-text">Expert</span></div>
@@ -126,11 +181,8 @@ export default function RootLayout({
             <MobileNavMenu />
             {children}
 
-            <footer className="border-t border-border/40 bg-background py-8 mt-auto">
-              <div className="container mx-auto px-4 text-center text-foreground/40 text-sm">
-                &copy; {new Date().getFullYear()} AI & Automation Expert. All rights reserved.
-              </div>
-            </footer>
+            {/* Rich Cross-Ecosystem Footer */}
+            <EcosystemFooter />
           
             <AIChatbot />
             <ZaloFloatingButton />

@@ -33,6 +33,10 @@ export function UserMenu() {
   const name = user.user_metadata?.full_name || user.email?.split("@")[0] || "User";
   const avatar = user.user_metadata?.avatar_url;
 
+  const isSuperAdmin = user?.app_metadata?.role === "admin" || (user as any)?.user_metadata?.role === "admin";
+  const isAssistant = !!((user as any)?.user_metadata?.can_manage_content || (user as any)?.user_metadata?.can_moderate_comments || (user as any)?.user_metadata?.can_grant_premium);
+  const canAccessAdmin = isSuperAdmin || isAssistant;
+
   return (
     <div ref={menuRef} className="relative">
       <button onClick={() => setOpen(!open)}
@@ -60,10 +64,14 @@ export function UserMenu() {
             <p className="text-xs text-foreground/40 truncate">{user.email}</p>
           </div>
 
-          {(user?.app_metadata?.role === "admin" || (user as any)?.user_metadata?.role === "admin") && (
+          {canAccessAdmin && (
             <Link href="/admin" onClick={() => setOpen(false)}
-              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-cyan-400 hover:bg-cyan-500/10 rounded-lg transition-colors font-bold">
-              ⚙️ Quản trị Admin
+              className={`w-full flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors font-bold ${
+                isSuperAdmin 
+                  ? "text-cyan-400 hover:bg-cyan-500/10" 
+                  : "text-emerald-400 hover:bg-emerald-500/10"
+              }`}>
+              {isSuperAdmin ? "⚙️ Quản trị Admin" : "🛡️ Quản trị Trợ lý"}
             </Link>
           )}
 
