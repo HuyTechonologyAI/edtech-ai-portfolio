@@ -33,9 +33,10 @@ export function UserMenu() {
   const name = user.user_metadata?.full_name || user.email?.split("@")[0] || "User";
   const avatar = user.user_metadata?.avatar_url;
 
-  const isSuperAdminEmail = user?.email === "drakengo1707@gmail.com" || user?.email === "huytechnologyai2025@gmail.com" || user?.email === "marverick2024@gmail.com";
-  const isSuperAdmin = isSuperAdminEmail || user?.app_metadata?.role === "admin" || (user as any)?.user_metadata?.role === "admin";
-  const isAssistant = !isSuperAdmin && !!((user as any)?.user_metadata?.can_manage_content || (user as any)?.user_metadata?.can_moderate_comments || (user as any)?.user_metadata?.can_grant_premium);
+  const isDemotedAssistant = user?.email === "drakengo1707@gmail.com" || user?.email === "marverick2024@gmail.com";
+  const isSuperAdminEmail = user?.email === "huytechnologyai2025@gmail.com";
+  const isSuperAdmin = !isDemotedAssistant && (isSuperAdminEmail || user?.app_metadata?.role === "admin" || (user as any)?.user_metadata?.role === "admin");
+  const isAssistant = isDemotedAssistant || (!isSuperAdmin && !!((user as any)?.user_metadata?.can_manage_content || (user as any)?.user_metadata?.can_moderate_comments || (user as any)?.user_metadata?.can_grant_premium));
   const canAccessAdmin = isSuperAdmin || isAssistant;
 
   return (

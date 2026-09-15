@@ -53,16 +53,17 @@ export default function AdminDashboard({ initialHasAdminCookie = false }: { init
       });
   }, [initialHasAdminCookie]);
 
-  const isSuperAdminEmail = user?.email === "drakengo1707@gmail.com" || user?.email === "huytechnologyai2025@gmail.com" || user?.email === "marverick2024@gmail.com";
-  const isSuperAdmin = (hasAdminCookie === true) || isSuperAdminEmail || !!(user && (user.app_metadata?.role === "admin" || (user as any).user_metadata?.role === "admin"));
-  const canManageContent = isSuperAdmin || !!(user && (user as any).user_metadata?.can_manage_content === true);
-  const canModerateComments = isSuperAdmin || !!(user && (user as any).user_metadata?.can_moderate_comments === true);
-  const canGrantPremium = isSuperAdmin || !!(user && (user as any).user_metadata?.can_grant_premium === true);
+  const isDemotedAssistant = user?.email === "drakengo1707@gmail.com" || user?.email === "marverick2024@gmail.com";
+  const isSuperAdminEmail = user?.email === "huytechnologyai2025@gmail.com";
+  const isSuperAdmin = !isDemotedAssistant && ((hasAdminCookie === true) || isSuperAdminEmail || !!(user && (user.app_metadata?.role === "admin" || (user as any).user_metadata?.role === "admin")));
+  const canManageContent = isSuperAdmin || isDemotedAssistant || !!(user && (user as any).user_metadata?.can_manage_content === true);
+  const canModerateComments = isSuperAdmin || isDemotedAssistant || !!(user && (user as any).user_metadata?.can_moderate_comments === true);
+  const canGrantPremium = isSuperAdmin || (!isDemotedAssistant && !!(user && (user as any).user_metadata?.can_grant_premium === true));
 
-  const isAssistant = !isSuperAdmin && (canManageContent || canModerateComments || canGrantPremium);
+  const isAssistant = !isSuperAdmin && (isDemotedAssistant || canManageContent || canModerateComments || canGrantPremium);
 
   // User is student account if logged in via Supabase, but has no admin cookie and no sub-admin flags
-  const isStudentAccount = !authLoading && !!user && hasAdminCookie === false && !isSuperAdmin && !canManageContent && !canModerateComments && !canGrantPremium;
+  const isStudentAccount = !authLoading && !!user && hasAdminCookie === false && !isSuperAdmin && !isAssistant;
 
   // Not logged in at all (no user and no admin cookie) -> Redirect to /admin/login only when session and auth load finish
   useEffect(() => {
