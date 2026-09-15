@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { LogOut, Video, FileText, Plus, Trash2, Pencil, Loader2, X, Save, Eye, BarChart3, Users, Crown, MessageSquare, Shield, ClipboardList, Sparkles, Gift, Layers, Smartphone, Award, TrendingUp, Activity, Bell, Globe, ToggleLeft, FolderOpen, LayoutTemplate } from "lucide-react";
+import { LogOut, Video, FileText, Plus, Trash2, Pencil, Loader2, X, Save, Eye, BarChart3, Users, Crown, MessageSquare, Shield, ClipboardList, Sparkles, Gift, Layers, Smartphone, Award, TrendingUp, Activity, Bell, Globe, ToggleLeft, FolderOpen, LayoutTemplate, Cpu } from "lucide-react";
 import UserManagementTab from "./UserManagementTab";
 import CommentModerationTab from "./CommentModerationTab";
 import RoleDelegationTab from "./RoleDelegationTab";
@@ -22,6 +22,7 @@ import SeoManagerTab from "./SeoManagerTab";
 import FeatureFlagsTab from "./FeatureFlagsTab";
 import MediaLibraryTab from "./MediaLibraryTab";
 import PageBuilderTab from "./PageBuilderTab";
+import CentralAiHubTab from "./CentralAiHubTab";
 import { useAuth } from "@/components/AuthProvider";
 
 interface ViewStats {
@@ -63,6 +64,7 @@ export default function AdminDashboard() {
     if (isSuperAdmin) return true;
     
     switch (tab) {
+      case "ai-hub":
       case "videos":
       case "resources":
       case "media":
@@ -81,7 +83,7 @@ export default function AdminDashboard() {
         return false; // other settings are superadmin only
     }
   };
-  const [activeTab, setActiveTab] = useState<"videos" | "resources" | "users" | "premium" | "comments" | "roles" | "logs" | "trends" | "tasks" | "settings" | "simulator" | "certificates" | "growth" | "knowledge" | "leads" | "health" | "notifications" | "seo" | "flags" | "media" | "builder">("videos");
+  const [activeTab, setActiveTab] = useState<"ai-hub" | "videos" | "resources" | "users" | "premium" | "comments" | "roles" | "logs" | "trends" | "tasks" | "settings" | "simulator" | "certificates" | "growth" | "knowledge" | "leads" | "health" | "notifications" | "seo" | "flags" | "media" | "builder">("ai-hub");
   const [items, setItems] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -530,6 +532,14 @@ export default function AdminDashboard() {
       <main className="container mx-auto p-4 py-8 flex flex-col md:flex-row gap-8">
         {/* Sidebar */}
         <div className="w-full md:w-64 flex md:flex-col gap-2 overflow-x-auto pb-3 md:pb-0 scrollbar-none shrink-0 border-b border-white/5 md:border-b-0">
+          {isTabAllowed("ai-hub") && (
+            <button 
+              onClick={() => {setActiveTab("ai-hub"); setIsAdding(false); setEditingId(null);}}
+              className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-4 rounded-xl transition-all whitespace-nowrap shrink-0 text-xs md:text-sm font-medium ${activeTab === "ai-hub" ? "bg-secondary/15 border border-secondary text-secondary font-extrabold shadow-[0_0_20px_rgba(0,255,133,0.3)]" : "bg-gradient-to-r from-secondary/10 to-cyan-500/10 border border-secondary/30 text-secondary hover:bg-secondary/20 font-bold"}`}
+            >
+              <Cpu className="w-4 h-4 md:w-5 md:h-5 shrink-0 text-secondary animate-pulse" /> ⚡ Tab AI Trung Tâm
+            </button>
+          )}
           {isTabAllowed("videos") && (
             <button 
               onClick={() => {setActiveTab("videos"); setIsAdding(false); setEditingId(null);}}
@@ -739,7 +749,9 @@ export default function AdminDashboard() {
               </div>
             </div>
           )}
-          {activeTab === "settings" ? (
+          {activeTab === "ai-hub" ? (
+            <CentralAiHubTab />
+          ) : activeTab === "settings" ? (
             <SaaSAndAffiliateSettingsTab />
           ) : activeTab === "users" ? (
             <UserManagementTab />
