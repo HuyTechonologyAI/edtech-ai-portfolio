@@ -33,27 +33,38 @@ interface ViewStats {
   total: number;
 }
 
-export default function AdminDashboard() {
+export default function AdminDashboard({ initialHasAdminCookie = false }: { initialHasAdminCookie?: boolean }) {
   const router = useRouter();
   const { user, loading: authLoading, signOut } = useAuth();
-  const [hasAdminCookie, setHasAdminCookie] = useState<boolean | null>(null);
+  const [hasAdminCookie, setHasAdminCookie] = useState<boolean | null>(initialHasAdminCookie ? true : null);
 
   useEffect(() => {
-    const hasCookie = typeof document !== "undefined" && document.cookie.split(";").some(c => c.trim().startsWith("admin_session=authenticated"));
-    setHasAdminCookie(hasCookie);
-  }, []);
+    if (initialHasAdminCookie) {
+      setHasAdminCookie(true);
+      return;
+    }
+    fetch("/api/admin/session")
+      .then((res) => res.json())
+      .then((data) => {
+        setHasAdminCookie(data.authenticated === true);
+      })
+      .catch(() => {
+        setHasAdminCookie(false);
+      });
+  }, [initialHasAdminCookie]);
 
-  const isSuperAdmin = (hasAdminCookie === true) || !!(user && (user.app_metadata?.role === "admin" || (user as any).user_metadata?.role === "admin"));
+  const isSuperAdminEmail = user?.email === "drakengo1707@gmail.com" || user?.email === "huytechnologyai2025@gmail.com" || user?.email === "marverick2024@gmail.com";
+  const isSuperAdmin = (hasAdminCookie === true) || isSuperAdminEmail || !!(user && (user.app_metadata?.role === "admin" || (user as any).user_metadata?.role === "admin"));
   const canManageContent = isSuperAdmin || !!(user && (user as any).user_metadata?.can_manage_content === true);
   const canModerateComments = isSuperAdmin || !!(user && (user as any).user_metadata?.can_moderate_comments === true);
   const canGrantPremium = isSuperAdmin || !!(user && (user as any).user_metadata?.can_grant_premium === true);
 
-  const isAssistant = !hasAdminCookie && !isSuperAdmin && (canManageContent || canModerateComments || canGrantPremium);
+  const isAssistant = !isSuperAdmin && (canManageContent || canModerateComments || canGrantPremium);
 
   // User is student account if logged in via Supabase, but has no admin cookie and no sub-admin flags
   const isStudentAccount = !authLoading && !!user && hasAdminCookie === false && !isSuperAdmin && !canManageContent && !canModerateComments && !canGrantPremium;
 
-  // Not logged in at all (no user and no admin cookie) -> Redirect to /admin/login
+  // Not logged in at all (no user and no admin cookie) -> Redirect to /admin/login only when session and auth load finish
   useEffect(() => {
     if (!authLoading && hasAdminCookie === false && !user) {
       router.push("/admin/login");

@@ -8,8 +8,9 @@ import { useAuth } from "@/components/AuthProvider";
 
 export function MobileNavMenu() {
   const { user, signOut } = useAuth();
-  const isSuperAdmin = user?.app_metadata?.role === "admin" || (user as any)?.user_metadata?.role === "admin";
-  const isAssistant = !!((user as any)?.user_metadata?.can_manage_content || (user as any)?.user_metadata?.can_moderate_comments || (user as any)?.user_metadata?.can_grant_premium);
+  const isSuperAdminEmail = user?.email === "drakengo1707@gmail.com" || user?.email === "huytechnologyai2025@gmail.com" || user?.email === "marverick2024@gmail.com";
+  const isSuperAdmin = isSuperAdminEmail || user?.app_metadata?.role === "admin" || (user as any)?.user_metadata?.role === "admin";
+  const isAssistant = !isSuperAdmin && !!((user as any)?.user_metadata?.can_manage_content || (user as any)?.user_metadata?.can_moderate_comments || (user as any)?.user_metadata?.can_grant_premium);
   const canAccessAdmin = isSuperAdmin || isAssistant;
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
