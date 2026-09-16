@@ -247,3 +247,59 @@ body {
 .animate-fade-in {
   animation: fade-in-up 0.6s ease-out;
 }
+
+/* === Qumica Hero: Infinite Marquee === */
+@keyframes marquee-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.animate-marquee {
+  animation: marquee-scroll 28s linear infinite;
+  display: flex;
+  width: max-content;
+}
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* === Qumica Hero: Gradient Shift on CTA Button === */
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.animate-gradient-shift {
+  background-size: 200% 200%;
+  animation: gradient-shift 4s ease infinite;
+}
+
+/* === Qumica Hero: Light Sweep Shimmer === */
+@keyframes light-sweep {
+  0% { transform: translateX(-150%) skewX(-20deg); }
+  100% { transform: translateX(350%) skewX(-20deg); }
+}
+.animate-light-sweep::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.35) 50%,
+    transparent 60%
+  );
+  animation: light-sweep 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* === Qumica Hero: Content Fade-in Variants === */
+@keyframes qumica-fade-up {
+  from { opacity: 0; transform: translateY(32px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.qumica-fade-1 { animation: qumica-fade-up 0.7s ease-out 0.1s both; }
+.qumica-fade-2 { animation: qumica-fade-up 0.7s ease-out 0.25s both; }
+.qumica-fade-3 { animation: qumica-fade-up 0.7s ease-out 0.4s both; }
+.qumica-fade-4 { animation: qumica-fade-up 0.7s ease-out 0.55s both; }
+.qumica-fade-5 { animation: qumica-fade-up 0.7s ease-out 0.7s both; }
+

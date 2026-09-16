@@ -156,7 +156,7 @@ export default function RootLayout({
             {/* Top Cross-Ecosystem Navigation Bar */}
             <EcosystemHeaderBar />
 
-            <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-xl">
+            <header className="sticky top-0 z-40 w-full border-b border-white/5 bg-black/30 backdrop-blur-xl">
               <div className="container mx-auto px-4 h-16 flex items-center justify-between">
                 <div className="font-bold text-2xl tracking-tight">AI & Auto<span className="text-secondary neon-glow-text">Expert</span></div>
                 <nav className="hidden md:flex gap-8 items-center">

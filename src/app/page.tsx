@@ -6,6 +6,7 @@ import { ArrowRight, Bot, Zap, BookOpen, Brain, Users, Star, FileText, Workflow 
 import { motion, Variants } from "framer-motion";
 import { TiltCard } from "@/components/TiltCard";
 import { EcosystemSection } from "@/components/EcosystemSection";
+import { QuimicaHeroSection } from "@/components/QuimicaHeroSection";
 import type { HomePageContent } from "@/components/PageBuilderTab";
 
 const DEFAULT_CONTENT: HomePageContent = {
@@ -155,69 +156,9 @@ export default function Home() {
 
   return (
     <main className="flex-1 overflow-hidden">
-      {/* Hero Section */}
-      <section className="relative w-full py-20 lg:py-32 flex items-center justify-center min-h-[80vh]">
-        {/* Background Decorative Elements */}
-        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-secondary/10 via-background to-background -z-10"></div>
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.5 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1.5 }}
-          className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-secondary/30 rounded-full blur-[120px] -z-10"
-        />
+      {/* Qumica-Style Hero Section */}
+      <QuimicaHeroSection />
 
-        <motion.div 
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="container px-4 md:px-6 max-w-6xl mx-auto flex flex-col items-center text-center"
-        >
-          <motion.div variants={itemVariants} className="inline-flex items-center rounded-full border border-secondary/30 bg-secondary/10 px-3 py-1 text-sm font-medium text-secondary mb-6">
-            <span className="flex h-2 w-2 rounded-full bg-secondary mr-2 animate-pulse"></span>
-            Chuyên gia Đào tạo AI & Automation
-          </motion.div>
-          
-          <motion.h1 
-            variants={itemVariants} 
-            className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6 max-w-4xl text-balance"
-            style={{ perspective: 1000 }}
-          >
-            <motion.span
-              initial={{ rotateX: 90, opacity: 0 }}
-              animate={{ rotateX: 0, opacity: 1 }}
-              transition={{ duration: 0.8, delay: 0.2, type: "spring" }}
-              className="inline-block"
-            >
-              {pageContent.heroTitlePrefix}{" "}
-              <TypewriterText phrases={pageContent.heroTypewriter} />{" "}
-              {pageContent.heroTitleSuffix}
-            </motion.span>
-          </motion.h1>
-          
-          <motion.p 
-            variants={itemVariants} 
-            className="text-lg md:text-xl text-foreground/70 mb-10 max-w-2xl"
-          >
-            {pageContent.heroDescription}
-          </motion.p>
-          
-          <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-6 w-full sm:w-auto mt-4">
-            <Link 
-              href="/roadmap" 
-              className="inline-flex items-center justify-center px-8 py-4 rounded-full bg-secondary text-black font-bold hover:bg-secondary/90 hover-glow transition-all"
-            >
-              Xem Lộ Trình Học
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Link>
-            <Link 
-              href="/contact" 
-              className="inline-flex items-center justify-center px-8 py-4 rounded-full border border-secondary/30 bg-transparent text-secondary font-bold hover:border-secondary hover:shadow-[0_0_15px_rgba(0,255,133,0.2)] transition-all"
-            >
-              Nhận Tư Vấn Doanh Nghiệp
-            </Link>
-          </motion.div>
-        </motion.div>
-      </section>
 
       {/* Feature/Highlights Section */}
       <section className="w-full py-16 bg-transparent relative">
