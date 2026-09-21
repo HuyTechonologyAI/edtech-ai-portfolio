@@ -15,8 +15,13 @@ export function LegacyShellWrapper({ children }: { children: React.ReactNode }) 
   const pathname = usePathname();
   const isV2 = pathname?.startsWith("/v2") ?? false;
 
-  // For /v2 route: completely isolate from legacy UI chrome (top bar, header, bottom nav, footer, legacy widgets)
+  // For /v2 preview route: isolate from legacy UI chrome
   if (isV2) {
+    return <>{children}</>;
+  }
+
+  // For root / (Corporate V2): isolate from legacy UI chrome
+  if (pathname === "/") {
     return <>{children}</>;
   }
 

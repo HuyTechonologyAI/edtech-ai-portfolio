@@ -2,19 +2,37 @@
 
 import { useState } from "react";
 import { Sparkles, ArrowRight, ShieldCheck, Mail, Phone, MapPin, CheckCircle } from "lucide-react";
+import { submitContact } from "@/actions/contact";
 
 export function FinalCTA() {
   const [intent, setIntent] = useState("automation");
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      const formData = new FormData(e.currentTarget);
+      const fullName = (formData.get("fullName") as string || "").trim();
+      const email = (formData.get("email") as string || "").trim();
+      const phone = (formData.get("phone") as string || "").trim();
+      const company = (formData.get("company") as string || "").trim();
+      const message = (formData.get("message") as string || "").trim();
+
+      const contactData = new FormData();
+      contactData.set("name", fullName || "Khách hàng Doanh nghiệp");
+      contactData.set("email", email || "contact@huycncdsai.io.vn");
+      contactData.set("company", company || `Lĩnh vực: ${intent}`);
+      contactData.set("message", `SĐT/Zalo: ${phone} | Nhu cầu: ${intent} | Nội dung: ${message || "Đăng ký tư vấn giải pháp AI"}`);
+
+      await submitContact(contactData);
       setSubmitted(true);
-    }, 800);
+    } catch {
+      setSubmitted(true);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -138,6 +156,7 @@ export function FinalCTA() {
                       </label>
                       <input
                         type="text"
+                        name="fullName"
                         required
                         placeholder="Nguyễn Văn A"
                         className="w-full px-4 py-2.5 rounded-xl bg-[#0F172A] border border-white/10 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-[#00E5FF]"
@@ -149,6 +168,7 @@ export function FinalCTA() {
                       </label>
                       <input
                         type="text"
+                        name="company"
                         placeholder="Tên công ty hoặc trường học"
                         className="w-full px-4 py-2.5 rounded-xl bg-[#0F172A] border border-white/10 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-[#00E5FF]"
                       />
@@ -163,6 +183,7 @@ export function FinalCTA() {
                       </label>
                       <input
                         type="tel"
+                        name="phone"
                         required
                         placeholder="0912 345 678"
                         className="w-full px-4 py-2.5 rounded-xl bg-[#0F172A] border border-white/10 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-[#00E5FF]"
@@ -174,6 +195,7 @@ export function FinalCTA() {
                       </label>
                       <input
                         type="email"
+                        name="email"
                         placeholder="email@doanhnghiep.com"
                         className="w-full px-4 py-2.5 rounded-xl bg-[#0F172A] border border-white/10 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-[#00E5FF]"
                       />
@@ -187,6 +209,7 @@ export function FinalCTA() {
                     </label>
                     <textarea
                       rows={3}
+                      name="message"
                       placeholder="Mô tả quy trình bạn muốn ứng dụng AI hoặc tự động hóa..."
                       className="w-full px-4 py-2.5 rounded-xl bg-[#0F172A] border border-white/10 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-[#00E5FF] resize-none"
                     />
