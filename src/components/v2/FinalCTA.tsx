@@ -18,7 +18,7 @@ export function FinalCTA() {
   };
 
   return (
-    <section id="contact" className="w-full py-24 bg-[#070B14] border-t border-white/5 relative overflow-hidden">
+    <section id="contact" className="w-full py-24 bg-[#070B14] border-t border-white/5 relative overflow-hidden scroll-mt-24 md:scroll-mt-28">
       {/* Background ambient lighting */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#00E5FF]/10 rounded-full blur-[160px] pointer-events-none" />
 

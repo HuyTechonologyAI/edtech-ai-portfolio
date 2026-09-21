@@ -6,7 +6,7 @@ import { EcosystemMap } from "@/components/v2/EcosystemMap";
 
 export function HeroSection() {
   return (
-    <section id="hero" className="relative w-full min-h-[90vh] flex flex-col justify-center pt-8 pb-16 overflow-hidden bg-[#070B14]">
+    <section id="hero" className="relative w-full min-h-[90vh] flex flex-col justify-center pt-8 pb-16 overflow-hidden bg-[#070B14] scroll-mt-24 md:scroll-mt-28">
       {/* Ambient background light gradients */}
       <div className="absolute top-1/4 left-1/10 w-96 h-96 bg-[#00E5FF]/10 rounded-full blur-[140px] pointer-events-none -z-10" />
       <div className="absolute bottom-1/4 right-1/10 w-96 h-96 bg-[#0070F3]/10 rounded-full blur-[140px] pointer-events-none -z-10" />
@@ -31,25 +31,27 @@ export function HeroSection() {
 
             {/* Subheadline */}
             <p className="text-sm sm:text-base md:text-lg text-slate-300 leading-relaxed max-w-xl font-normal">
-              Tập đoàn công nghệ kết nối các giải pháp AI, Tự động hóa, Giáo dục số, Pháp lý thuế và Truyền thông chuyên biệt trên nền tảng điều phối đa tác tử an toàn theo chuẩn <strong className="text-white font-semibold">HAIP/1.0</strong>.
+              Hệ sinh thái công nghệ kết nối các giải pháp AI, Tự động hóa, Giáo dục số, Pháp lý thuế và Truyền thông chuyên biệt trên nền tảng điều phối đa tác tử an toàn theo chuẩn <strong className="text-white font-semibold">HAIP/1.0</strong>.
             </p>
 
-            {/* Dual CTAs */}
+            {/* Dual CTAs with Clear Hierarchy */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-2">
-              <Link
-                href="#ecosystem"
-                className="flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-full text-xs sm:text-sm font-bold text-black bg-gradient-to-r from-[#00E5FF] to-[#0070F3] shadow-[0_0_25px_rgba(0,229,255,0.45)] hover:shadow-[0_0_35px_rgba(0,229,255,0.7)] hover:scale-102 transition-all"
-              >
-                <span>Khám phá hệ sinh thái</span>
-                <ChevronDown className="w-4 h-4" />
-              </Link>
-
+              {/* Primary Business CTA */}
               <Link
                 href="#contact"
+                className="flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-full text-xs sm:text-sm font-bold text-black bg-gradient-to-r from-[#00E5FF] to-[#0070F3] shadow-[0_0_25px_rgba(0,229,255,0.45)] hover:shadow-[0_0_35px_rgba(0,229,255,0.7)] hover:scale-102 transition-all"
+              >
+                <Sparkles className="w-4 h-4 text-black" />
+                <span>Tư vấn AI Automation</span>
+              </Link>
+
+              {/* Secondary Exploratory CTA */}
+              <Link
+                href="#ecosystem"
                 className="flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-full text-xs sm:text-sm font-bold text-white bg-[#0F172A] border border-white/15 hover:border-[#00E5FF]/60 hover:bg-[#1E293B] transition-all"
               >
-                <Sparkles className="w-4 h-4 text-[#00E5FF]" />
-                <span>Tư vấn AI Automation</span>
+                <span>Khám phá hệ sinh thái</span>
+                <ChevronDown className="w-4 h-4 text-[#00E5FF]" />
               </Link>
             </div>
 

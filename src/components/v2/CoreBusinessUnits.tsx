@@ -22,7 +22,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }
 
 export function CoreBusinessUnits() {
   return (
-    <section id="ecosystem" className="w-full py-24 bg-[#0A1124] border-t border-white/5">
+    <section id="ecosystem" className="w-full py-24 bg-[#0A1124] border-t border-white/5 scroll-mt-24 md:scroll-mt-28">
       <div className="container mx-auto px-4 md:px-6 max-w-7xl">
         <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#00E5FF]/10 border border-[#00E5FF]/20 text-[#00E5FF] text-xs font-bold uppercase tracking-wider">
@@ -97,12 +97,12 @@ export function CoreBusinessUnits() {
                     {org.short_description}
                   </p>
 
-                  {/* Public Capabilities */}
+                  {/* Public Capabilities (Top 3) */}
                   <div className="space-y-1.5 pt-3 border-t border-white/5">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                       Năng lực chuyên môn:
                     </span>
-                    {org.public_capabilities.map((cap, i) => (
+                    {org.public_capabilities.slice(0, 3).map((cap, i) => (
                       <div key={i} className="flex items-start gap-2 text-[11px] text-slate-200">
                         <CheckCircle
                           className="w-3.5 h-3.5 shrink-0 mt-0.5"
@@ -113,8 +113,8 @@ export function CoreBusinessUnits() {
                     ))}
                   </div>
 
-                  {/* Product Groups */}
-                  <div className="space-y-1 pt-2">
+                  {/* Product Groups (Cleaned for mobile) */}
+                  <div className="space-y-1 pt-2 hidden sm:block">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                       Sản phẩm & Ứng dụng:
                     </span>

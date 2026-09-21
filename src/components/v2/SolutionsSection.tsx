@@ -60,7 +60,7 @@ export function SolutionsSection() {
   ];
 
   return (
-    <section id="solutions" className="w-full py-24 bg-[#070B14] border-t border-white/5">
+    <section id="solutions" className="w-full py-24 bg-[#070B14] border-t border-white/5 scroll-mt-24 md:scroll-mt-28">
       <div className="container mx-auto px-4 md:px-6 max-w-7xl">
         <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#00E5FF]/10 border border-[#00E5FF]/20 text-[#00E5FF] text-xs font-bold uppercase tracking-wider">

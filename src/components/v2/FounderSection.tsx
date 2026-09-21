@@ -4,7 +4,7 @@ import { Award, Compass, Sparkles, CheckCircle2 } from "lucide-react";
 
 export function FounderSection() {
   return (
-    <section id="leadership" className="w-full py-24 bg-[#070B14] border-t border-white/5 relative overflow-hidden">
+    <section id="leadership" className="w-full py-24 bg-[#070B14] border-t border-white/5 relative overflow-hidden scroll-mt-24 md:scroll-mt-28">
       {/* Background ambient lighting */}
       <div className="absolute top-1/2 right-1/4 -translate-y-1/2 w-96 h-96 bg-[#00E5FF]/5 rounded-full blur-[140px] pointer-events-none" />
 
@@ -16,13 +16,14 @@ export function FounderSection() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/profile.jpg"
-                alt="Ngô Quốc Huy - Founder & CEO HUY TECHNOLOGY AI GROUP"
+                alt="Ngô Quốc Huy - Nhà sáng lập & Giám đốc HUY TECHNOLOGY AI GROUP"
+                loading="lazy"
                 className="w-full aspect-[4/5] object-cover transition-transform duration-700 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#070B14] via-[#070B14]/30 to-transparent z-10" />
               <div className="absolute bottom-6 left-6 right-6 z-20">
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#00E5FF]/20 border border-[#00E5FF]/40 text-[#00E5FF] text-[11px] font-extrabold uppercase mb-2">
-                  <Sparkles className="w-3.5 h-3.5" /> Founder & CEO
+                  <Sparkles className="w-3.5 h-3.5" /> Nhà Sáng Lập & Giám Đốc
                 </div>
                 <h3 className="text-2xl sm:text-3xl font-black text-white">
                   Ngô Quốc Huy
@@ -60,11 +61,11 @@ export function FounderSection() {
                 <ul className="text-xs text-slate-300 space-y-1.5 leading-relaxed">
                   <li className="flex items-start gap-1.5">
                     <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
-                    <span>Danh hiệu <strong>"Người thợ trẻ giỏi toàn quốc" (2020)</strong> do TW Đoàn TNCS Hồ Chí Minh trao tặng.</span>
+                    <span>Danh hiệu <strong>"Người thợ trẻ giỏi toàn quốc" (2020)</strong> do Trung ương Đoàn TNCS Hồ Chí Minh trao tặng.</span>
                   </li>
                   <li className="flex items-start gap-1.5">
                     <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
-                    <span>Giải Nhất <strong>"Khởi nghiệp ĐMST OCOP"</strong> tỉnh Đồng Nai (2020).</span>
+                    <span>Giải Nhất <strong>"Khởi nghiệp Đổi mới Sáng tạo OCOP"</strong> tỉnh Đồng Nai (2020).</span>
                   </li>
                 </ul>
               </div>

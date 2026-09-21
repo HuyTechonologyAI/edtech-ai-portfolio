@@ -18,13 +18,13 @@ export function EcosystemMap() {
   const [activeOrgId, setActiveOrgId] = useState<string>("org-01-huytech");
   const activeOrg = PUBLIC_ECOSYSTEM.find((o) => o.id === activeOrgId) || PUBLIC_ECOSYSTEM[0];
 
-  // Radial positions for satellite nodes (angle in degrees relative to center)
+  // Radial positions for satellite nodes (left side constellation so right drawer does not obscure)
   const SATELLITE_NODES = [
-    { id: "org-02-aischool", angle: -90, x: 260, y: 50 },   // Top
-    { id: "org-03-smarttax", angle: -160, x: 60, y: 150 },  // Top-Left
-    { id: "org-04-media-tech", angle: -20, x: 460, y: 150 }, // Top-Right
-    { id: "org-05-media-edu", angle: 140, x: 100, y: 340 },  // Bottom-Left
-    { id: "org-06-media-creative", angle: 40, x: 420, y: 340 }, // Bottom-Right
+    { id: "org-02-aischool", x: 190, y: 55 },    // Top
+    { id: "org-03-smarttax", x: 65, y: 145 },   // Top-Left
+    { id: "org-04-media-tech", x: 300, y: 130 }, // Middle-Right
+    { id: "org-05-media-edu", x: 75, y: 315 },  // Bottom-Left
+    { id: "org-06-media-creative", x: 285, y: 315 }, // Bottom-Right
   ];
 
   return (
@@ -32,7 +32,7 @@ export function EcosystemMap() {
       {/* Desktop Radial Constellation View (>= 1024px) */}
       <div className="hidden lg:block relative w-full h-[460px] bg-surface/30 rounded-3xl border border-white/10 p-6 overflow-hidden backdrop-blur-xl shadow-2xl">
         {/* Background decorative glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[380px] h-[380px] bg-brand-primary/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[380px] h-[380px] bg-brand-primary/5 rounded-full blur-3xl pointer-events-none" />
         
         {/* SVG Live Connection Rays */}
         <svg className="absolute inset-0 w-full h-full pointer-events-none" xmlns="http://www.w3.org/2000/svg">
@@ -47,8 +47,8 @@ export function EcosystemMap() {
             return (
               <line
                 key={`line-${node.id}`}
-                x1={260} // Center node x
-                y1={210} // Center node y
+                x1={190} // Center node x
+                y1={215} // Center node y
                 x2={node.x}
                 y2={node.y}
                 stroke={isSelected ? "#00E5FF" : "rgba(255, 255, 255, 0.15)"}
@@ -64,22 +64,22 @@ export function EcosystemMap() {
         <button
           type="button"
           onClick={() => setActiveOrgId("org-01-huytech")}
-          className={`absolute left-[260px] top-[210px] -translate-x-1/2 -translate-y-1/2 z-20 flex flex-col items-center justify-center w-32 h-32 rounded-full border-2 transition-all duration-300 ${
+          className={`absolute left-[190px] top-[215px] -translate-x-1/2 -translate-y-1/2 z-20 flex flex-col items-center justify-center w-28 h-28 rounded-full border-2 transition-all duration-300 ${
             activeOrgId === "org-01-huytech"
-              ? "border-[#00E5FF] bg-[#070B14] shadow-[0_0_35px_rgba(0,229,255,0.6)] scale-105"
-              : "border-white/20 bg-[#070B14]/80 hover:border-[#00E5FF]/60 hover:scale-102"
+              ? "border-[#00E5FF] bg-[#070B14] shadow-[0_0_35px_rgba(0,229,255,0.6)] scale-105 opacity-100"
+              : "border-white/20 bg-[#070B14]/80 hover:border-[#00E5FF]/60 hover:scale-102 opacity-85 hover:opacity-100"
           }`}
           aria-pressed={activeOrgId === "org-01-huytech"}
-          aria-label="HUY TECHNOLOGY AI GROUP (Tập đoàn công nghệ lõi)"
+          aria-label="HUY TECHNOLOGY AI GROUP (Đơn vị công nghệ hạt nhân)"
         >
-          <div className="w-10 h-10 rounded-full bg-[#00E5FF]/10 flex items-center justify-center text-[#00E5FF] mb-1">
-            <Cpu className="w-6 h-6" />
+          <div className="w-8 h-8 rounded-full bg-[#00E5FF]/10 flex items-center justify-center text-[#00E5FF] mb-0.5">
+            <Cpu className="w-5 h-5" />
           </div>
-          <span className="text-[11px] font-extrabold text-white text-center leading-tight px-2">
+          <span className="text-[10px] font-extrabold text-white text-center leading-tight px-1">
             HUY TECHNOLOGY
           </span>
-          <span className="text-[9px] text-[#00E5FF] font-semibold tracking-wider uppercase mt-0.5">
-            Core Holding
+          <span className="text-[8px] text-[#00E5FF] font-semibold tracking-wider uppercase mt-0.5">
+            Core Unit
           </span>
         </button>
 
@@ -122,7 +122,7 @@ export function EcosystemMap() {
         })}
 
         {/* Desktop Active Organization Floating Detail Drawer */}
-        <div className="absolute right-6 top-6 bottom-6 w-80 bg-[#0F172A]/90 border border-white/10 rounded-2xl p-5 flex flex-col justify-between backdrop-blur-md shadow-2xl z-30">
+        <div className="absolute right-4 top-4 bottom-4 w-72 bg-[#0F172A]/95 border border-white/10 rounded-2xl p-5 flex flex-col justify-between backdrop-blur-md shadow-2xl z-30">
           <div>
             <div className="flex items-center justify-between mb-2">
               <span

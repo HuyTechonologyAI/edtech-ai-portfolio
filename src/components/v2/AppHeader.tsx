@@ -1,15 +1,41 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Cpu, Menu, X, ArrowRight, ShieldCheck } from "lucide-react";
+import { Cpu, Menu, X, ArrowRight } from "lucide-react";
 
 export function AppHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Prevent background scroll and signal menu-open state to floating widgets
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+      document.body.classList.add("v2-menu-open");
+    } else {
+      document.body.style.overflow = "";
+      document.body.classList.remove("v2-menu-open");
+    }
+    return () => {
+      document.body.style.overflow = "";
+      document.body.classList.remove("v2-menu-open");
+    };
+  }, [mobileMenuOpen]);
+
+  // Handle Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && mobileMenuOpen) {
+        setMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [mobileMenuOpen]);
+
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-[#070B14]/85 backdrop-blur-xl transition-all">
-      <div className="container mx-auto px-4 md:px-6 h-20 flex items-center justify-between max-w-7xl">
+    <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-[#070B14]/90 backdrop-blur-xl transition-all">
+      <div className="container mx-auto px-4 md:px-6 h-16 md:h-20 flex items-center justify-between max-w-7xl">
         {/* Brand Logo */}
         <Link href="/" className="flex items-center gap-3 group focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00E5FF] rounded-lg">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#00E5FF] to-[#0070F3] p-0.5 shadow-[0_0_20px_rgba(0,229,255,0.4)] group-hover:shadow-[0_0_30px_rgba(0,229,255,0.7)] transition-all">
@@ -75,7 +101,7 @@ export function AppHeader() {
           <button
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 rounded-lg bg-surface/50 border border-white/10 text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00E5FF]"
+            className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl bg-surface/50 border border-white/10 text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00E5FF]"
             aria-label="Toggle navigation menu"
             aria-expanded={mobileMenuOpen}
           >

@@ -15,10 +15,11 @@ import { FounderSection } from "./FounderSection";
 import { ResourcesResearch } from "./ResourcesResearch";
 import { FinalCTA } from "./FinalCTA";
 import { AppFooter } from "./AppFooter";
+import { CorporateFloatingWidgets } from "./CorporateFloatingWidgets";
 
 export function CorporateHomePageV2() {
   return (
-    <div className="min-h-screen flex flex-col bg-[#070B14] text-white selection:bg-[#00E5FF] selection:text-black">
+    <div className="min-h-screen flex flex-col bg-[#070B14] text-white selection:bg-[#00E5FF] selection:text-black relative">
       {/* 01. App Header */}
       <AppHeader />
 
@@ -65,6 +66,9 @@ export function CorporateHomePageV2() {
 
       {/* 16. Multi-Entity Corporate Footer */}
       <AppFooter />
+
+      {/* 17. Corporate Floating Widgets */}
+      <CorporateFloatingWidgets />
     </div>
   );
 }

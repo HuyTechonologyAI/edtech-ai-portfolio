@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Cpu, ShieldCheck, Heart } from "lucide-react";
+import { Cpu } from "lucide-react";
 import { PUBLIC_ECOSYSTEM } from "@/lib/public-ecosystem";
 
 export function AppFooter() {

@@ -29,7 +29,7 @@ export function ResourcesResearch() {
   ];
 
   return (
-    <section className="w-full py-24 bg-[#0A1124] border-t border-white/5">
+    <section id="resources" className="w-full py-24 bg-[#0A1124] border-t border-white/5 scroll-mt-24 md:scroll-mt-28">
       <div className="container mx-auto px-4 md:px-6 max-w-7xl">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
           <div className="space-y-3 max-w-2xl">
