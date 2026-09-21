@@ -1,0 +1,144 @@
+{
+  "version": "2.0",
+  "generated_for": "HUY_AI_GROUP_V2",
+  "public_ecosystem": [
+    {
+      "id": "org-01-huytech",
+      "display_name": "HUY TECHNOLOGY AI GROUP",
+      "short_description": "Đơn vị hạt nhân điều phối, nghiên cứu mô hình đa tác tử và hạ tầng công nghệ lõi.",
+      "brand_role": "Đơn Vị Hạt Nhân / Nền Tảng Công Nghệ",
+      "accent_color": "#00E5FF",
+      "badge_bg": "rgba(0, 229, 255, 0.12)",
+      "badge_text": "#00E5FF",
+      "gradient": "linear-gradient(135deg, #00E5FF 0%, #0070F3 100%)",
+      "icon_name": "Cpu",
+      "public_capabilities": [
+        "Kiến trúc điều phối đa tác tử (Chuẩn HAIP)",
+        "Quy trình tự động hóa tác vụ doanh nghiệp",
+        "Hạ tầng tính toán AI linh hoạt (Local + Cloud)"
+      ],
+      "public_product_groups": [
+        "Nền tảng điều phối AI (AaaS - Đang phát triển)",
+        "Tự động hóa luồng công việc doanh nghiệp",
+        "Giải pháp lưu trữ & xử lý AI nội bộ"
+      ],
+      "public_website_target": "https://huycncdsai.io.vn",
+      "public_status": "LIVE"
+    },
+    {
+      "id": "org-02-aischool",
+      "display_name": "GVCNCDSAI AI SCHOOL",
+      "short_description": "Đơn vị đào tạo kỹ năng số và phát triển giải pháp AI hỗ trợ giáo viên theo định hướng sư phạm.",
+      "brand_role": "Đơn Vị Đào Tạo & Ứng Dụng Giáo Dục",
+      "accent_color": "#00FF85",
+      "badge_bg": "rgba(0, 255, 133, 0.12)",
+      "badge_text": "#00FF85",
+      "gradient": "linear-gradient(135deg, #00FF85 0%, #10B981 100%)",
+      "icon_name": "GraduationCap",
+      "public_capabilities": [
+        "Hỗ trợ thiết kế kế hoạch bài dạy định hướng CV 5512",
+        "Bộ học liệu và slide trình chiếu sư phạm",
+        "Tài nguyên bồi dưỡng kỹ năng ứng dụng AI cho giáo viên"
+      ],
+      "public_product_groups": [
+        "Trợ lý giáo viên Smart Teacher Schedule (Đang hoạt động)",
+        "Xưởng công cụ bài giảng tương tác (BETA)",
+        "Cộng đồng chia sẻ phương pháp giảng dạy số"
+      ],
+      "public_website_target": "https://gvcncdsai.io.vn",
+      "public_status": "LIVE"
+    },
+    {
+      "id": "org-03-smarttax",
+      "display_name": "SMARTTAX AI",
+      "short_description": "Trợ lý hỗ trợ tra cứu thông tin thuế, đối chiếu văn bản pháp luật và hỗ trợ chuẩn bị hồ sơ kế toán.",
+      "brand_role": "Trợ Lý Thông Tin Thuế & Pháp Lý",
+      "accent_color": "#3B82F6",
+      "badge_bg": "rgba(59, 130, 246, 0.12)",
+      "badge_text": "#60A5FA",
+      "gradient": "linear-gradient(135deg, #3B82F6 0%, #F59E0B 100%)",
+      "icon_name": "Calculator",
+      "public_capabilities": [
+        "Hỗ trợ tra cứu quy chuẩn luật & văn bản thuế",
+        "Đối chiếu trích dẫn điều khoản pháp lý",
+        "Hỗ trợ phân tích dữ liệu hóa đơn (Cần người duyệt)"
+      ],
+      "public_product_groups": [
+        "Hệ thống tra cứu câu hỏi thuế (BETA)",
+        "Công cụ hỗ trợ đọc chứng từ hóa đơn (Thử nghiệm)",
+        "Cổng kết nối chuyên gia đối soát chuyên môn"
+      ],
+      "public_website_target": "https://smarttax-ai.vercel.app",
+      "public_status": "BETA"
+    },
+    {
+      "id": "org-04-media-tech",
+      "display_name": "HUY TECH MEDIA",
+      "short_description": "Kênh chuyên khảo về công nghệ AI, kiến trúc tự động hóa và kinh nghiệm thực thi dự án.",
+      "brand_role": "Đơn Vị Truyền Thông Công Nghệ",
+      "accent_color": "#00D2FF",
+      "badge_bg": "rgba(0, 210, 255, 0.12)",
+      "badge_text": "#00D2FF",
+      "gradient": "linear-gradient(135deg, #00D2FF 0%, #0055FF 100%)",
+      "icon_name": "Tv",
+      "public_capabilities": [
+        "Bài viết chuyên sâu về kiến trúc hệ thống AI",
+        "Cẩm nang hướng dẫn tự động hóa quy trình",
+        "Tổng hợp thực tiễn chuyển đổi số doanh nghiệp"
+      ],
+      "public_product_groups": [
+        "Bản tin chuyên đề AI & Tự động hóa (Đang hoàn thiện)",
+        "Chuỗi video chia sẻ kiến trúc kỹ thuật (Phát triển)",
+        "Tài liệu phân tích giải pháp công nghệ"
+      ],
+      "public_website_target": "https://huycncdsai.io.vn/media",
+      "public_status": "DEVELOPMENT"
+    },
+    {
+      "id": "org-05-media-edu",
+      "display_name": "GVCNCDSAI MEDIA",
+      "short_description": "Kênh nội dung giáo dục, phương pháp tiếp cận STEM và đồng hành cùng sự phát triển của nhà giáo.",
+      "brand_role": "Đơn Vị Truyền Thông Giáo Dục",
+      "accent_color": "#10B981",
+      "badge_bg": "rgba(16, 185, 129, 0.12)",
+      "badge_text": "#34D399",
+      "gradient": "linear-gradient(135deg, #10B981 0%, #059669 100%)",
+      "icon_name": "BookOpen",
+      "public_capabilities": [
+        "Nội dung phát triển kỹ năng sư phạm hiện đại",
+        "Tài liệu hướng dẫn trực quan hoạt động lớp học",
+        "Tài nguyên bổ trợ phương pháp giảng dạy tích cực"
+      ],
+      "public_product_groups": [
+        "Chuỗi bài giảng kỹ năng số cho giáo viên (BETA)",
+        "Sổ tay hướng dẫn ứng dụng công nghệ lớp học",
+        "Kênh chia sẻ kinh nghiệm giảng dạy thực tế"
+      ],
+      "public_website_target": "https://gvcncdsai.io.vn/media",
+      "public_status": "DEVELOPMENT"
+    },
+    {
+      "id": "org-06-media-creative",
+      "display_name": "HUY CREATIVE MEDIA",
+      "short_description": "Không gian nghiên cứu ứng dụng AI trong sáng tạo nghệ thuật số, thiết kế âm thanh và định dạng đa phương tiện.",
+      "brand_role": "Nghiên Cứu Sáng Tạo Đa Phương Tiện",
+      "accent_color": "#8B5CF6",
+      "badge_bg": "rgba(139, 92, 246, 0.12)",
+      "badge_text": "#C084FC",
+      "gradient": "linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%)",
+      "icon_name": "Sparkles",
+      "public_capabilities": [
+        "Thử nghiệm tạo âm thanh và nhạc nền hỗ trợ tập trung",
+        "Nghiên cứu công cụ đồ họa và hiệu ứng thị giác",
+        "Khám phá định dạng truyền thông số tương tác"
+      ],
+      "public_product_groups": [
+        "Bộ sưu tập âm thanh thư giãn thử nghiệm (Kế hoạch)",
+        "Mẫu đồ họa truyền thông đa nền tảng (Đang xây dựng)",
+        "Nội dung trình diễn công nghệ sáng tạo"
+      ],
+      "public_website_target": "https://huycncdsai.io.vn/creative",
+      "public_status": "PLANNED"
+    }
+  ]
+}
