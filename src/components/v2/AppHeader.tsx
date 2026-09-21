@@ -6,6 +6,17 @@ import { Cpu, Menu, X, ArrowRight } from "lucide-react";
 
 export function AppHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isPreview, setIsPreview] = useState(false);
+
+  // Check preview environment
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const host = window.location.hostname;
+      if (host.includes("vercel.app") || host === "localhost" || host.includes("preview")) {
+        setIsPreview(true);
+      }
+    }
+  }, []);
 
   // Prevent background scroll and signal menu-open state to floating widgets
   useEffect(() => {
@@ -37,21 +48,29 @@ export function AppHeader() {
     <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-[#070B14]/90 backdrop-blur-xl transition-all">
       <div className="container mx-auto px-4 md:px-6 h-16 md:h-20 flex items-center justify-between max-w-7xl">
         {/* Brand Logo */}
-        <Link href="/" className="flex items-center gap-3 group focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00E5FF] rounded-lg">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#00E5FF] to-[#0070F3] p-0.5 shadow-[0_0_20px_rgba(0,229,255,0.4)] group-hover:shadow-[0_0_30px_rgba(0,229,255,0.7)] transition-all">
-            <div className="w-full h-full bg-[#070B14] rounded-[10px] flex items-center justify-center text-[#00E5FF]">
-              <Cpu className="w-5 h-5" />
+        <div className="flex items-center gap-3">
+          <Link href="/" className="flex items-center gap-3 group focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00E5FF] rounded-lg">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#00E5FF] to-[#0070F3] p-0.5 shadow-[0_0_20px_rgba(0,229,255,0.4)] group-hover:shadow-[0_0_30px_rgba(0,229,255,0.7)] transition-all">
+              <div className="w-full h-full bg-[#070B14] rounded-[10px] flex items-center justify-center text-[#00E5FF]">
+                <Cpu className="w-5 h-5" />
+              </div>
             </div>
-          </div>
-          <div className="flex flex-col">
-            <span className="text-sm md:text-base font-black tracking-tight text-white group-hover:text-[#00E5FF] transition-colors">
-              HUY TECHNOLOGY
+            <div className="flex flex-col">
+              <span className="text-sm md:text-base font-black tracking-tight text-white group-hover:text-[#00E5FF] transition-colors">
+                HUY TECHNOLOGY
+              </span>
+              <span className="text-[10px] font-bold tracking-widest text-[#00E5FF] uppercase -mt-0.5">
+                AI GROUP
+              </span>
+            </div>
+          </Link>
+
+          {isPreview && (
+            <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider uppercase bg-amber-500/10 text-amber-400 border border-amber-500/30">
+              Bản xem trước
             </span>
-            <span className="text-[10px] font-bold tracking-widest text-[#00E5FF] uppercase -mt-0.5">
-              AI GROUP
-            </span>
-          </div>
-        </Link>
+          )}
+        </div>
 
         {/* Desktop Navigation Links */}
         <nav className="hidden lg:flex items-center gap-7 text-xs font-semibold text-slate-300">
