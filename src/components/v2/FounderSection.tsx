@@ -61,11 +61,11 @@ export function FounderSection() {
                 <ul className="text-xs text-slate-300 space-y-1.5 leading-relaxed">
                   <li className="flex items-start gap-1.5">
                     <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
-                    <span>Danh hiệu <strong>"Người thợ trẻ giỏi toàn quốc" (2020)</strong> do Trung ương Đoàn TNCS Hồ Chí Minh trao tặng.</span>
+                    <span>Danh hiệu <strong>&quot;Người thợ trẻ giỏi toàn quốc&quot; (2020)</strong> do Trung ương Đoàn TNCS Hồ Chí Minh trao tặng.</span>
                   </li>
                   <li className="flex items-start gap-1.5">
                     <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
-                    <span>Giải Nhất <strong>"Khởi nghiệp Đổi mới Sáng tạo OCOP"</strong> tỉnh Đồng Nai (2020).</span>
+                    <span>Giải Nhất <strong>&quot;Khởi nghiệp Đổi mới Sáng tạo OCOP&quot;</strong> tỉnh Đồng Nai (2020).</span>
                   </li>
                 </ul>
               </div>

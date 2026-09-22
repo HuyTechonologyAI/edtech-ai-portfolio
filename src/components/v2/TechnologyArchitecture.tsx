@@ -1,6 +1,6 @@
 "use client";
 
-import { Cpu, Server, Network, Database, Shield, FileCode } from "lucide-react";
+import { Server, Network, Database, FileCode } from "lucide-react";
 
 export function TechnologyArchitecture() {
   const pillars = [

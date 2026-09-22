@@ -13,7 +13,8 @@ export function AppHeader() {
     if (typeof window !== "undefined") {
       const host = window.location.hostname;
       if (host.includes("vercel.app") || host === "localhost" || host.includes("preview")) {
-        setIsPreview(true);
+        const timer = setTimeout(() => setIsPreview(true), 0);
+        return () => clearTimeout(timer);
       }
     }
   }, []);

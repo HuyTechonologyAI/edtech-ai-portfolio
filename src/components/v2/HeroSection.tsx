@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Sparkles, Shield, Cpu, ChevronDown } from "lucide-react";
+import { Sparkles, Shield, Cpu, ChevronDown } from "lucide-react";
 import { EcosystemMap } from "@/components/v2/EcosystemMap";
 
 export function HeroSection() {
