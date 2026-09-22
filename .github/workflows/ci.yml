@@ -52,6 +52,10 @@ jobs:
 
       - name: Production build
         run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder-ci.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-ci-anon-key
+          SUPABASE_SERVICE_ROLE_KEY: placeholder-ci-service-role-key
 
   legacy-lint-audit:
     name: Legacy Lint Audit
