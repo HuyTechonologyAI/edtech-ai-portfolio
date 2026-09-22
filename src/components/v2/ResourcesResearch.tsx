@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FileText, ArrowRight, Download, BookOpen } from "lucide-react";
+import { ArrowRight, Download, BookOpen } from "lucide-react";
 
 export function ResourcesResearch() {
   const items = [

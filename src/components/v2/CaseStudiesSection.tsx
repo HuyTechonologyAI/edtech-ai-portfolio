@@ -1,6 +1,6 @@
 "use client";
 
-import { Award, TrendingUp, CheckCircle, Clock } from "lucide-react";
+
 
 export function CaseStudiesSection() {
   const cases = [

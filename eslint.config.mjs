@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    "scripts/**",
+    "check_schema.js",
+    "migrate_knowledge.js",
   ]),
 ]);
 

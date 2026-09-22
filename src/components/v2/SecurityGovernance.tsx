@@ -1,6 +1,6 @@
 "use client";
 
-import { ShieldCheck, Lock, UserCheck, Eye, Scale, AlertTriangle } from "lucide-react";
+import { ShieldCheck, Lock, UserCheck, Eye, Scale } from "lucide-react";
 
 export function SecurityGovernance() {
   const principles = [

@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Cpu, GraduationCap, Calculator, Tv, BookOpen, Sparkles, ExternalLink, ShieldCheck, CheckCircle2 } from "lucide-react";
-import { PUBLIC_ECOSYSTEM, PublicOrganization } from "@/lib/public-ecosystem";
+import { Cpu, GraduationCap, Calculator, Tv, BookOpen, Sparkles, ExternalLink, CheckCircle2 } from "lucide-react";
+import { PUBLIC_ECOSYSTEM } from "@/lib/public-ecosystem";
 
 const ICON_MAP: Record<string, React.ElementType> = {
   Cpu,
