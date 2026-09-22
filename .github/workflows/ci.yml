@@ -25,21 +25,51 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '22'
           cache: 'npm'
+
+      - name: Verify Node runtime environment
+        run: |
+          node -v
+          npm -v
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Lint check
-        run: npm run lint
+      - name: Lint protected/changed scope
+        run: npm run lint:quality-gate
+        env:
+          GITHUB_BASE_REF: ${{ github.base_ref }}
 
       - name: Type check
         run: npm run typecheck
 
       - name: Production build
         run: npm run build
+
+  legacy-lint-audit:
+    name: Legacy Lint Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run legacy lint audit
+        run: npm run lint
