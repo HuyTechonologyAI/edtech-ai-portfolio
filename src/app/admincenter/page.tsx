@@ -782,7 +782,7 @@ export default function AdminCenterPage() {
             </div>
             <div className="flex items-baseline gap-2">
               <span className="text-2xl font-black text-white font-mono">
-                {systemStatus?.queue?.completedTasks || telemetryEvents.length * 4 || 142}
+                {telemetryEvents.length}
               </span>
               <span className="text-xs text-slate-400">Gói tin A2A</span>
             </div>
@@ -1548,12 +1548,12 @@ export default function AdminCenterPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {[
-                  { id: "anthropic-prod", name: "Anthropic Claude Prod", limit: "10,000,000 Tokens", used: totalTokensUsed > 0 ? "42,800" : "0", pct: totalTokensUsed > 0 ? 0.43 : 0, color: "text-amber-400", bar: "bg-amber-400" },
-                  { id: "openai-tier4", name: "OpenAI Tier-4 Cluster", limit: "10,000,000 Tokens", used: totalTokensUsed > 0 ? "68,400" : "0", pct: totalTokensUsed > 0 ? 0.68 : 0, color: "text-emerald-400", bar: "bg-emerald-400" },
-                  { id: "google-vertex", name: "Google Vertex AI Enterprise", limit: "10,000,000 Tokens", used: totalTokensUsed > 0 ? "19,200" : "0", pct: totalTokensUsed > 0 ? 0.19 : 0, color: "text-blue-400", bar: "bg-blue-400" },
-                  { id: "deepseek-api", name: "DeepSeek API High-Throughput", limit: "10,000,000 Tokens", used: totalTokensUsed > 0 ? "35,100" : "0", pct: totalTokensUsed > 0 ? 0.35 : 0, color: "text-cyan-400", bar: "bg-cyan-400" },
-                  { id: "groq-ultra", name: "Groq Ultra LPU (500 t/s)", limit: "10,000,000 Tokens", used: totalTokensUsed > 0 ? "54,000" : "0", pct: totalTokensUsed > 0 ? 0.54 : 0, color: "text-orange-400", bar: "bg-orange-400" },
-                  { id: "local-node01", name: "Dell M4800 Node-01 On-Prem", limit: "Không giới hạn (Local Compute)", used: "Vô tận", pct: 12, color: "text-purple-400", bar: "bg-purple-400" },
+                  { id: "anthropic-prod", name: "Anthropic Claude Prod", limit: "10,000,000 Tokens", used: "0", pct: 0, color: "text-amber-400", bar: "bg-amber-400" },
+                  { id: "openai-tier4", name: "OpenAI Tier-4 Cluster", limit: "10,000,000 Tokens", used: "0", pct: 0, color: "text-emerald-400", bar: "bg-emerald-400" },
+                  { id: "google-vertex", name: "Google Vertex AI Enterprise", limit: "10,000,000 Tokens", used: "0", pct: 0, color: "text-blue-400", bar: "bg-blue-400" },
+                  { id: "deepseek-api", name: "DeepSeek API High-Throughput", limit: "10,000,000 Tokens", used: "0", pct: 0, color: "text-cyan-400", bar: "bg-cyan-400" },
+                  { id: "groq-ultra", name: "Groq Ultra LPU (500 t/s)", limit: "10,000,000 Tokens", used: "0", pct: 0, color: "text-orange-400", bar: "bg-orange-400" },
+                  { id: "local-node01", name: "Dell M4800 Node-01 On-Prem", limit: "Không giới hạn (Local Compute)", used: "Sẵn sàng", pct: 0, color: "text-purple-400", bar: "bg-purple-400" },
                 ].map((pool) => (
                   <div key={pool.id} className="bg-[#070B14] border border-white/10 rounded-2xl p-5">
                     <div className="flex items-center justify-between mb-3">
