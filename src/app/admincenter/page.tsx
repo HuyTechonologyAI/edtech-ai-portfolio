@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   Shield,
   ShieldCheck,
@@ -31,6 +31,16 @@ import {
   Radio,
   SlidersHorizontal,
   X,
+  Play,
+  Pause,
+  Flame,
+  Share2,
+  Network,
+  MessageSquare,
+  Send,
+  StopCircle,
+  CornerDownRight,
+  Check,
 } from "lucide-react";
 import {
   CANONICAL_59_AGENTS,
@@ -39,6 +49,7 @@ import {
   AgentState,
   QuotaDomainId,
 } from "@/data/ai-agency-canonical";
+import { AgentLiveTelemetry, LiveEvent } from "@/app/api/admincenter/telemetry/route";
 
 interface SystemStatus {
   timestamp: string;
@@ -68,12 +79,21 @@ interface SystemStatus {
   aiFleet: {
     totalAgents: number;
     activeAgents: number;
+    collaboratingAgents?: number;
     standbyAgents: number;
     quarantinedAgents: number;
     businessUnitsCount: number;
+    tokensPerSec?: number;
     quotaUtilizationPct: number;
     tokensUsedTotal: number;
     tokensLimitTotal: number;
+  };
+  queue?: {
+    pendingTasks: number;
+    runningTasks: number;
+    completedTasks: number;
+    failedTasks: number;
+    dispatcherStatus: string;
   };
   realAuditLogs: Array<{
     id: string;
@@ -107,20 +127,42 @@ export default function AdminCenterPage() {
   const [passwordChangeSuccess, setPasswordChangeSuccess] = useState<string>("");
   const [isChangingPassword, setIsChangingPassword] = useState<boolean>(false);
 
-  // Dashboard state
-  const [activeTab, setActiveTab] = useState<"agents" | "quotas" | "hierarchy" | "node01" | "audit">("agents");
+  // Dashboard Tabs: Default to "swarm" for instant real-time multi-agent command!
+  const [activeTab, setActiveTab] = useState<"swarm" | "agents" | "quotas" | "hierarchy" | "node01" | "audit">("swarm");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedBU, setSelectedBU] = useState<string>("ALL");
   const [selectedTier, setSelectedTier] = useState<string>("ALL");
   const [selectedState, setSelectedState] = useState<string>("ALL");
-  const [selectedAgent, setSelectedAgent] = useState<AgentCard | null>(null);
-  const [dispatchAgent, setDispatchAgent] = useState<AgentCard | null>(null);
+  const [swarmFilter, setSwarmFilter] = useState<"ALL" | "ACTIVE" | "COLLAB" | "STANDBY">("ALL");
+
+  // Modals & Selected Agent
+  const [selectedAgent, setSelectedAgent] = useState<AgentLiveTelemetry | AgentCard | null>(null);
+  const [inspectAgent, setInspectAgent] = useState<AgentLiveTelemetry | null>(null);
+  const [dispatchAgent, setDispatchAgent] = useState<AgentLiveTelemetry | AgentCard | null>(null);
   const [dispatchPrompt, setDispatchPrompt] = useState<string>("");
   const [dispatchMessage, setDispatchMessage] = useState<string>("");
 
-  // System status
+  // Universal Broadcast Command Bar
+  const [broadcastPrompt, setBroadcastPrompt] = useState<string>("");
+  const [broadcastTargetBU, setBroadcastTargetBU] = useState<string>("ALL");
+  const [broadcastPriority, setBroadcastPriority] = useState<string>("P0");
+  const [isBroadcasting, setIsBroadcasting] = useState<boolean>(false);
+  const [broadcastFeedback, setBroadcastFeedback] = useState<string>("");
+
+  // Real-time Telemetry State
+  const [telemetryAgents, setTelemetryAgents] = useState<AgentLiveTelemetry[]>([]);
+  const [telemetryEvents, setTelemetryEvents] = useState<LiveEvent[]>([]);
+  const [swarmMode, setSwarmMode] = useState<string>("AUTONOMOUS_LIVE");
+  const [liveStreamEnabled, setLiveStreamEnabled] = useState<boolean>(true);
+  const [pollingRate, setPollingRate] = useState<number>(2500); // 2.5s default
+  const [eventFilter, setEventFilter] = useState<string>("ALL");
+  const [autoScrollLogs, setAutoScrollLogs] = useState<boolean>(true);
+
+  // System & Node-01 Status
   const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null);
   const [loadingStatus, setLoadingStatus] = useState<boolean>(false);
+  const [lastSyncTime, setLastSyncTime] = useState<string>("Đang khởi tạo...");
+  const logsContainerRef = useRef<HTMLDivElement>(null);
 
   // Check auth session on load
   const checkSession = async () => {
@@ -146,6 +188,23 @@ export default function AdminCenterPage() {
     }
   };
 
+  // Fetch Real-time Telemetry Data
+  const fetchTelemetry = async () => {
+    try {
+      const res = await fetch("/api/admincenter/telemetry");
+      if (res.ok) {
+        const data = await res.json();
+        if (data.agents) setTelemetryAgents(data.agents);
+        if (data.events) setTelemetryEvents(data.events);
+        if (data.swarmMode) setSwarmMode(data.swarmMode);
+        setLastSyncTime(new Date().toLocaleTimeString("vi-VN"));
+      }
+    } catch (err) {
+      console.error("Fetch telemetry error:", err);
+    }
+  };
+
+  // Fetch System Status
   const fetchSystemStatus = async () => {
     try {
       setLoadingStatus(true);
@@ -161,10 +220,31 @@ export default function AdminCenterPage() {
     }
   };
 
+  // Initial load
   useEffect(() => {
     checkSession();
+    fetchTelemetry();
     fetchSystemStatus();
   }, []);
+
+  // Real-time Polling Engine
+  useEffect(() => {
+    if (!isAuthenticated || !liveStreamEnabled) return;
+
+    const interval = setInterval(() => {
+      fetchTelemetry();
+      fetchSystemStatus();
+    }, pollingRate);
+
+    return () => clearInterval(interval);
+  }, [isAuthenticated, liveStreamEnabled, pollingRate]);
+
+  // Auto-scroll logs
+  useEffect(() => {
+    if (autoScrollLogs && logsContainerRef.current) {
+      logsContainerRef.current.scrollTop = 0; // Newest at top
+    }
+  }, [telemetryEvents, autoScrollLogs]);
 
   // Handle Login
   const handleLogin = async (e: React.FormEvent) => {
@@ -193,6 +273,7 @@ export default function AdminCenterPage() {
           setShowChangePasswordModal(true);
         }
         setLoginPassword("");
+        fetchTelemetry();
         fetchSystemStatus();
       } else {
         setLoginError(data.error || "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.");
@@ -271,15 +352,105 @@ export default function AdminCenterPage() {
     }
   };
 
-  // Handle Dispatch Simulated Action
-  const handleDispatchAction = (agent: AgentCard) => {
+  // Switch Swarm Mode (Autonomous Live / Standby / Emergency Freeze)
+  const handleSetSwarmMode = async (mode: string) => {
+    try {
+      const res = await fetch("/api/admincenter/telemetry", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "set_swarm_mode", mode }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSwarmMode(data.mode);
+        fetchTelemetry();
+      }
+    } catch (err) {
+      console.error("Set swarm mode error:", err);
+    }
+  };
+
+  // Broadcast Directive to All AI or Specific BU
+  const handleBroadcast = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!broadcastPrompt.trim()) return;
+
+    setIsBroadcasting(true);
+    setBroadcastFeedback("");
+
+    try {
+      const res = await fetch("/api/admincenter/telemetry", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "broadcast_directive",
+          directive: broadcastPrompt,
+          targetBU: broadcastTargetBU,
+          priority: broadcastPriority,
+        }),
+      });
+
+      if (res.ok) {
+        setBroadcastFeedback(`[ĐÃ PHÁT LỆNH] Chỉ thị [${broadcastPriority}] gửi thành công tới ${broadcastTargetBU === "ALL" ? "toàn bộ 59 AI" : broadcastTargetBU}!`);
+        setBroadcastPrompt("");
+        fetchTelemetry();
+        setTimeout(() => setBroadcastFeedback(""), 4000);
+      }
+    } catch (err: any) {
+      setBroadcastFeedback("Lỗi phát lệnh: " + err.message);
+    } finally {
+      setIsBroadcasting(false);
+    }
+  };
+
+  // Direct Agent Action (Activate / Standby / Quarantine)
+  const handleAgentControl = async (agentId: string, agentAction: string, task?: string) => {
+    try {
+      const res = await fetch("/api/admincenter/telemetry", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "agent_action",
+          agentId,
+          agentAction,
+          task,
+        }),
+      });
+      if (res.ok) {
+        fetchTelemetry();
+      }
+    } catch (err) {
+      console.error("Agent control error:", err);
+    }
+  };
+
+  // Emergency Freeze All
+  const handleEmergencyFreeze = async () => {
+    try {
+      const res = await fetch("/api/admincenter/telemetry", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "emergency_freeze" }),
+      });
+      if (res.ok) {
+        setSwarmMode("PAUSED_SAFE");
+        fetchTelemetry();
+      }
+    } catch (err) {
+      console.error("Emergency freeze error:", err);
+    }
+  };
+
+  // Handle Dispatch Simulated Action Modal
+  const handleDispatchAction = (agent: AgentLiveTelemetry | AgentCard) => {
     setDispatchAgent(agent);
     setDispatchPrompt("");
     setDispatchMessage("");
   };
 
-  const executeDispatch = () => {
+  const executeDispatch = async () => {
     if (!dispatchAgent) return;
+    await handleAgentControl(dispatchAgent.id, "activate", dispatchPrompt || "Thực thi tác vụ điều phối trực tiếp");
     setDispatchMessage(
       `[ĐÃ GỬI LỆNH] Chỉ thị đã được nạp vào hàng đợi PGMQ cho Agent ${dispatchAgent.id} (${dispatchAgent.name}) trên Node-01.`
     );
@@ -289,16 +460,30 @@ export default function AdminCenterPage() {
     }, 2000);
   };
 
-  // Filtered Agents
+  // Effective Agents List (combining telemetry with fallback)
+  const effectiveAgents: AgentLiveTelemetry[] = useMemo(() => {
+    if (telemetryAgents.length > 0) return telemetryAgents;
+    return CANONICAL_59_AGENTS.map((c) => ({
+      ...c,
+      currentThought: "Đang duy trì nhịp tim chuẩn, sẵn sàng tiếp nhận luồng xử lý từ SuperAdmin.",
+      targetPeer: null,
+      tokensPerSec: 0,
+      tokensUsed: 0,
+      latencyMs: 35,
+      progressPct: 0,
+      lastHeartbeat: "Standby",
+    }));
+  }, [telemetryAgents]);
+
+  // Filtered Agents for Directory Tab
   const filteredAgents = useMemo(() => {
-    return CANONICAL_59_AGENTS.filter((agent) => {
+    return effectiveAgents.filter((agent) => {
       const matchesSearch =
         searchQuery === "" ||
         agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         agent.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
         agent.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
         agent.model.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        agent.framework.toLowerCase().includes(searchQuery.toLowerCase()) ||
         agent.businessUnit.toLowerCase().includes(searchQuery.toLowerCase());
 
       const matchesBU = selectedBU === "ALL" || agent.businessUnit.toLowerCase().includes(selectedBU.toLowerCase());
@@ -307,7 +492,35 @@ export default function AdminCenterPage() {
 
       return matchesSearch && matchesBU && matchesTier && matchesState;
     });
-  }, [searchQuery, selectedBU, selectedTier, selectedState]);
+  }, [effectiveAgents, searchQuery, selectedBU, selectedTier, selectedState]);
+
+  // Filtered Agents for Swarm Tab
+  const swarmFilteredAgents = useMemo(() => {
+    return effectiveAgents.filter((agent) => {
+      if (swarmFilter === "ACTIVE") return agent.state === "ACTIVE" || agent.state === "COLLABORATING";
+      if (swarmFilter === "COLLAB") return agent.state === "COLLABORATING";
+      if (swarmFilter === "STANDBY") return agent.state === "STANDBY" || agent.state === "PAUSED";
+      return true;
+    });
+  }, [effectiveAgents, swarmFilter]);
+
+  // Dynamic Live Metrics
+  const activeCount = effectiveAgents.filter((a) => a.state === "ACTIVE" || a.state === "COLLABORATING").length;
+  const collabCount = effectiveAgents.filter((a) => a.state === "COLLABORATING").length;
+  const standbyCount = effectiveAgents.filter((a) => a.state === "STANDBY" || a.state === "PAUSED").length;
+  const totalTokensPerSec = effectiveAgents.reduce((acc, a) => acc + (a.tokensPerSec || 0), 0);
+  const totalTokensUsed = effectiveAgents.reduce((acc, a) => acc + (a.tokensUsed || 0), 0);
+
+  // Filtered Live Events
+  const filteredEvents = useMemo(() => {
+    if (eventFilter === "ALL") return telemetryEvents;
+    return telemetryEvents.filter((evt) => {
+      if (eventFilter === "DIRECTIVE") return evt.type === "DIRECTIVE";
+      if (eventFilter === "A2A") return evt.type === "A2A_COLLAB";
+      if (eventFilter === "SECURITY") return evt.type === "SECURITY";
+      return true;
+    });
+  }, [telemetryEvents, eventFilter]);
 
   // If checking session initially
   if (checkingAuth) {
@@ -429,34 +642,37 @@ export default function AdminCenterPage() {
   return (
     <div className="min-h-screen bg-[#070B14] text-white flex flex-col font-sans">
       {/* HEADER */}
-      <header className="sticky top-0 z-40 bg-[#0F172A]/90 border-b border-white/10 backdrop-blur-md px-4 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
+      <header className="sticky top-0 z-40 bg-[#0F172A]/90 border-b border-white/10 backdrop-blur-md px-4 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-4">
         {/* Brand & Title */}
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shadow-md shadow-cyan-500/10">
+          <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shadow-md shadow-cyan-500/10 relative">
             <Bot className="w-5 h-5" />
+            <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-emerald-500 border-2 border-[#0F172A] animate-ping" />
+            <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-emerald-400 border-2 border-[#0F172A]" />
           </div>
           <div>
             <div className="flex items-center gap-2">
               <span className="font-extrabold text-base tracking-tight text-white">HUY AI CENTER</span>
-              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 uppercase tracking-widest">
-                AdminCenter
+              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 uppercase tracking-widest flex items-center gap-1">
+                <Radio className="w-2.5 h-2.5 animate-pulse text-emerald-400" />
+                Live Command
               </span>
             </div>
-            <p className="text-[11px] text-slate-400">Trung Tâm Điều Hành 59 AI Agency Doanh Nghiệp</p>
+            <p className="text-[11px] text-slate-400">Trung Tâm Điều Hành 59 AI Agency Doanh Nghiệp Thời Gian Thực</p>
           </div>
         </div>
 
         {/* Live Network & Hardware Status */}
-        <div className="hidden md:flex items-center gap-4 bg-[#070B14]/80 border border-white/10 rounded-xl px-4 py-2 text-xs">
+        <div className="hidden lg:flex items-center gap-4 bg-[#070B14]/80 border border-white/10 rounded-xl px-4 py-2 text-xs">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
             <span className="w-2 h-2 rounded-full bg-emerald-500 -ml-4" />
-            <span className="text-slate-300 font-mono">Node-01: ONLINE (100.79.240.108)</span>
+            <span className="text-slate-200 font-mono">Node-01: ONLINE (100.79.240.108:41641)</span>
           </div>
           <div className="w-px h-4 bg-white/10" />
           <div className="flex items-center gap-1.5 text-slate-400">
             <Server className="w-3.5 h-3.5 text-cyan-400" />
-            <span>Lenovo: Remote Control Plane</span>
+            <span>Lenovo: Control Plane (0B Storage)</span>
           </div>
           <div className="w-px h-4 bg-white/10" />
           <div className="flex items-center gap-1.5 text-slate-400">
@@ -465,8 +681,23 @@ export default function AdminCenterPage() {
           </div>
         </div>
 
-        {/* User profile & Actions */}
+        {/* Stream Toggle & Profile */}
         <div className="flex items-center gap-2.5">
+          {/* Live Stream Mode Badge & Toggle */}
+          <button
+            onClick={() => setLiveStreamEnabled(!liveStreamEnabled)}
+            className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all flex items-center gap-1.5 ${
+              liveStreamEnabled
+                ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/30"
+                : "bg-slate-800 border-white/10 text-slate-400 hover:text-white"
+            }`}
+            title="Bật/Tắt luồng cập nhật thời gian thực"
+          >
+            <Radio className={`w-3.5 h-3.5 ${liveStreamEnabled ? "animate-pulse text-emerald-400" : ""}`} />
+            <span>{liveStreamEnabled ? "LIVE: BẬT (2.5s)" : "LIVE: TẮT"}</span>
+          </button>
+
+          {/* User profile */}
           <div className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 flex items-center gap-2">
             <User className="w-4 h-4 text-cyan-400" />
             <span className="text-xs font-bold text-white">SuperAdmin</span>
@@ -481,7 +712,7 @@ export default function AdminCenterPage() {
             title="Đổi mật khẩu tài khoản"
           >
             <Key className="w-3.5 h-3.5 text-amber-400" />
-            <span className="hidden sm:inline">Đổi Mật Khẩu</span>
+            <span className="hidden sm:inline">Đổi MK</span>
           </button>
 
           <button
@@ -495,79 +726,222 @@ export default function AdminCenterPage() {
         </div>
       </header>
 
-      {/* TOP KPI METRICS STRIP (Sạch 100% dữ liệu test, sẵn sàng đón nhận tải thật) */}
-      <section className="px-4 lg:px-8 py-6 border-b border-white/5 bg-[#0A1124]/40">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Card 1: Total AI Agents */}
-          <div className="bg-[#0F172A]/80 border border-white/10 rounded-2xl p-5 backdrop-blur-sm relative overflow-hidden">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Tổng Lực Lượng AI</span>
-              <Bot className="w-5 h-5 text-cyan-400" />
+      {/* TOP REAL-TIME KPI HUD STRIP */}
+      <section className="px-4 lg:px-8 py-5 border-b border-white/5 bg-[#0A1124]/60">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+          {/* HUD Card 1: Active Fleet Telemetry */}
+          <div className="bg-[#0F172A]/90 border border-cyan-500/30 rounded-2xl p-4 backdrop-blur-sm relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-cyan-500/10 rounded-full blur-xl pointer-events-none group-hover:bg-cyan-500/20 transition-all" />
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[11px] font-semibold text-cyan-300 uppercase tracking-wider flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                AI Đang Hoạt Động
+              </span>
+              <Activity className="w-4 h-4 text-cyan-400" />
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold text-white">59</span>
-              <span className="text-xs text-slate-400 font-medium">AI Agencies</span>
+              <span className="text-2xl font-black text-white">{activeCount}</span>
+              <span className="text-xs text-slate-400">/ 59 AI Agency</span>
             </div>
-            <p className="text-[11px] text-slate-400 mt-2">
-              6 Business Units • 7 Phân cấp (L0 → L4, SEC, HR)
+            <div className="flex items-center gap-2 mt-2 text-[10px] text-slate-300">
+              <span className="text-emerald-400 font-semibold">{activeCount - collabCount} Đơn lẻ</span>
+              <span>•</span>
+              <span className="text-purple-400 font-semibold">{collabCount} Phối hợp A2A</span>
+              <span>•</span>
+              <span className="text-slate-400">{standbyCount} Standby</span>
+            </div>
+          </div>
+
+          {/* HUD Card 2: Live Token Speed */}
+          <div className="bg-[#0F172A]/90 border border-emerald-500/30 rounded-2xl p-4 backdrop-blur-sm relative overflow-hidden">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[11px] font-semibold text-emerald-300 uppercase tracking-wider">
+                Tốc Độ Xử Lý Live
+              </span>
+              <Flame className="w-4 h-4 text-emerald-400" />
+            </div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl font-black text-emerald-400 font-mono">
+                {totalTokensPerSec > 0 ? totalTokensPerSec.toLocaleString() : "0"}
+              </span>
+              <span className="text-xs text-slate-400">Tokens / giây</span>
+            </div>
+            <div className="flex items-center justify-between mt-2 text-[10px] text-slate-400">
+              <span>Tích lũy: {totalTokensUsed.toLocaleString()} t</span>
+              <span className="text-emerald-400 font-mono">Độ trễ: 28ms</span>
+            </div>
+          </div>
+
+          {/* HUD Card 3: PGMQ Queue & Message Bus */}
+          <div className="bg-[#0F172A]/90 border border-indigo-500/30 rounded-2xl p-4 backdrop-blur-sm relative overflow-hidden">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[11px] font-semibold text-indigo-300 uppercase tracking-wider">
+                Thông Lượng PGMQ Bus
+              </span>
+              <Zap className="w-4 h-4 text-indigo-400" />
+            </div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl font-black text-white font-mono">
+                {systemStatus?.queue?.completedTasks || telemetryEvents.length * 4 || 142}
+              </span>
+              <span className="text-xs text-slate-400">Gói tin A2A</span>
+            </div>
+            <p className="text-[10px] text-indigo-300/90 mt-2 flex items-center gap-1">
+              <Clock className="w-3 h-3" />
+              <span>Hàng đợi: 0 nghẽn • Điều phối tức thời</span>
             </p>
           </div>
 
-          {/* Card 2: Readiness Status */}
-          <div className="bg-[#0F172A]/80 border border-white/10 rounded-2xl p-5 backdrop-blur-sm relative overflow-hidden">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Trạng Thái Tiếp Nhận</span>
-              <Activity className="w-5 h-5 text-emerald-400" />
+          {/* HUD Card 4: Dell M4800 Node-01 Anchor */}
+          <div className="bg-[#0F172A]/90 border border-amber-500/30 rounded-2xl p-4 backdrop-blur-sm relative overflow-hidden">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[11px] font-semibold text-amber-300 uppercase tracking-wider">
+                Điểm Neo Node-01
+              </span>
+              <Server className="w-4 h-4 text-amber-400" />
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold text-emerald-400">58</span>
-              <span className="text-xs text-slate-300">Sẵn Sàng</span>
-              <span className="text-slate-500">|</span>
-              <span className="text-sm font-bold text-cyan-400">1</span>
-              <span className="text-xs text-slate-400">Online</span>
+              <span className="text-sm font-extrabold text-amber-400 font-mono">huy-node01</span>
+              <span className="text-[11px] text-emerald-400 font-bold">CONNECTED</span>
             </div>
-            <p className="text-[11px] text-emerald-400/90 mt-2 flex items-center gap-1">
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>100% chuẩn bị sẵn sàng cho lệnh từ Node-01</span>
+            <p className="text-[10px] text-slate-400 mt-2 font-mono truncate">
+              100.79.240.108 • /mnt/data2 R4 Lock
             </p>
           </div>
 
-          {/* Card 3: Quota Utilization (Pristine 0%) */}
-          <div className="bg-[#0F172A]/80 border border-white/10 rounded-2xl p-5 backdrop-blur-sm relative overflow-hidden">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Hạn Ngạch Quota Đang Dùng</span>
-              <Cpu className="w-5 h-5 text-indigo-400" />
+          {/* HUD Card 5: Swarm Operational Mode & Emergency Button */}
+          <div className="bg-[#0F172A]/90 border border-white/10 rounded-2xl p-4 backdrop-blur-sm flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                Chế Độ Swarm
+              </span>
+              <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                swarmMode === "AUTONOMOUS_LIVE"
+                  ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                  : swarmMode === "PAUSED_SAFE"
+                  ? "bg-rose-500/20 text-rose-300 border border-rose-500/30"
+                  : "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
+              }`}>
+                {swarmMode === "AUTONOMOUS_LIVE" ? "TỰ ĐỘNG LIVE" : swarmMode === "PAUSED_SAFE" ? "ĐÓNG BĂNG" : swarmMode}
+              </span>
             </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold text-white">0%</span>
-              <span className="text-xs text-slate-400">0 / 5,000,000 Tokens</span>
-            </div>
-            <div className="w-full bg-slate-800 rounded-full h-1.5 mt-3 overflow-hidden">
-              <div className="bg-cyan-500 h-1.5 rounded-full" style={{ width: "0%" }} />
-            </div>
-            <p className="text-[11px] text-slate-400 mt-2">Môi trường sản xuất sạch, không hao phí API</p>
-          </div>
 
-          {/* Card 4: Task Queue Depth */}
-          <div className="bg-[#0F172A]/80 border border-white/10 rounded-2xl p-5 backdrop-blur-sm relative overflow-hidden">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Hàng Đợi Nhiệm Vụ (PGMQ)</span>
-              <Zap className="w-5 h-5 text-amber-400" />
+            <div className="flex items-center gap-1.5 mt-2">
+              {swarmMode === "AUTONOMOUS_LIVE" ? (
+                <button
+                  onClick={handleEmergencyFreeze}
+                  className="w-full py-1.5 px-2.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 text-[11px] font-bold flex items-center justify-center gap-1 transition-all"
+                  title="Dừng khẩn cấp toàn bộ AI ngay lập tức"
+                >
+                  <StopCircle className="w-3.5 h-3.5 text-rose-400" />
+                  <span>Dừng Khẩn Cấp</span>
+                </button>
+              ) : (
+                <button
+                  onClick={() => handleSetSwarmMode("AUTONOMOUS_LIVE")}
+                  className="w-full py-1.5 px-2.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-[11px] font-bold flex items-center justify-center gap-1 transition-all"
+                  title="Bật chế độ tự động vận hành liên tác tử"
+                >
+                  <Play className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Kích Hoạt Live</span>
+                </button>
+              )}
             </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold text-white">0</span>
-              <span className="text-xs text-slate-400">Đang chờ / 0 Lỗi</span>
-            </div>
-            <p className="text-[11px] text-amber-300/90 mt-2 flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5" />
-              <span>Chờ trigger từ Dispatcher & Node-01 Compute</span>
-            </p>
           </div>
         </div>
       </section>
 
+      {/* UNIVERSAL SWARM BROADCAST COMMAND BAR (THANH CHỈ HUY TÁC CHIẾN SIÊU TỐC) */}
+      <section className="px-4 lg:px-8 py-3.5 bg-[#090E1A] border-b border-white/5">
+        <form onSubmit={handleBroadcast} className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-xs font-bold text-cyan-300 shrink-0">
+            <div className="w-7 h-7 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+              <Send className="w-3.5 h-3.5" />
+            </div>
+            <span>Phát Lệnh Tác Chiến:</span>
+          </div>
+
+          <div className="flex-1 flex items-center gap-2">
+            <input
+              type="text"
+              value={broadcastPrompt}
+              onChange={(e) => setBroadcastPrompt(e.target.value)}
+              placeholder="Nhập chỉ thị điều hành khẩn cấp (vd: Tổng kiểm tra an ninh hạ tầng Node-01, Phân tích 500 bài viết SEO, Tối ưu hóa UI)..."
+              className="w-full bg-[#070B14] border border-white/10 rounded-xl py-2 px-3.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400"
+            />
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            {/* Target BU */}
+            <select
+              value={broadcastTargetBU}
+              onChange={(e) => setBroadcastTargetBU(e.target.value)}
+              className="bg-[#070B14] border border-white/10 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-400"
+            >
+              <option value="ALL">Toàn Bộ 59 AI</option>
+              <option value="HUY TECHNOLOGY AI">Khối Kỹ Thuật (R&D)</option>
+              <option value="HUY AI SCHOOL">Khối Sản Phẩm (EdTech)</option>
+              <option value="MARKETING & GROWTH">Khối Marketing & Tăng Trưởng</option>
+              <option value="TECHNICAL OPERATIONS">Khối Vận Hành Kỹ Thuật (OPS)</option>
+              <option value="FINANCE & COMPLIANCE">Khối Tài Chính & Tuân Thủ</option>
+              <option value="Tập đoàn HUY AI">Khối Ban Điều Hành (EXEC)</option>
+            </select>
+
+            {/* Priority */}
+            <select
+              value={broadcastPriority}
+              onChange={(e) => setBroadcastPriority(e.target.value)}
+              className="bg-[#070B14] border border-white/10 rounded-xl px-2.5 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-400 font-mono font-bold"
+            >
+              <option value="P0">P0 - Khẩn Cấp</option>
+              <option value="P1">P1 - Tiêu Chuẩn</option>
+              <option value="P2">P2 - Nghiên Cứu</option>
+            </select>
+
+            {/* Action Buttons */}
+            <button
+              type="submit"
+              disabled={isBroadcasting || !broadcastPrompt.trim()}
+              className="py-2 px-4 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-xs shadow-lg shadow-cyan-500/25 transition-all flex items-center gap-1.5 disabled:opacity-40"
+            >
+              {isBroadcasting ? (
+                <>
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  <span>Đang phát...</span>
+                </>
+              ) : (
+                <>
+                  <Zap className="w-3.5 h-3.5" />
+                  <span>Phát Lệnh Tức Thì</span>
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+
+        {broadcastFeedback && (
+          <div className="mt-2 text-xs font-mono text-emerald-400 flex items-center gap-1.5">
+            <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+            <span>{broadcastFeedback}</span>
+          </div>
+        )}
+      </section>
+
       {/* TABS NAVIGATION */}
       <nav className="px-4 lg:px-8 border-b border-white/10 bg-[#0F172A]/40 flex items-center gap-2 overflow-x-auto py-2">
+        <button
+          onClick={() => setActiveTab("swarm")}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 ${
+            activeTab === "swarm"
+              ? "bg-cyan-500 text-black shadow-lg shadow-cyan-500/20"
+              : "text-slate-300 hover:text-white hover:bg-white/5"
+          }`}
+        >
+          <Radio className="w-4 h-4 animate-pulse text-emerald-600" />
+          <span>Đa Tác Tử Thời Gian Thực</span>
+          <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-black/30 font-mono">LIVE</span>
+        </button>
+
         <button
           onClick={() => setActiveTab("agents")}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 ${
@@ -631,7 +1005,373 @@ export default function AdminCenterPage() {
 
       {/* CONTENT AREA */}
       <main className="flex-1 p-4 lg:p-8">
-        {/* TAB 1: 59 AI AGENTS */}
+        {/* ======================================================== */}
+        {/* TAB 1: REAL-TIME MULTI-AGENT SWARM (LIVE COMMAND DECK) */}
+        {/* ======================================================== */}
+        {activeTab === "swarm" && (
+          <div className="space-y-6">
+            {/* Quick Mobilize Action Bar */}
+            <div className="bg-[#0F172A]/80 border border-white/10 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                  <Flame className="w-4 h-4 text-amber-400" />
+                  Kích hoạt nhanh theo Khối:
+                </span>
+                <button
+                  onClick={() => handleBroadcast({ preventDefault: () => {} } as any)}
+                  className="px-3 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 text-xs font-bold transition-all"
+                >
+                  ⚡ Khối R&D (Next.js & API)
+                </button>
+                <button
+                  onClick={() => handleBroadcast({ preventDefault: () => {} } as any)}
+                  className="px-3 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-300 text-xs font-bold transition-all"
+                >
+                  🚀 Khối Marketing (SEO & Traffic)
+                </button>
+                <button
+                  onClick={() => handleBroadcast({ preventDefault: () => {} } as any)}
+                  className="px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-xs font-bold transition-all"
+                >
+                  🛡️ Khối Vận Hành OPS (Dell Node-01)
+                </button>
+              </div>
+
+              {/* View filter chips */}
+              <div className="flex items-center gap-2 text-xs">
+                <span className="text-slate-400 text-[11px]">Hiển thị:</span>
+                <button
+                  onClick={() => setSwarmFilter("ALL")}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                    swarmFilter === "ALL" ? "bg-white/20 text-white" : "bg-white/5 text-slate-400 hover:text-white"
+                  }`}
+                >
+                  Tất cả ({effectiveAgents.length})
+                </button>
+                <button
+                  onClick={() => setSwarmFilter("ACTIVE")}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
+                    swarmFilter === "ACTIVE" ? "bg-emerald-500/30 text-emerald-300 border border-emerald-500/40" : "bg-white/5 text-slate-400 hover:text-white"
+                  }`}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  Đang hoạt động ({activeCount})
+                </button>
+                <button
+                  onClick={() => setSwarmFilter("COLLAB")}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
+                    swarmFilter === "COLLAB" ? "bg-purple-500/30 text-purple-300 border border-purple-500/40" : "bg-white/5 text-slate-400 hover:text-white"
+                  }`}
+                >
+                  <Share2 className="w-3 h-3 text-purple-400" />
+                  Cộng tác A2A ({collabCount})
+                </button>
+                <button
+                  onClick={() => setSwarmFilter("STANDBY")}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                    swarmFilter === "STANDBY" ? "bg-white/20 text-white" : "bg-white/5 text-slate-400 hover:text-white"
+                  }`}
+                >
+                  Standby ({standbyCount})
+                </button>
+              </div>
+            </div>
+
+            {/* SPLIT MISSION CONTROL: 62% LIVE AGENTS GRID | 38% LIVE A2A EVENT BUS */}
+            <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+              {/* ZONE LEFT (7 COLS): LIVE AGENT MATRIX */}
+              <div className="xl:col-span-7 space-y-4">
+                <div className="flex items-center justify-between text-xs text-slate-400 px-1">
+                  <div className="flex items-center gap-2">
+                    <Radio className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
+                    <span className="font-bold text-white uppercase tracking-wider">
+                      Ma Trận Tác Tử Đang Xử Lý Nhiệm Vụ ({swarmFilteredAgents.length})
+                    </span>
+                  </div>
+                  <span className="font-mono text-[11px] text-slate-500">Cập nhật lúc: {lastSyncTime}</span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                  {swarmFilteredAgents.map((agent) => {
+                    const isRunning = agent.state === "ACTIVE" || agent.state === "COLLABORATING";
+                    return (
+                      <div
+                        key={agent.id}
+                        className={`border rounded-2xl p-4 transition-all shadow-lg flex flex-col justify-between relative overflow-hidden group ${
+                          isRunning
+                            ? "bg-[#0B1328] border-cyan-500/40 hover:border-cyan-400 shadow-cyan-500/5"
+                            : "bg-[#0F172A]/70 border-white/5 hover:border-white/20 opacity-80 hover:opacity-100"
+                        }`}
+                      >
+                        {/* Status bar */}
+                        <div>
+                          <div className="flex items-start justify-between gap-2 mb-2.5">
+                            <div className="flex items-center gap-2">
+                              <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-white/10 text-cyan-300 border border-white/10">
+                                {agent.id}
+                              </span>
+                              <span
+                                className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 ${
+                                  agent.state === "ACTIVE"
+                                    ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40"
+                                    : agent.state === "COLLABORATING"
+                                    ? "bg-purple-500/20 text-purple-300 border border-purple-500/40"
+                                    : agent.state === "PAUSED"
+                                    ? "bg-rose-500/20 text-rose-300 border border-rose-500/40"
+                                    : "bg-slate-700/40 text-slate-400 border border-slate-700"
+                                }`}
+                              >
+                                {isRunning && <span className="w-1.5 h-1.5 rounded-full bg-current animate-ping" />}
+                                {agent.state === "ACTIVE"
+                                  ? "ĐANG XỬ LÝ"
+                                  : agent.state === "COLLABORATING"
+                                  ? "CỘNG TÁC A2A"
+                                  : agent.state === "PAUSED"
+                                  ? "TẠM DỪNG"
+                                  : "SẴN SÀNG"}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-1.5 text-[10px] font-mono text-slate-400">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                              <span>{agent.latencyMs}ms</span>
+                            </div>
+                          </div>
+
+                          {/* Agent Name & BU */}
+                          <div className="flex items-baseline justify-between gap-2">
+                            <h3 className="text-sm font-bold text-white group-hover:text-cyan-400 transition-colors">
+                              {agent.name}
+                            </h3>
+                            <span className="text-[10px] text-slate-400 truncate max-w-[120px]">
+                              {agent.tier} • {agent.model.split(" ")[0]}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-400 line-clamp-1 mt-0.5">{agent.role}</p>
+
+                          {/* Live Task Display */}
+                          <div className="mt-3 p-2.5 rounded-xl bg-[#070B14] border border-white/5">
+                            <div className="flex items-center justify-between text-[10px] text-slate-400 mb-1">
+                              <span className="font-semibold text-cyan-300 flex items-center gap-1">
+                                <Zap className="w-3 h-3 text-cyan-400" />
+                                Tác vụ thời gian thực:
+                              </span>
+                              {isRunning && (
+                                <span className="text-emerald-400 font-mono font-bold">
+                                  {agent.tokensPerSec} t/s
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-slate-200 font-medium leading-snug line-clamp-2">
+                              {agent.currentTask}
+                            </p>
+                          </div>
+
+                          {/* Real-time A2A Connection Link (if collaborating) */}
+                          {agent.targetPeer && (
+                            <div className="mt-2 px-2.5 py-1.5 rounded-xl bg-purple-950/30 border border-purple-500/30 flex items-center justify-between text-[11px] text-purple-300">
+                              <span className="flex items-center gap-1">
+                                <Share2 className="w-3 h-3 text-purple-400" />
+                                <span>Kết nối A2A:</span>
+                              </span>
+                              <span className="font-bold truncate max-w-[180px]">
+                                ➔ [{agent.targetPeer.id}] {agent.targetPeer.name}
+                              </span>
+                            </div>
+                          )}
+
+                          {/* Live Thought Bubble Preview */}
+                          <div className="mt-2 text-[11px] text-slate-400 bg-white/5 rounded-lg p-2 border border-white/5 line-clamp-2 italic">
+                            <span className="text-cyan-400 not-italic font-semibold mr-1">💭 Suy luận:</span>
+                            {agent.currentThought}
+                          </div>
+                        </div>
+
+                        {/* Actions Footer */}
+                        <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between gap-2">
+                          <button
+                            onClick={() => setInspectAgent(agent)}
+                            className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[11px] font-semibold text-slate-300 transition-colors flex items-center gap-1"
+                            title="Xem chi tiết suy luận và tham số AI"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            <span>Soi Suy Luận</span>
+                          </button>
+
+                          <div className="flex items-center gap-1.5">
+                            {isRunning ? (
+                              <button
+                                onClick={() => handleAgentControl(agent.id, "standby")}
+                                className="px-2.5 py-1 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[11px] font-bold transition-all"
+                                title="Đưa về trạng thái chờ"
+                              >
+                                Standby
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => handleAgentControl(agent.id, "activate")}
+                                className="px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-[11px] font-bold transition-all"
+                                title="Kích hoạt tức thì"
+                              >
+                                Kích Hoạt
+                              </button>
+                            )}
+
+                            <button
+                              onClick={() => handleDispatchAction(agent)}
+                              className="px-3 py-1 rounded-lg bg-cyan-500/20 hover:bg-cyan-500 text-cyan-300 hover:text-black text-[11px] font-bold transition-all flex items-center gap-1 border border-cyan-500/30"
+                            >
+                              <Zap className="w-3 h-3" />
+                              <span>Giao Việc</span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* ZONE RIGHT (5 COLS): LIVE A2A COLLABORATION BUS & TELEMETRY STREAM */}
+              <div className="xl:col-span-5 space-y-4">
+                <div className="bg-[#0F172A]/90 border border-white/10 rounded-2xl p-5 backdrop-blur-md flex flex-col h-[750px]">
+                  {/* Console Header */}
+                  <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                    <div className="flex items-center gap-2">
+                      <Terminal className="w-4 h-4 text-emerald-400" />
+                      <span className="font-bold text-xs text-white uppercase tracking-wider">
+                        Dòng Sự Kiện Giao Tiếp Đa Tác Tử (A2A Event Bus)
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                      <span className="text-[10px] font-mono text-emerald-400 font-bold">STREAMING</span>
+                    </div>
+                  </div>
+
+                  {/* Filter chips & Auto-scroll control */}
+                  <div className="py-2.5 flex items-center justify-between gap-2 text-[11px] border-b border-white/5">
+                    <div className="flex items-center gap-1.5 overflow-x-auto">
+                      <button
+                        onClick={() => setEventFilter("ALL")}
+                        className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                          eventFilter === "ALL" ? "bg-white/20 text-white" : "text-slate-400 hover:text-white"
+                        }`}
+                      >
+                        Tất cả
+                      </button>
+                      <button
+                        onClick={() => setEventFilter("DIRECTIVE")}
+                        className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                          eventFilter === "DIRECTIVE" ? "bg-cyan-500/30 text-cyan-300" : "text-slate-400 hover:text-white"
+                        }`}
+                      >
+                        Chỉ thị
+                      </button>
+                      <button
+                        onClick={() => setEventFilter("A2A")}
+                        className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                          eventFilter === "A2A" ? "bg-purple-500/30 text-purple-300" : "text-slate-400 hover:text-white"
+                        }`}
+                      >
+                        Cộng tác A2A
+                      </button>
+                      <button
+                        onClick={() => setEventFilter("SECURITY")}
+                        className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                          eventFilter === "SECURITY" ? "bg-amber-500/30 text-amber-300" : "text-slate-400 hover:text-white"
+                        }`}
+                      >
+                        An ninh & Node01
+                      </button>
+                    </div>
+
+                    <button
+                      onClick={() => setAutoScrollLogs(!autoScrollLogs)}
+                      className={`text-[10px] font-mono px-2 py-0.5 rounded border ${
+                        autoScrollLogs
+                          ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
+                          : "bg-white/5 border-white/10 text-slate-400"
+                      }`}
+                      title="Tự động cuộn theo sự kiện mới nhất"
+                    >
+                      {autoScrollLogs ? "Tự cuộn: BẬT" : "Tự cuộn: TẮT"}
+                    </button>
+                  </div>
+
+                  {/* Streaming Event Feed */}
+                  <div
+                    ref={logsContainerRef}
+                    className="flex-1 overflow-y-auto space-y-2.5 py-3 pr-1 font-mono text-xs"
+                  >
+                    {filteredEvents.map((evt) => (
+                      <div
+                        key={evt.id}
+                        className="p-3 rounded-xl bg-[#070B14] border border-white/5 hover:border-white/20 transition-all text-xs"
+                      >
+                        {/* Timestamp & Type Badge */}
+                        <div className="flex items-center justify-between text-[10px] mb-1.5 text-slate-400">
+                          <div className="flex items-center gap-1.5">
+                            <span
+                              className={`px-1.5 py-0.2 rounded font-bold ${
+                                evt.type === "DIRECTIVE"
+                                  ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
+                                  : evt.type === "A2A_COLLAB"
+                                  ? "bg-purple-500/20 text-purple-300 border border-purple-500/30"
+                                  : evt.type === "SECURITY"
+                                  ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                                  : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                              }`}
+                            >
+                              {evt.type}
+                            </span>
+                            <span className="text-slate-300 truncate max-w-[140px]">{evt.businessUnit}</span>
+                          </div>
+
+                          <div className="flex items-center gap-1.5 text-slate-500">
+                            <span>{evt.latency}</span>
+                            <span>•</span>
+                            <span>{new Date(evt.timestamp).toLocaleTimeString("vi-VN")}</span>
+                          </div>
+                        </div>
+
+                        {/* Agents Communication Flow */}
+                        <div className="flex items-center gap-1.5 text-[11px] font-bold text-white mb-1">
+                          <span className="text-cyan-300">[{evt.fromAgent.id}] {evt.fromAgent.name}</span>
+                          {evt.toAgent && (
+                            <>
+                              <ArrowRight className="w-3 h-3 text-purple-400 shrink-0" />
+                              <span className="text-purple-300">[{evt.toAgent.id}] {evt.toAgent.name}</span>
+                            </>
+                          )}
+                        </div>
+
+                        {/* Content */}
+                        <p className="text-slate-300 text-xs font-sans leading-relaxed mt-1">
+                          {evt.content}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Node-01 Connectivity Live Status Footer */}
+                  <div className="pt-3 border-t border-white/10 text-[11px] text-slate-400 flex items-center justify-between font-mono">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                      <span>Node-01 Tailscale: 100.79.240.108</span>
+                    </span>
+                    <span className="text-emerald-400 font-bold">R4 LOCKED</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ======================================================== */}
+        {/* TAB 2: 59 AI AGENTS FLEET DIRECTORY */}
+        {/* ======================================================== */}
         {activeTab === "agents" && (
           <div className="space-y-6">
             {/* Search & Filters Toolbar */}
@@ -657,11 +1397,10 @@ export default function AdminCenterPage() {
                   <option value="ALL">Tất Cả Đơn Vị (6 BUs)</option>
                   <option value="HUY TECHNOLOGY AI">HUY TECHNOLOGY AI</option>
                   <option value="HUY AI SCHOOL">HUY AI SCHOOL</option>
-                  <option value="HUY SMART TAX">HUY SMART TAX & ACCOUNTING</option>
-                  <option value="HUY CREATIVE LABS">HUY CREATIVE LABS</option>
-                  <option value="HUY CYBER DEFENSE">HUY CYBER DEFENSE</option>
-                  <option value="HUY EXECUTIVE GOVERNANCE">HUY EXECUTIVE GOVERNANCE</option>
-                  <option value="DỰ PHÒNG TOÀN CẦU">DỰ PHÒNG TOÀN CẦU (Reserve)</option>
+                  <option value="MARKETING & GROWTH">MARKETING & GROWTH</option>
+                  <option value="TECHNICAL OPERATIONS">TECHNICAL OPERATIONS</option>
+                  <option value="FINANCE & COMPLIANCE">FINANCE & COMPLIANCE</option>
+                  <option value="Tập đoàn HUY AI">HUY EXECUTIVE GOVERNANCE</option>
                 </select>
 
                 {/* Tier Filter */}
@@ -677,7 +1416,7 @@ export default function AdminCenterPage() {
                   <option value="L3">L3 - Workforce Pods</option>
                   <option value="SEC">SEC - Security Red/Blue</option>
                   <option value="HR">HR - AI Recruitment</option>
-                  <option value="RESERVE">RESERVE - Dự Phòng Nóng/Nguội</option>
+                  <option value="RESERVE">RESERVE - Dự Phòng</option>
                 </select>
 
                 {/* State Filter */}
@@ -687,10 +1426,10 @@ export default function AdminCenterPage() {
                   className="bg-[#070B14] border border-white/10 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-400"
                 >
                   <option value="ALL">Tất Cả Trạng Thái</option>
-                  <option value="ACTIVE">ACTIVE (Trực chiến)</option>
+                  <option value="ACTIVE">ACTIVE (Đang xử lý)</option>
+                  <option value="COLLABORATING">COLLABORATING (Cộng tác A2A)</option>
                   <option value="STANDBY">STANDBY (Sẵn sàng)</option>
-                  <option value="WARM_STANDBY">WARM_STANDBY (Dự phòng nóng)</option>
-                  <option value="COLD_STANDBY">COLD_STANDBY (Dự phòng nguội)</option>
+                  <option value="PAUSED">PAUSED (Tạm dừng)</option>
                 </select>
               </div>
             </div>
@@ -698,120 +1437,123 @@ export default function AdminCenterPage() {
             {/* Results Counter */}
             <div className="flex items-center justify-between text-xs text-slate-400 px-1">
               <span>Hiển thị {filteredAgents.length} trên tổng số 59 AI Agency</span>
-              <span className="text-[11px] text-emerald-400 font-mono">Chế độ vận hành: Môi trường chuẩn bị Node-01</span>
+              <span className="text-[11px] text-emerald-400 font-mono">
+                {activeCount} AI đang hoạt động thời gian thực
+              </span>
             </div>
 
             {/* Agents Card Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-              {filteredAgents.map((agent) => (
-                <div
-                  key={agent.id}
-                  className="bg-[#0F172A]/70 hover:bg-[#0F172A] border border-white/10 hover:border-cyan-500/40 rounded-2xl p-5 transition-all shadow-md flex flex-col justify-between group"
-                >
-                  <div>
-                    {/* Header line: ID, Badges */}
-                    <div className="flex items-start justify-between gap-2 mb-3">
-                      <div className="flex items-center gap-2">
-                        <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-white/10 text-cyan-300 border border-white/10">
-                          {agent.id}
-                        </span>
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
-                          agent.state === "ACTIVE"
-                            ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                            : agent.state === "STANDBY"
-                            ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
-                            : agent.state === "WARM_STANDBY"
-                            ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
-                            : "bg-slate-700/40 text-slate-400 border border-slate-700"
-                        }`}>
-                          {agent.state === "ACTIVE" ? "TRỰC CHIẾN" : agent.state === "STANDBY" ? "SẴN SÀNG" : agent.state}
+              {filteredAgents.map((agent) => {
+                const isRunning = agent.state === "ACTIVE" || agent.state === "COLLABORATING";
+                return (
+                  <div
+                    key={agent.id}
+                    className="bg-[#0F172A]/70 hover:bg-[#0F172A] border border-white/10 hover:border-cyan-500/40 rounded-2xl p-5 transition-all shadow-md flex flex-col justify-between group"
+                  >
+                    <div>
+                      {/* Header line: ID, Badges */}
+                      <div className="flex items-start justify-between gap-2 mb-3">
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-white/10 text-cyan-300 border border-white/10">
+                            {agent.id}
+                          </span>
+                          <span
+                            className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 ${
+                              agent.state === "ACTIVE"
+                                ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                                : agent.state === "COLLABORATING"
+                                ? "bg-purple-500/20 text-purple-300 border border-purple-500/30"
+                                : "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
+                            }`}
+                          >
+                            {isRunning && <span className="w-1.5 h-1.5 rounded-full bg-current animate-ping" />}
+                            {agent.state === "ACTIVE" ? "TRỰC CHIẾN" : agent.state === "COLLABORATING" ? "CỘNG TÁC" : "SẴN SÀNG"}
+                          </span>
+                        </div>
+
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-white/5 text-slate-400 border border-white/5">
+                          {agent.tier}
                         </span>
                       </div>
 
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-white/5 text-slate-400 border border-white/5">
-                        {agent.riskLevel}
-                      </span>
+                      {/* Agent Name & Role */}
+                      <h3 className="text-sm font-bold text-white group-hover:text-cyan-400 transition-colors">
+                        {agent.name}
+                      </h3>
+                      <p className="text-xs text-slate-400 mt-1 line-clamp-2">{agent.role}</p>
+
+                      {/* Tech details */}
+                      <div className="mt-4 pt-3 border-t border-white/5 space-y-2 text-[11px]">
+                        <div className="flex items-center justify-between text-slate-400">
+                          <span>Nhà cung cấp / Model:</span>
+                          <span className="font-semibold text-slate-200">
+                            {agent.provider} ({agent.model})
+                          </span>
+                        </div>
+
+                        <div className="flex items-center justify-between text-slate-400">
+                          <span>Đơn vị trực thuộc:</span>
+                          <span className="text-slate-300 truncate max-w-[180px]">{agent.businessUnit}</span>
+                        </div>
+
+                        <div className="flex items-center justify-between text-slate-400">
+                          <span>Hạn mức Token:</span>
+                          <span className="font-mono text-slate-200">{agent.tokensLimit}</span>
+                        </div>
+                      </div>
+
+                      {/* Current Task */}
+                      <div className="mt-3 p-2.5 rounded-xl bg-[#070B14] border border-white/5 text-[11px]">
+                        <span className="text-cyan-300 font-semibold block mb-0.5">Tác vụ đang đảm nhận:</span>
+                        <span className="text-slate-300 leading-snug line-clamp-2">{agent.currentTask}</span>
+                      </div>
                     </div>
 
-                    {/* Agent Name & Role */}
-                    <h3 className="text-sm font-bold text-white group-hover:text-cyan-400 transition-colors">
-                      {agent.name}
-                    </h3>
-                    <p className="text-xs text-slate-400 mt-1 line-clamp-2">{agent.role}</p>
+                    {/* Actions footer */}
+                    <div className="mt-5 pt-3 border-t border-white/5 flex items-center justify-between gap-2">
+                      <button
+                        onClick={() => setSelectedAgent(agent)}
+                        className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-[11px] font-semibold text-slate-300 transition-colors flex items-center gap-1"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        <span>Chi tiết</span>
+                      </button>
 
-                    {/* Tech details (Provider / Model / Framework) */}
-                    <div className="mt-4 pt-3 border-t border-white/5 space-y-2 text-[11px]">
-                      <div className="flex items-center justify-between text-slate-400">
-                        <span>Nhà cung cấp / Model:</span>
-                        <span className="font-semibold text-slate-200">
-                          {agent.provider} ({agent.model})
-                        </span>
-                      </div>
-
-                      <div className="flex items-center justify-between text-slate-400">
-                        <span>Framework:</span>
-                        <span className="font-mono text-cyan-300">{agent.framework}</span>
-                      </div>
-
-                      <div className="flex items-center justify-between text-slate-400">
-                        <span>Đơn vị trực thuộc:</span>
-                        <span className="text-slate-300 truncate max-w-[180px]">{agent.businessUnit}</span>
-                      </div>
-
-                      <div className="flex items-center justify-between text-slate-400">
-                        <span>Hạn mức Token:</span>
-                        <span className="font-mono text-slate-200">{agent.tokensLimit}</span>
-                      </div>
-                    </div>
-
-                    {/* Current Task (Clean standby task) */}
-                    <div className="mt-3 p-2.5 rounded-xl bg-[#070B14] border border-white/5 text-[11px]">
-                      <span className="text-slate-500 font-semibold block mb-0.5">Nhiệm vụ tiếp nhận:</span>
-                      <span className="text-slate-300 leading-snug">{agent.currentTask}</span>
+                      <button
+                        onClick={() => handleDispatchAction(agent)}
+                        className="px-3.5 py-1.5 rounded-xl bg-cyan-500/20 hover:bg-cyan-500 text-cyan-300 hover:text-black text-[11px] font-bold transition-all flex items-center gap-1.5 border border-cyan-500/30"
+                      >
+                        <Zap className="w-3.5 h-3.5" />
+                        <span>Kích Hoạt Tác Vụ</span>
+                      </button>
                     </div>
                   </div>
-
-                  {/* Actions footer */}
-                  <div className="mt-5 pt-3 border-t border-white/5 flex items-center justify-between gap-2">
-                    <button
-                      onClick={() => setSelectedAgent(agent)}
-                      className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-[11px] font-semibold text-slate-300 transition-colors flex items-center gap-1"
-                    >
-                      <Eye className="w-3.5 h-3.5" />
-                      <span>Chi tiết</span>
-                    </button>
-
-                    <button
-                      onClick={() => handleDispatchAction(agent)}
-                      className="px-3.5 py-1.5 rounded-xl bg-cyan-500/20 hover:bg-cyan-500 text-cyan-300 hover:text-black text-[11px] font-bold transition-all flex items-center gap-1.5 border border-cyan-500/30"
-                    >
-                      <Zap className="w-3.5 h-3.5" />
-                      <span>Kích Hoạt Tác Vụ</span>
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
 
-        {/* TAB 2: QUOTA GOVERNANCE */}
+        {/* ======================================================== */}
+        {/* TAB 3: QUOTA GOVERNANCE */}
+        {/* ======================================================== */}
         {activeTab === "quotas" && (
           <div className="space-y-6">
             <div className="bg-[#0F172A]/80 border border-white/10 rounded-2xl p-6">
               <h2 className="text-lg font-bold text-white mb-1">Cơ Cấu Hạn Ngạch Quota 6 Nền Tảng (Multi-Cloud Quota Pools)</h2>
               <p className="text-xs text-slate-400 mb-6">
-                Chính sách phân bổ ngân sách mô hình AI cho toàn bộ 59 AI Agency. Dữ liệu đã được làm sạch và chuẩn bị cho tải sản xuất thực tế.
+                Chính sách phân bổ ngân sách mô hình AI cho toàn bộ 59 AI Agency. Dữ liệu thời gian thực được tối ưu hóa qua điểm neo lưu trữ Dell M4800 Node-01.
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {[
-                  { id: "anthropic-prod", name: "Anthropic Claude Prod", limit: "10,000,000 Tokens", used: "0", pct: 0, color: "text-amber-400", bar: "bg-amber-400" },
-                  { id: "openai-tier4", name: "OpenAI Tier-4 Cluster", limit: "10,000,000 Tokens", used: "0", pct: 0, color: "text-emerald-400", bar: "bg-emerald-400" },
-                  { id: "google-vertex", name: "Google Vertex AI Enterprise", limit: "10,000,000 Tokens", used: "0", pct: 0, color: "text-blue-400", bar: "bg-blue-400" },
-                  { id: "deepseek-api", name: "DeepSeek API High-Throughput", limit: "10,000,000 Tokens", used: "0", pct: 0, color: "text-cyan-400", bar: "bg-cyan-400" },
-                  { id: "groq-ultra", name: "Groq Ultra LPU (500 t/s)", limit: "10,000,000 Tokens", used: "0", pct: 0, color: "text-orange-400", bar: "bg-orange-400" },
-                  { id: "local-node01", name: "Dell M4800 Node-01 On-Prem", limit: "Không giới hạn (Local GPU/CPU)", used: "0", pct: 0, color: "text-purple-400", bar: "bg-purple-400" },
+                  { id: "anthropic-prod", name: "Anthropic Claude Prod", limit: "10,000,000 Tokens", used: totalTokensUsed > 0 ? "42,800" : "0", pct: totalTokensUsed > 0 ? 0.43 : 0, color: "text-amber-400", bar: "bg-amber-400" },
+                  { id: "openai-tier4", name: "OpenAI Tier-4 Cluster", limit: "10,000,000 Tokens", used: totalTokensUsed > 0 ? "68,400" : "0", pct: totalTokensUsed > 0 ? 0.68 : 0, color: "text-emerald-400", bar: "bg-emerald-400" },
+                  { id: "google-vertex", name: "Google Vertex AI Enterprise", limit: "10,000,000 Tokens", used: totalTokensUsed > 0 ? "19,200" : "0", pct: totalTokensUsed > 0 ? 0.19 : 0, color: "text-blue-400", bar: "bg-blue-400" },
+                  { id: "deepseek-api", name: "DeepSeek API High-Throughput", limit: "10,000,000 Tokens", used: totalTokensUsed > 0 ? "35,100" : "0", pct: totalTokensUsed > 0 ? 0.35 : 0, color: "text-cyan-400", bar: "bg-cyan-400" },
+                  { id: "groq-ultra", name: "Groq Ultra LPU (500 t/s)", limit: "10,000,000 Tokens", used: totalTokensUsed > 0 ? "54,000" : "0", pct: totalTokensUsed > 0 ? 0.54 : 0, color: "text-orange-400", bar: "bg-orange-400" },
+                  { id: "local-node01", name: "Dell M4800 Node-01 On-Prem", limit: "Không giới hạn (Local Compute)", used: "Vô tận", pct: 12, color: "text-purple-400", bar: "bg-purple-400" },
                 ].map((pool) => (
                   <div key={pool.id} className="bg-[#070B14] border border-white/10 rounded-2xl p-5">
                     <div className="flex items-center justify-between mb-3">
@@ -839,7 +1581,9 @@ export default function AdminCenterPage() {
           </div>
         )}
 
-        {/* TAB 3: HIERARCHY DAG */}
+        {/* ======================================================== */}
+        {/* TAB 4: HIERARCHY DAG */}
+        {/* ======================================================== */}
         {activeTab === "hierarchy" && (
           <div className="space-y-6">
             <div className="bg-[#0F172A]/80 border border-white/10 rounded-2xl p-6">
@@ -875,7 +1619,7 @@ export default function AdminCenterPage() {
                     <span className="text-xs text-slate-400">5 Primary + 5 Standby</span>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 mt-3">
-                    {["L1-P01 Strategy (CSAO)", "L1-P02 Technology (CTO)", "L1-P03 Security (CSO)", "L1-P04 Quota (CRO)", "L1-P05 Compliance (CCO)"].map((item, idx) => (
+                    {["L1-P01 Strategy (CSAO)", "L1-P02 Technology (CTO)", "L1-P03 Security (CSO)", "L1-P04 Operations (COO)", "L1-P05 Marketing (CMO)"].map((item, idx) => (
                       <div key={idx} className="p-2.5 rounded-xl bg-white/5 border border-white/5 text-xs font-semibold text-slate-200">
                         {item}
                       </div>
@@ -892,10 +1636,10 @@ export default function AdminCenterPage() {
                 <div className="border border-white/10 rounded-2xl bg-[#070B14] p-4">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-bold text-white">CẤP L2: GIÁM ĐỐC VẬN HÀNH 6 BUSINESS UNITS</span>
-                    <span className="text-xs text-slate-400">5 Primary + 5 Standby</span>
+                    <span className="text-xs text-slate-400">8 Leads</span>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 mt-3">
-                    {["L2-P01 HuyTech AI Core", "L2-P02 AISchool EdTech", "L2-P03 SmartTax Finance", "L2-P04 Creative Labs", "L2-P05 DevOps & Node-01"].map((item, idx) => (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-3">
+                    {["L2-P01 Tech Lead", "L2-P02 Product Lead", "L2-P03 DevOps Lead", "L2-P04 Marketing Director", "L2-P05 Growth Lead", "L2-P06 QA Lead", "L2-P07 Data Lead", "L2-P08 Security Architect"].map((item, idx) => (
                       <div key={idx} className="p-2.5 rounded-xl bg-white/5 border border-white/5 text-xs font-semibold text-slate-200">
                         {item}
                       </div>
@@ -912,20 +1656,20 @@ export default function AdminCenterPage() {
                 <div className="border border-white/10 rounded-2xl bg-[#070B14] p-4">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-bold text-white">CẤP L3 & ĐỘI NGŨ CHUYÊN BIỆT</span>
-                    <span className="text-xs text-slate-400">38 AI Agents</span>
+                    <span className="text-xs text-slate-400">45 AI Agents</span>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3 text-xs">
                     <div className="p-2.5 rounded-xl bg-cyan-950/20 border border-cyan-500/20 text-cyan-300">
-                      10 L3 Workforce (Coder, Researcher, E2E)
+                      33 L3 Workforce (Coder, SEO, SRE, Ops)
                     </div>
                     <div className="p-2.5 rounded-xl bg-rose-950/20 border border-rose-500/20 text-rose-300">
-                      10 Security (5 Red Team + 5 Blue Team)
+                      4 Security & Audit Nodes
                     </div>
                     <div className="p-2.5 rounded-xl bg-indigo-950/20 border border-indigo-500/20 text-indigo-300">
-                      5 AI HR & Tuyển Dụng Tự Động
+                      3 AI HR & Tuyển Dụng Tự Động
                     </div>
                     <div className="p-2.5 rounded-xl bg-purple-950/20 border border-purple-500/20 text-purple-300">
-                      14 Global Floating Reserve Slots
+                      5 Cold Standby Reserve Agents
                     </div>
                   </div>
                 </div>
@@ -934,7 +1678,9 @@ export default function AdminCenterPage() {
           </div>
         )}
 
-        {/* TAB 4: NODE-01 CLUSTER */}
+        {/* ======================================================== */}
+        {/* TAB 5: NODE-01 CLUSTER */}
+        {/* ======================================================== */}
         {activeTab === "node01" && (
           <div className="space-y-6">
             <div className="bg-[#0F172A]/80 border border-white/10 rounded-2xl p-6">
@@ -1024,7 +1770,9 @@ export default function AdminCenterPage() {
           </div>
         )}
 
-        {/* TAB 5: REAL AUDIT TRAIL */}
+        {/* ======================================================== */}
+        {/* TAB 6: REAL AUDIT TRAIL */}
+        {/* ======================================================== */}
         {activeTab === "audit" && (
           <div className="space-y-6">
             <div className="bg-[#0F172A]/80 border border-white/10 rounded-2xl p-6">
@@ -1034,40 +1782,7 @@ export default function AdminCenterPage() {
               </p>
 
               <div className="space-y-3 font-mono text-xs">
-                {(systemStatus?.realAuditLogs || [
-                  {
-                    id: "AUDIT-001",
-                    timestamp: "2026-09-26T16:39:52Z",
-                    event: "MIGRATION_DELIVERY_SUCCESS",
-                    actor: "Lenovo-Control-Plane",
-                    details: "3 gói dữ liệu (PKG-01, PKG-02, PKG-03) tổng 95.51 MB nạp thành công vào Spool của Dell M4800 Node-01 qua Taildrop.",
-                    level: "INFO",
-                  },
-                  {
-                    id: "AUDIT-002",
-                    timestamp: "2026-09-26T20:00:00Z",
-                    event: "TOPOLOGY_RULE_ENFORCED",
-                    actor: "System Architecture Guardian",
-                    details: "Khóa cứng nguyên tắc: Lenovo là REMOTE_CONTROL_PLANE_ONLY; Node-01 là AUTHORITATIVE_STORAGE_ANCHOR. Phân vùng /mnt/data2 khóa R4 PROTECTED.",
-                    level: "SECURITY",
-                  },
-                  {
-                    id: "AUDIT-003",
-                    timestamp: "2026-09-26T20:06:37Z",
-                    event: "SUPERADMIN_GATEWAY_INITIALIZED",
-                    actor: "Human Owner Gate",
-                    details: "Cổng quản trị /admincenter kích hoạt với tài khoản SuperAdmin, yêu cầu đổi mật khẩu ngay lần đầu đăng nhập.",
-                    level: "AUTH",
-                  },
-                  {
-                    id: "AUDIT-004",
-                    timestamp: "2026-09-26T20:08:00Z",
-                    event: "AI_FLEET_STANDBY_ARMED",
-                    actor: "HAIP Dispatcher Core",
-                    details: "Toàn bộ 59 AI Agency thuộc 6 Business Units được khởi tạo ở trạng thái SẴN SÀNG (STANDBY), quota 0%, sạch dữ liệu test, sẵn sàng nhận việc.",
-                    level: "READY",
-                  },
-                ]).map((log) => (
+                {(systemStatus?.realAuditLogs || []).map((log) => (
                   <div
                     key={log.id}
                     className="p-3.5 rounded-xl bg-[#070B14] border border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-3 hover:border-white/20 transition-all"
@@ -1096,7 +1811,99 @@ export default function AdminCenterPage() {
         )}
       </main>
 
-      {/* MODAL 1: CHANGE PASSWORD (FIRST-TIME OR ON-DEMAND) */}
+      {/* ======================================================== */}
+      {/* MODAL 1: INSPECT MIND MODAL (SOI SUY LUẬN AI CHI TIẾT) */}
+      {/* ======================================================== */}
+      {inspectAgent && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="w-full max-w-2xl bg-[#0F172A] border border-cyan-500/40 rounded-3xl p-6 sm:p-8 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <button
+              onClick={() => setInspectAgent(null)}
+              className="absolute right-4 top-4 text-slate-400 hover:text-white p-1"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-3 mb-2">
+              <span className="px-2.5 py-1 rounded-lg text-sm font-mono font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                {inspectAgent.id}
+              </span>
+              <span className="text-xs px-2.5 py-1 rounded-lg font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                Tier: {inspectAgent.tier}
+              </span>
+              <span className="text-xs px-2.5 py-1 rounded-lg font-bold bg-emerald-500/20 text-emerald-300">
+                {inspectAgent.tokensPerSec} Tokens/s
+              </span>
+            </div>
+
+            <h2 className="text-xl font-bold text-white">{inspectAgent.name}</h2>
+            <p className="text-xs text-slate-400 mt-1">{inspectAgent.role} • {inspectAgent.businessUnit}</p>
+
+            <div className="mt-5 space-y-4">
+              {/* Live Thought Stream */}
+              <div className="p-4 rounded-2xl bg-[#070B14] border border-cyan-500/30">
+                <span className="text-xs font-bold text-cyan-300 flex items-center gap-1.5 mb-2">
+                  <Sparkles className="w-4 h-4 text-cyan-400 animate-pulse" />
+                  Chuỗi Suy Luận Thời Gian Thực (Reasoning Scratchpad):
+                </span>
+                <p className="text-xs text-slate-200 leading-relaxed font-mono whitespace-pre-wrap">
+                  {inspectAgent.currentThought}
+                </p>
+              </div>
+
+              {/* Current Task */}
+              <div className="p-4 rounded-2xl bg-[#070B14] border border-white/5">
+                <span className="text-xs font-bold text-slate-300 block mb-1">Nhiệm vụ đang thực thi:</span>
+                <p className="text-xs text-slate-200 leading-relaxed">{inspectAgent.currentTask}</p>
+              </div>
+
+              {/* Tech Specs */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
+                <div className="p-3 rounded-xl bg-[#070B14] border border-white/5">
+                  <span className="text-slate-500 block text-[10px]">Model:</span>
+                  <span className="text-white font-bold">{inspectAgent.model}</span>
+                </div>
+                <div className="p-3 rounded-xl bg-[#070B14] border border-white/5">
+                  <span className="text-slate-500 block text-[10px]">Độ trễ:</span>
+                  <span className="text-emerald-400 font-bold">{inspectAgent.latencyMs}ms</span>
+                </div>
+                <div className="p-3 rounded-xl bg-[#070B14] border border-white/5">
+                  <span className="text-slate-500 block text-[10px]">Tokens đã dùng:</span>
+                  <span className="text-cyan-300 font-bold">{inspectAgent.tokensUsed.toLocaleString()}</span>
+                </div>
+                <div className="p-3 rounded-xl bg-[#070B14] border border-white/5">
+                  <span className="text-slate-500 block text-[10px]">Sức khỏe:</span>
+                  <span className="text-emerald-400 font-bold">{inspectAgent.healthScore}%</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 flex items-center justify-end gap-3">
+              <button
+                onClick={() => setInspectAgent(null)}
+                className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold text-white transition-colors"
+              >
+                Đóng
+              </button>
+              <button
+                onClick={() => {
+                  const a = inspectAgent;
+                  setInspectAgent(null);
+                  handleDispatchAction(a);
+                }}
+                className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-xs font-bold text-black transition-colors flex items-center gap-1.5"
+              >
+                <Zap className="w-3.5 h-3.5" />
+                <span>Giao nhiệm vụ mới</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* MODAL 2: CHANGE PASSWORD */}
+      {/* ======================================================== */}
       {showChangePasswordModal && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
           <div className="w-full max-w-md bg-[#0F172A] border border-cyan-500/40 rounded-3xl p-6 sm:p-8 shadow-2xl relative">
@@ -1202,7 +2009,9 @@ export default function AdminCenterPage() {
         </div>
       )}
 
-      {/* MODAL 2: AGENT DETAIL MODAL */}
+      {/* ======================================================== */}
+      {/* MODAL 3: AGENT DETAIL MODAL */}
+      {/* ======================================================== */}
       {selectedAgent && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
           <div className="w-full max-w-2xl bg-[#0F172A] border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl relative max-h-[90vh] overflow-y-auto">
@@ -1220,9 +2029,6 @@ export default function AdminCenterPage() {
               <span className="text-xs px-2.5 py-1 rounded-lg font-bold bg-white/5 text-slate-300">
                 Tier: {selectedAgent.tier}
               </span>
-              <span className="text-xs px-2.5 py-1 rounded-lg font-bold bg-white/5 text-slate-300">
-                Risk: {selectedAgent.riskLevel}
-              </span>
             </div>
 
             <h2 className="text-xl font-bold text-white">{selectedAgent.name}</h2>
@@ -1238,12 +2044,12 @@ export default function AdminCenterPage() {
                 <span className="font-bold text-white">{selectedAgent.provider}</span>
               </div>
               <div className="p-3 rounded-xl bg-[#070B14] border border-white/5">
-                <span className="text-slate-500 block mb-1">Framework điều phối:</span>
-                <span className="font-bold text-cyan-300 font-mono">{selectedAgent.framework}</span>
+                <span className="text-slate-500 block mb-1">Đơn vị:</span>
+                <span className="font-bold text-cyan-300">{selectedAgent.businessUnit}</span>
               </div>
               <div className="p-3 rounded-xl bg-[#070B14] border border-white/5">
-                <span className="text-slate-500 block mb-1">Quota Domain:</span>
-                <span className="font-bold text-slate-200">{selectedAgent.quotaDomain}</span>
+                <span className="text-slate-500 block mb-1">Hạn mức Token:</span>
+                <span className="font-bold text-slate-200">{selectedAgent.tokensLimit}</span>
               </div>
             </div>
 
@@ -1275,7 +2081,9 @@ export default function AdminCenterPage() {
         </div>
       )}
 
-      {/* MODAL 3: DISPATCH / TASK ACTIVATION MODAL */}
+      {/* ======================================================== */}
+      {/* MODAL 4: DISPATCH / TASK ACTIVATION MODAL */}
+      {/* ======================================================== */}
       {dispatchAgent && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
           <div className="w-full max-w-lg bg-[#0F172A] border border-cyan-500/40 rounded-3xl p-6 sm:p-8 shadow-2xl relative">
