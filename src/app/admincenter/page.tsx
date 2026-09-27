@@ -14,75 +14,105 @@ import {
   CheckCircle2,
   AlertTriangle,
   Search,
-  Filter,
   RefreshCw,
   LogOut,
-  ChevronRight,
   Bot,
-  Sparkles,
-  Clock,
   ArrowRight,
   Eye,
   EyeOff,
   Database,
-  Terminal,
   Zap,
-  Globe,
   Radio,
-  SlidersHorizontal,
   X,
 } from "lucide-react";
 import {
   CANONICAL_59_AGENTS,
   AgentCard,
-  AgentTier,
-  AgentState,
-  QuotaDomainId,
 } from "@/data/ai-agency-canonical";
 
+interface RuntimeAgent {
+  id: string;
+  enabled?: boolean | null;
+  health_status?: string | null;
+  metadata?: { verification_status?: string | null } | null;
+  configuration?: { runtime_dispatch_enabled?: boolean | null } | null;
+}
+
 interface SystemStatus {
-  timestamp: string;
-  status: string;
-  topology: {
-    controlPlane: {
-      node: string;
-      role: string;
-      status: string;
-      storagePolicy: string;
-    };
-    authoritativeAnchor: {
-      node: string;
-      peerName: string;
-      tailscaleIP: string;
-      lanIP: string;
-      role: string;
-      status: string;
-      storageRoots: {
-        canonicalProjects: string;
-        directivesAndPayloads: string;
-        stagingSpool: string;
-        protectedZone: string;
+  timestamp?: string;
+  snapshotStatus?: string | null;
+  status?: string | null;
+  aiFleet?: {
+    totalAgents?: number;
+    verifiedAgents?: number;
+    activeAgents?: number;
+    standbyAgents?: number;
+    unverifiedAgents?: number;
+  };
+  queue?: {
+    pendingTasks?: number;
+    runningTasks?: number;
+    completedTasks?: number;
+    failedTasks?: number;
+    totalTasks?: number;
+    dispatcherStatus?: string | null;
+  };
+  runtime?: {
+    sourceOfTruth?: string | null;
+    supervisorState?: string | null;
+    providerHealth?: Record<string, unknown> | null;
+    backlogTaskStatuses?: Record<string, unknown> | null;
+    latestBottleneck?: string | null;
+    runtimeDispatchEnabled?: boolean | null;
+    nodeMetrics?: { cpu?: number | null; ram?: number | null; disk?: number | null; queue?: number | null } | null;
+    telemetryErrors?: string[] | null;
+  };
+  agents?: RuntimeAgent[];
+  topology?: {
+    controlPlane?: { node?: string; role?: string; status?: string; storagePolicy?: string };
+    authoritativeAnchor?: {
+      node?: string | null;
+      name?: string | null;
+      status?: string | null;
+      hostname?: string | null;
+      specs?: Record<string, unknown> | string | null;
+      storageRoots?: {
+        canonicalProjects?: string;
+        directivesAndPayloads?: string;
+        stagingSpool?: string;
+        protectedZone?: string;
       };
     };
   };
-  aiFleet: {
-    totalAgents: number;
-    activeAgents: number;
-    standbyAgents: number;
-    quarantinedAgents: number;
-    businessUnitsCount: number;
-    quotaUtilizationPct: number;
-    tokensUsedTotal: number;
-    tokensLimitTotal: number;
-  };
-  realAuditLogs: Array<{
+  realAuditLogs?: Array<{
     id: string;
-    timestamp: string;
-    event: string;
-    actor: string;
-    details: string;
-    level: string;
+    timestamp?: string;
+    event?: string;
+    actor?: string;
+    details?: string;
+    level?: string;
   }>;
+}
+
+function telemetry(value: unknown): string {
+  if (value == null || (typeof value === "string" && !value.trim()) ||
+      (typeof value === "object" && Object.keys(value).length === 0)) return "TELEMETRY_PENDING";
+  return typeof value === "object" ? JSON.stringify(value, null, 2) : String(value);
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+function TelemetryFields({ fields }: { fields: Record<string, unknown> }) {
+  return <dl className="space-y-3 text-xs">
+    {Object.entries(fields).map(([label, value]) => (
+      <div key={label} className="border-b border-white/5 pb-2">
+        <dt className="text-slate-400 mb-1">{label}</dt>
+        <dd className="text-slate-200 font-mono whitespace-pre-wrap break-words">{telemetry(value)}</dd>
+      </div>
+    ))}
+  </dl>;
 }
 
 export default function AdminCenterPage() {
@@ -108,7 +138,7 @@ export default function AdminCenterPage() {
   const [isChangingPassword, setIsChangingPassword] = useState<boolean>(false);
 
   // Dashboard state
-  const [activeTab, setActiveTab] = useState<"agents" | "quotas" | "hierarchy" | "node01" | "audit">("agents");
+  const [activeTab, setActiveTab] = useState<"agents" | "quotas" | "hierarchy" | "node01" | "audit" | "runtime">("agents");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedBU, setSelectedBU] = useState<string>("ALL");
   const [selectedTier, setSelectedTier] = useState<string>("ALL");
@@ -149,12 +179,15 @@ export default function AdminCenterPage() {
   const fetchSystemStatus = async () => {
     try {
       setLoadingStatus(true);
-      const res = await fetch("/api/admincenter/system");
+      const res = await fetch("/api/admincenter/system", { cache: "no-store" });
       if (res.ok) {
         const data = await res.json();
         setSystemStatus(data);
+      } else {
+        setSystemStatus(null);
       }
     } catch (err) {
+      setSystemStatus(null);
       console.error("Fetch status error:", err);
     } finally {
       setLoadingStatus(false);
@@ -162,9 +195,19 @@ export default function AdminCenterPage() {
   };
 
   useEffect(() => {
-    checkSession();
-    fetchSystemStatus();
+    const timer = setTimeout(() => { void checkSession(); }, 0);
+    return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const timer = setTimeout(() => { void fetchSystemStatus(); }, 0);
+    const interval = setInterval(() => { void fetchSystemStatus(); }, 15_000);
+    return () => {
+      clearTimeout(timer);
+      clearInterval(interval);
+    };
+  }, [isAuthenticated]);
 
   // Handle Login
   const handleLogin = async (e: React.FormEvent) => {
@@ -193,12 +236,11 @@ export default function AdminCenterPage() {
           setShowChangePasswordModal(true);
         }
         setLoginPassword("");
-        fetchSystemStatus();
       } else {
         setLoginError(data.error || "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.");
       }
-    } catch (err: any) {
-      setLoginError("Không thể kết nối máy chủ xác thực: " + err.message);
+    } catch (err: unknown) {
+      setLoginError("Không thể kết nối máy chủ xác thực: " + errorMessage(err));
     } finally {
       setIsLoggingIn(false);
     }
@@ -215,6 +257,8 @@ export default function AdminCenterPage() {
       setIsAuthenticated(false);
       setMustChangePassword(false);
       setShowChangePasswordModal(false);
+      setSystemStatus(null);
+      setDispatchAgent(null);
     } catch (err) {
       console.error("Logout error:", err);
     }
@@ -264,30 +308,38 @@ export default function AdminCenterPage() {
       } else {
         setPasswordChangeError(data.error || "Đổi mật khẩu thất bại.");
       }
-    } catch (err: any) {
-      setPasswordChangeError("Lỗi hệ thống khi đổi mật khẩu: " + err.message);
+    } catch (err: unknown) {
+      setPasswordChangeError("Lỗi hệ thống khi đổi mật khẩu: " + errorMessage(err));
     } finally {
       setIsChangingPassword(false);
     }
   };
 
-  // Handle Dispatch Simulated Action
+  const isDispatchEligible = (agent: AgentCard | null) => {
+    if (!agent || systemStatus?.runtime?.runtimeDispatchEnabled !== true) return false;
+    const runtimeAgent = systemStatus?.agents?.find((row) => row.id === agent.id);
+    return runtimeAgent?.enabled === true &&
+      runtimeAgent.health_status === "healthy" &&
+      runtimeAgent.metadata?.verification_status === "VERIFIED" &&
+      runtimeAgent.configuration?.runtime_dispatch_enabled === true;
+  };
+
   const handleDispatchAction = (agent: AgentCard) => {
+    if (!isDispatchEligible(agent)) {
+      setDispatchAgent(null);
+      setDispatchMessage("Dispatch bị khóa: agent chưa VERIFIED hoặc runtime dispatch chưa bật.");
+      return;
+    }
     setDispatchAgent(agent);
     setDispatchPrompt("");
     setDispatchMessage("");
   };
 
-  const executeDispatch = () => {
-    if (!dispatchAgent) return;
-    setDispatchMessage(
-      `[ĐÃ GỬI LỆNH] Chỉ thị đã được nạp vào hàng đợi PGMQ cho Agent ${dispatchAgent.id} (${dispatchAgent.name}) trên Node-01.`
-    );
-    setTimeout(() => {
-      setDispatchAgent(null);
-      setDispatchMessage("");
-    }, 2000);
-  };
+  const fleet = systemStatus?.aiFleet;
+  const runtime = systemStatus?.runtime;
+  const anchor = systemStatus?.topology?.authoritativeAnchor;
+  const metrics = runtime?.nodeMetrics;
+  const metricFields = { "CPU (%)": metrics?.cpu, "RAM (%)": metrics?.ram, "Disk (%)": metrics?.disk, "Queue": metrics?.queue };
 
   // Filtered Agents
   const filteredAgents = useMemo(() => {
@@ -449,9 +501,9 @@ export default function AdminCenterPage() {
         {/* Live Network & Hardware Status */}
         <div className="hidden md:flex items-center gap-4 bg-[#070B14]/80 border border-white/10 rounded-xl px-4 py-2 text-xs">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-            <span className="w-2 h-2 rounded-full bg-emerald-500 -ml-4" />
-            <span className="text-slate-300 font-mono">Node-01: ONLINE (100.79.240.108)</span>
+            <span className="w-2 h-2 rounded-full bg-slate-400" />
+            <span className="w-2 h-2 rounded-full bg-slate-500 -ml-4" />
+            <span className="text-slate-300 font-mono">Node-01: {telemetry(anchor?.status)}</span>
           </div>
           <div className="w-px h-4 bg-white/10" />
           <div className="flex items-center gap-1.5 text-slate-400">
@@ -498,71 +550,21 @@ export default function AdminCenterPage() {
       {/* TOP KPI METRICS STRIP (Sạch 100% dữ liệu test, sẵn sàng đón nhận tải thật) */}
       <section className="px-4 lg:px-8 py-6 border-b border-white/5 bg-[#0A1124]/40">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Card 1: Total AI Agents */}
-          <div className="bg-[#0F172A]/80 border border-white/10 rounded-2xl p-5 backdrop-blur-sm relative overflow-hidden">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Tổng Lực Lượng AI</span>
-              <Bot className="w-5 h-5 text-cyan-400" />
+          {[
+            { label: "Tổng Lực Lượng AI", value: `${telemetry(fleet?.activeAgents)}/${telemetry(fleet?.verifiedAgents)} verified`, detail: `Catalog ${fleet?.totalAgents ?? 59} | ${telemetry(fleet?.unverifiedAgents)} unverified`, icon: Bot },
+            { label: "Trạng Thái Tiếp Nhận", value: `${telemetry(fleet?.activeAgents)}/${telemetry(fleet?.verifiedAgents)} verified`, detail: `Standby: ${telemetry(fleet?.standbyAgents)} | ${telemetry(systemStatus?.snapshotStatus || systemStatus?.status)}`, icon: Activity },
+            { label: "Node01 authoritative", value: telemetry(anchor?.status), detail: telemetry(anchor?.hostname), icon: Server },
+            { label: "Hàng Đợi Nhiệm Vụ", value: telemetry(systemStatus?.queue?.pendingTasks), detail: `Pending | ${telemetry(systemStatus?.queue?.runningTasks)} running | ${telemetry(systemStatus?.queue?.failedTasks)} failed`, icon: Zap },
+          ].map(({ label, value, detail, icon: Icon }) => (
+            <div key={label} className="bg-[#0F172A]/80 border border-white/10 rounded-2xl p-5 backdrop-blur-sm relative overflow-hidden">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{label}</span>
+                <Icon className="w-5 h-5 text-cyan-400" />
+              </div>
+              <div className="text-xl font-extrabold text-white break-words">{value}</div>
+              <p className="text-[11px] text-slate-400 mt-2">{detail}</p>
             </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold text-white">59</span>
-              <span className="text-xs text-slate-400 font-medium">AI Agencies</span>
-            </div>
-            <p className="text-[11px] text-slate-400 mt-2">
-              6 Business Units • 7 Phân cấp (L0 → L4, SEC, HR)
-            </p>
-          </div>
-
-          {/* Card 2: Readiness Status */}
-          <div className="bg-[#0F172A]/80 border border-white/10 rounded-2xl p-5 backdrop-blur-sm relative overflow-hidden">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Trạng Thái Tiếp Nhận</span>
-              <Activity className="w-5 h-5 text-emerald-400" />
-            </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold text-emerald-400">58</span>
-              <span className="text-xs text-slate-300">Sẵn Sàng</span>
-              <span className="text-slate-500">|</span>
-              <span className="text-sm font-bold text-cyan-400">1</span>
-              <span className="text-xs text-slate-400">Online</span>
-            </div>
-            <p className="text-[11px] text-emerald-400/90 mt-2 flex items-center gap-1">
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>100% chuẩn bị sẵn sàng cho lệnh từ Node-01</span>
-            </p>
-          </div>
-
-          {/* Card 3: Quota Utilization (Pristine 0%) */}
-          <div className="bg-[#0F172A]/80 border border-white/10 rounded-2xl p-5 backdrop-blur-sm relative overflow-hidden">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Hạn Ngạch Quota Đang Dùng</span>
-              <Cpu className="w-5 h-5 text-indigo-400" />
-            </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold text-white">0%</span>
-              <span className="text-xs text-slate-400">0 / 5,000,000 Tokens</span>
-            </div>
-            <div className="w-full bg-slate-800 rounded-full h-1.5 mt-3 overflow-hidden">
-              <div className="bg-cyan-500 h-1.5 rounded-full" style={{ width: "0%" }} />
-            </div>
-            <p className="text-[11px] text-slate-400 mt-2">Môi trường sản xuất sạch, không hao phí API</p>
-          </div>
-
-          {/* Card 4: Task Queue Depth */}
-          <div className="bg-[#0F172A]/80 border border-white/10 rounded-2xl p-5 backdrop-blur-sm relative overflow-hidden">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Hàng Đợi Nhiệm Vụ (PGMQ)</span>
-              <Zap className="w-5 h-5 text-amber-400" />
-            </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold text-white">0</span>
-              <span className="text-xs text-slate-400">Đang chờ / 0 Lỗi</span>
-            </div>
-            <p className="text-[11px] text-amber-300/90 mt-2 flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5" />
-              <span>Chờ trigger từ Dispatcher & Node-01 Compute</span>
-            </p>
-          </div>
+          ))}
         </div>
       </section>
 
@@ -627,10 +629,46 @@ export default function AdminCenterPage() {
           <Shield className="w-4 h-4" />
           <span>Nhật Ký Kiểm Toán Thực Tế</span>
         </button>
+        <button onClick={() => setActiveTab("runtime")}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 ${activeTab === "runtime" ? "bg-cyan-500 text-black shadow-lg shadow-cyan-500/20" : "text-slate-300 hover:text-white hover:bg-white/5"}`}>
+          <Activity className="w-4 h-4" />Runtime & Watchdog
+        </button>
+        <button onClick={fetchSystemStatus} disabled={loadingStatus} className="ml-auto px-4 py-2 text-xs text-cyan-300 flex items-center gap-2 shrink-0 disabled:opacity-50">
+          <RefreshCw className={`w-4 h-4 ${loadingStatus ? "animate-spin" : ""}`} />Làm mới
+        </button>
       </nav>
 
       {/* CONTENT AREA */}
       <main className="flex-1 p-4 lg:p-8">
+        {dispatchMessage && <p role="status" className="mb-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs">{dispatchMessage}</p>}
+        {activeTab === "runtime" && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-[#0F172A]/80 border border-white/10 rounded-2xl p-6">
+              <h2 className="text-lg font-bold mb-4">Runtime & Watchdog</h2>
+              <TelemetryFields fields={{
+                "Source of truth": runtime?.sourceOfTruth,
+                "Snapshot": systemStatus?.snapshotStatus,
+                "Status": systemStatus?.status,
+                "Supervisor state": runtime?.supervisorState,
+                "Runtime dispatch": typeof runtime?.runtimeDispatchEnabled === "boolean" ? (runtime.runtimeDispatchEnabled ? "ENABLED" : "DISABLED") : null,
+                "Backlog task statuses": runtime?.backlogTaskStatuses,
+                "Latest bottleneck": runtime?.latestBottleneck,
+                "Telemetry errors": runtime?.telemetryErrors,
+                "Dispatcher": systemStatus?.queue?.dispatcherStatus,
+                "Completed tasks": systemStatus?.queue?.completedTasks,
+                "Total tasks": systemStatus?.queue?.totalTasks,
+              }} />
+            </div>
+            <div className="bg-[#0F172A]/80 border border-white/10 rounded-2xl p-6 space-y-6">
+              <h3 className="font-bold">Node metrics</h3>
+              <TelemetryFields fields={metricFields} />
+              <h3 className="font-bold">Provider health</h3>
+              {runtime?.providerHealth && Object.keys(runtime.providerHealth).length > 0
+                ? <TelemetryFields fields={runtime.providerHealth} />
+                : <p className="text-xs text-slate-400">Chưa có telemetry</p>}
+            </div>
+          </div>
+        )}
         {/* TAB 1: 59 AI AGENTS */}
         {activeTab === "agents" && (
           <div className="space-y-6">
@@ -686,9 +724,9 @@ export default function AdminCenterPage() {
                   onChange={(e) => setSelectedState(e.target.value)}
                   className="bg-[#070B14] border border-white/10 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-400"
                 >
-                  <option value="ALL">Tất Cả Trạng Thái</option>
-                  <option value="ACTIVE">ACTIVE (Trực chiến)</option>
-                  <option value="STANDBY">STANDBY (Sẵn sàng)</option>
+                  <option value="ALL">Trạng thái catalog</option>
+                  <option value="ACTIVE">ACTIVE (catalog)</option>
+                  <option value="STANDBY">STANDBY (catalog)</option>
                   <option value="WARM_STANDBY">WARM_STANDBY (Dự phòng nóng)</option>
                   <option value="COLD_STANDBY">COLD_STANDBY (Dự phòng nguội)</option>
                 </select>
@@ -697,8 +735,8 @@ export default function AdminCenterPage() {
 
             {/* Results Counter */}
             <div className="flex items-center justify-between text-xs text-slate-400 px-1">
-              <span>Hiển thị {filteredAgents.length} trên tổng số 59 AI Agency</span>
-              <span className="text-[11px] text-emerald-400 font-mono">Chế độ vận hành: Môi trường chuẩn bị Node-01</span>
+              <span>Catalog 59 | {telemetry(fleet?.verifiedAgents)} verified | {telemetry(fleet?.activeAgents)} active | {telemetry(fleet?.unverifiedAgents)} unverified</span>
+              <span className="text-[11px] text-emerald-400 font-mono">Hiển thị {filteredAgents.length} mục catalog</span>
             </div>
 
             {/* Agents Card Grid */}
@@ -715,16 +753,13 @@ export default function AdminCenterPage() {
                         <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-white/10 text-cyan-300 border border-white/10">
                           {agent.id}
                         </span>
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
-                          agent.state === "ACTIVE"
-                            ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                            : agent.state === "STANDBY"
-                            ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
-                            : agent.state === "WARM_STANDBY"
-                            ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
-                            : "bg-slate-700/40 text-slate-400 border border-slate-700"
-                        }`}>
-                          {agent.state === "ACTIVE" ? "TRỰC CHIẾN" : agent.state === "STANDBY" ? "SẴN SÀNG" : agent.state}
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-white/5 text-slate-300 border border-white/10">
+                          {(() => {
+                            const row = systemStatus?.agents?.find((item) => item.id === agent.id);
+                            return row
+                              ? `${telemetry(row.metadata?.verification_status)} / ${telemetry(row.health_status)} / ${typeof row.enabled === "boolean" ? (row.enabled ? "ENABLED" : "DISABLED") : "TELEMETRY_PENDING"}`
+                              : "UNVERIFIED / CATALOG";
+                          })()}
                         </span>
                       </div>
 
@@ -766,7 +801,7 @@ export default function AdminCenterPage() {
 
                     {/* Current Task (Clean standby task) */}
                     <div className="mt-3 p-2.5 rounded-xl bg-[#070B14] border border-white/5 text-[11px]">
-                      <span className="text-slate-500 font-semibold block mb-0.5">Nhiệm vụ tiếp nhận:</span>
+                      <span className="text-slate-500 font-semibold block mb-0.5">Nhiệm vụ catalog:</span>
                       <span className="text-slate-300 leading-snug">{agent.currentTask}</span>
                     </div>
                   </div>
@@ -936,89 +971,29 @@ export default function AdminCenterPage() {
 
         {/* TAB 4: NODE-01 CLUSTER */}
         {activeTab === "node01" && (
-          <div className="space-y-6">
-            <div className="bg-[#0F172A]/80 border border-white/10 rounded-2xl p-6">
-              <h2 className="text-lg font-bold text-white mb-1">Kiến Trúc Hạ Tầng Cụm Node-01 & Máy Lenovo</h2>
-              <p className="text-xs text-slate-400 mb-6">
-                Chính sách lưu trữ chính thức đã được khóa cứng: Dell M4800 là điểm neo lưu trữ vĩnh viễn; Lenovo là trạm điều khiển từ xa.
-              </p>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Node-01 Dell */}
-                <div className="bg-[#070B14] border border-emerald-500/30 rounded-2xl p-5">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                      <Server className="w-5 h-5 text-emerald-400" />
-                      <span className="font-bold text-white">Dell Precision M4800 (huy-node01)</span>
-                    </div>
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                      AUTHORITATIVE ANCHOR
-                    </span>
-                  </div>
-
-                  <div className="space-y-2 text-xs text-slate-300 font-mono">
-                    <div className="flex justify-between py-1 border-b border-white/5">
-                      <span className="text-slate-400">Tailscale IP:</span>
-                      <span className="text-white">100.79.240.108</span>
-                    </div>
-                    <div className="flex justify-between py-1 border-b border-white/5">
-                      <span className="text-slate-400">LAN Peer:</span>
-                      <span className="text-white">192.168.1.230:41641 (Độ trễ 5.2ms)</span>
-                    </div>
-                    <div className="flex justify-between py-1 border-b border-white/5">
-                      <span className="text-slate-400">Root dự án chính thức:</span>
-                      <span className="text-emerald-400 font-bold">/mnt/data1/Projects/HUY-AI-Center</span>
-                    </div>
-                    <div className="flex justify-between py-1 border-b border-white/5">
-                      <span className="text-slate-400">Root tài liệu & payloads:</span>
-                      <span className="text-emerald-400 font-bold">/mnt/data1/HUY-AI/</span>
-                    </div>
-                    <div className="flex justify-between py-1 border-b border-white/5">
-                      <span className="text-slate-400">Khu vực bảo vệ bất khả xâm phạm:</span>
-                      <span className="text-amber-400 font-bold">/mnt/data2 (R4 PROTECTED)</span>
-                    </div>
-                    <div className="flex justify-between py-1">
-                      <span className="text-slate-400">Trạng thái tiếp nhận gói dữ liệu:</span>
-                      <span className="text-emerald-400 font-bold">3/3 gói nạp Spool thành công</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Lenovo Control Plane */}
-                <div className="bg-[#070B14] border border-cyan-500/30 rounded-2xl p-5">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                      <Terminal className="w-5 h-5 text-cyan-400" />
-                      <span className="font-bold text-white">Lenovo ThinkPad</span>
-                    </div>
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">
-                      REMOTE CONTROL PLANE
-                    </span>
-                  </div>
-
-                  <div className="space-y-2 text-xs text-slate-300 font-mono">
-                    <div className="flex justify-between py-1 border-b border-white/5">
-                      <span className="text-slate-400">Vai trò:</span>
-                      <span className="text-cyan-300 font-bold">Trạm kích hoạt lệnh & giám sát</span>
-                    </div>
-                    <div className="flex justify-between py-1 border-b border-white/5">
-                      <span className="text-slate-400">Chính sách lưu trữ:</span>
-                      <span className="text-cyan-300">ZERO PERMANENT STORAGE</span>
-                    </div>
-                    <div className="flex justify-between py-1 border-b border-white/5">
-                      <span className="text-slate-400">Cơ chế Checkpoint:</span>
-                      <span className="text-white">Tự động sync sang Node-01 qua Taildrop</span>
-                    </div>
-                    <div className="flex justify-between py-1 border-b border-white/5">
-                      <span className="text-slate-400">Tình trạng cổng local:</span>
-                      <span className="text-emerald-400 font-bold">ĐÃ TẮT (Port 3000 Closed)</span>
-                    </div>
-                    <div className="flex justify-between py-1">
-                      <span className="text-slate-400">Cổng trực tuyến chính thức:</span>
-                      <span className="text-cyan-400 font-bold">https://www.huycncdsai.io.vn/admincenter</span>
-                    </div>
-                  </div>
-                </div>
+          <div className="bg-[#0F172A]/80 border border-white/10 rounded-2xl p-6">
+            <h2 className="text-lg font-bold mb-4">Cụm Node-01 & Lưu Trữ</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-[#070B14] border border-emerald-500/30 rounded-2xl p-5">
+                <h3 className="text-emerald-400 font-bold mb-4">Node01 authoritative — AUTHORITATIVE ANCHOR</h3>
+                <TelemetryFields fields={{
+                  "Node": anchor?.node,
+                  "Name": anchor?.name,
+                  "Status": anchor?.status,
+                  "Hostname": anchor?.hostname,
+                  "Specs": anchor?.specs,
+                  ...metricFields,
+                  "Root dự án": anchor?.storageRoots?.canonicalProjects,
+                  "Root tài liệu & payloads": anchor?.storageRoots?.directivesAndPayloads,
+                  "Staging spool": anchor?.storageRoots?.stagingSpool,
+                  "Protected zone": anchor?.storageRoots?.protectedZone,
+                }} />
+              </div>
+              <div className="bg-[#070B14] border border-cyan-500/30 rounded-2xl p-5">
+                <h3 className="text-cyan-400 font-bold mb-4">Lenovo remote-control-only</h3>
+                <p className="text-xs text-slate-300 mb-4">REMOTE_CONTROL_PLANE_ONLY • ZERO_PERMANENT_STORAGE</p>
+                <TelemetryFields fields={{ "Status": systemStatus?.topology?.controlPlane?.status }} />
+                <p className="text-xs text-slate-400 mt-4">Kết nối / đồng bộ: Chưa có telemetry</p>
               </div>
             </div>
           </div>
@@ -1030,44 +1005,12 @@ export default function AdminCenterPage() {
             <div className="bg-[#0F172A]/80 border border-white/10 rounded-2xl p-6">
               <h2 className="text-lg font-bold text-white mb-1">Nhật Ký Kiểm Toán Hệ Thống Thực Tế (System Real Audit Trail)</h2>
               <p className="text-xs text-slate-400 mb-6">
-                Lịch sử sự kiện khởi tạo hệ thống, các mốc di trú dữ liệu sang Node-01 và kích hoạt chế độ sẵn sàng cho 59 AI Agency.
+                Dữ liệu audit thực tế từ Supabase.
               </p>
 
               <div className="space-y-3 font-mono text-xs">
-                {(systemStatus?.realAuditLogs || [
-                  {
-                    id: "AUDIT-001",
-                    timestamp: "2026-09-26T16:39:52Z",
-                    event: "MIGRATION_DELIVERY_SUCCESS",
-                    actor: "Lenovo-Control-Plane",
-                    details: "3 gói dữ liệu (PKG-01, PKG-02, PKG-03) tổng 95.51 MB nạp thành công vào Spool của Dell M4800 Node-01 qua Taildrop.",
-                    level: "INFO",
-                  },
-                  {
-                    id: "AUDIT-002",
-                    timestamp: "2026-09-26T20:00:00Z",
-                    event: "TOPOLOGY_RULE_ENFORCED",
-                    actor: "System Architecture Guardian",
-                    details: "Khóa cứng nguyên tắc: Lenovo là REMOTE_CONTROL_PLANE_ONLY; Node-01 là AUTHORITATIVE_STORAGE_ANCHOR. Phân vùng /mnt/data2 khóa R4 PROTECTED.",
-                    level: "SECURITY",
-                  },
-                  {
-                    id: "AUDIT-003",
-                    timestamp: "2026-09-26T20:06:37Z",
-                    event: "SUPERADMIN_GATEWAY_INITIALIZED",
-                    actor: "Human Owner Gate",
-                    details: "Cổng quản trị /admincenter kích hoạt với tài khoản SuperAdmin, yêu cầu đổi mật khẩu ngay lần đầu đăng nhập.",
-                    level: "AUTH",
-                  },
-                  {
-                    id: "AUDIT-004",
-                    timestamp: "2026-09-26T20:08:00Z",
-                    event: "AI_FLEET_STANDBY_ARMED",
-                    actor: "HAIP Dispatcher Core",
-                    details: "Toàn bộ 59 AI Agency thuộc 6 Business Units được khởi tạo ở trạng thái SẴN SÀNG (STANDBY), quota 0%, sạch dữ liệu test, sẵn sàng nhận việc.",
-                    level: "READY",
-                  },
-                ]).map((log) => (
+                {!systemStatus?.realAuditLogs?.length && <p className="text-slate-400">Chưa có audit log thực tế từ Supabase.</p>}
+                {(systemStatus?.realAuditLogs ?? []).map((log) => (
                   <div
                     key={log.id}
                     className="p-3.5 rounded-xl bg-[#070B14] border border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-3 hover:border-white/20 transition-all"
@@ -1086,7 +1029,7 @@ export default function AdminCenterPage() {
                     </div>
 
                     <div className="text-[11px] text-slate-500 shrink-0">
-                      {new Date(log.timestamp).toLocaleString("vi-VN")}
+                      {log.timestamp ? new Date(log.timestamp).toLocaleString("vi-VN") : "TELEMETRY_PENDING"}
                     </div>
                   </div>
                 ))}
@@ -1260,15 +1203,20 @@ export default function AdminCenterPage() {
                 Đóng
               </button>
               <button
+                disabled={!isDispatchEligible(selectedAgent)}
                 onClick={() => {
                   const a = selectedAgent;
                   setSelectedAgent(null);
                   handleDispatchAction(a);
                 }}
-                className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-xs font-bold text-black transition-colors flex items-center gap-1.5"
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 ${
+                  isDispatchEligible(selectedAgent)
+                    ? "bg-cyan-500 hover:bg-cyan-400 text-black"
+                    : "bg-slate-700/60 text-slate-400 cursor-not-allowed"
+                }`}
               >
                 <Zap className="w-3.5 h-3.5" />
-                <span>Kích hoạt tác vụ</span>
+                <span>{isDispatchEligible(selectedAgent) ? "Chuẩn bị tác vụ" : "DISPATCH LOCKED"}</span>
               </button>
             </div>
           </div>
@@ -1288,23 +1236,17 @@ export default function AdminCenterPage() {
 
             <div className="flex items-center gap-2 mb-2">
               <Zap className="w-5 h-5 text-cyan-400" />
-              <h2 className="text-lg font-bold text-white">KÍCH HOẠT TÁC VỤ AI THỰC TẾ</h2>
+              <h2 className="text-lg font-bold text-white">CHUẨN BỊ TÁC VỤ AI</h2>
             </div>
             <p className="text-xs text-slate-300 mb-4">
-              Gửi chỉ thị điều hành trực tiếp tới Agent <span className="text-cyan-400 font-bold">{dispatchAgent.id}</span> ({dispatchAgent.name}).
+              Xem chỉ thị dự kiến cho Agent <span className="text-cyan-400 font-bold">{dispatchAgent.id}</span> ({dispatchAgent.name}).
             </p>
-
-            {dispatchMessage && (
-              <div className="mb-4 p-3 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-mono">
-                {dispatchMessage}
-              </div>
-            )}
 
             <div className="space-y-4 text-xs">
               <div>
                 <label className="block text-slate-400 font-semibold mb-1">Môi trường thực thi:</label>
                 <div className="p-2.5 rounded-xl bg-[#070B14] border border-white/5 text-slate-200 font-mono">
-                  Dell M4800 Node-01 (100.79.240.108:41641) / PGMQ Queue
+                  {telemetry(anchor?.hostname)} / Dispatch API chưa kích hoạt
                 </div>
               </div>
 
@@ -1329,11 +1271,11 @@ export default function AdminCenterPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={executeDispatch}
+                  disabled
                   className="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-xs font-bold text-white shadow-lg shadow-cyan-500/20 transition-all flex items-center gap-1.5"
                 >
                   <ArrowRight className="w-3.5 h-3.5" />
-                  <span>Xác Nhận & Gửi Chỉ Thị</span>
+                  <span>Dispatch API chưa kích hoạt</span>
                 </button>
               </div>
             </div>
