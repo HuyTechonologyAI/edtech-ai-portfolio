@@ -138,6 +138,9 @@ export function getLiveTelemetryData() {
       state = custom.state as any;
     }
 
+    // Commands express intent, not verified execution of a catalog agent.
+    if (state === "ACTIVE" || state === "COLLABORATING") state = "STANDBY";
+
     return {
       id: canonical.id,
       name: canonical.name,
@@ -328,3 +331,5 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
+
+[executed on device: huy-ai-node-01 (3d9d4003-83b9-4fae-ab79-1bd43ee9288b)]

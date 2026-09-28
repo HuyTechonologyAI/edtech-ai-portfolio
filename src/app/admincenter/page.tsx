@@ -53,6 +53,9 @@ import {
 import { AgentLiveTelemetry, LiveEvent } from "@/app/api/admincenter/telemetry/route";
 
 interface SystemStatus {
+  runtimeWorkers: Record<string, number>;
+  activeRuntimeWorkers: number;
+  workExecution: { currentTask: string; stage: string; checkpointStatus: string; lastAction: string; nextAction: string } | null;
   timestamp: string;
   status: string;
   topology: {
@@ -237,8 +240,11 @@ export default function AdminCenterPage() {
       if (res.ok) {
         const data = await res.json();
         setSystemStatus(data);
+      } else {
+        setSystemStatus(null);
       }
     } catch (err) {
+      setSystemStatus(null);
       console.error("Fetch status error:", err);
     } finally {
       setLoadingStatus(false);
@@ -466,9 +472,9 @@ export default function AdminCenterPage() {
         agent.businessUnit.toLowerCase().includes(buKey.toLowerCase()) || buKey === "ALL"
           ? {
               ...agent,
-              state: "ACTIVE" as const,
-              currentThought: `[KÍCH HOẠT NHANH] Đang thực thi chỉ thị: ${directive}`,
-              tokensPerSec: 45,
+              state: "STANDBY" as const,
+              currentThought: `[KÍCH HOẠT NHANH] Chờ xác minh thực thi chỉ thị: ${directive}`,
+              tokensPerSec: 0,
             }
           : agent
       );
@@ -523,7 +529,7 @@ export default function AdminCenterPage() {
         a.id === agentId
           ? {
               ...a,
-              state: nextState as any,
+              state: (nextState === "ACTIVE" ? "STANDBY" : nextState) as AgentLiveTelemetry["state"],
               currentTask:
                 task ||
                 (nextState === "ACTIVE"
@@ -533,7 +539,7 @@ export default function AdminCenterPage() {
                 nextState === "ACTIVE"
                   ? "Đã nhận lệnh kích hoạt trực tiếp từ SuperAdmin."
                   : "Đưa về trạng thái nhịp tim chờ Standby.",
-              tokensPerSec: nextState === "ACTIVE" ? (a.tokensPerSec || 45) : 0,
+              tokensPerSec: 0,
             }
           : a
       );
@@ -618,9 +624,14 @@ export default function AdminCenterPage() {
 
   // Effective Agents List (combining telemetry with fallback)
   const effectiveAgents: AgentLiveTelemetry[] = useMemo(() => {
-    if (telemetryAgents.length > 0) return telemetryAgents;
+    if (telemetryAgents.length > 0) return telemetryAgents.map((agent) => ({
+      ...agent,
+      state: agent.state === 'ACTIVE' || agent.state === 'COLLABORATING' ? 'STANDBY' : agent.state,
+      tokensPerSec: 0,
+    }));
     return CANONICAL_59_AGENTS.map((c) => ({
       ...c,
+      state: "STANDBY",
       currentThought: "Đang duy trì nhịp tim chuẩn, sẵn sàng tiếp nhận luồng xử lý từ SuperAdmin.",
       targetPeer: null,
       tokensPerSec: 0,
@@ -901,20 +912,16 @@ export default function AdminCenterPage() {
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-[11px] font-semibold text-cyan-300 uppercase tracking-wider flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                AI Đang Hoạt Động
+                AI Runtime đang làm việc
               </span>
               <Activity className="w-4 h-4 text-cyan-400" />
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-black text-white">{activeCount}</span>
-              <span className="text-xs text-slate-400">/ 59 AI Agency</span>
+              <span className="text-2xl font-black text-white">{systemStatus?.activeRuntimeWorkers ?? 0}</span>
+              <span className="text-xs text-slate-400">workers · Node01</span>
             </div>
             <div className="flex items-center gap-2 mt-2 text-[10px] text-slate-300">
-              <span className="text-emerald-400 font-semibold">{activeCount - collabCount} Đơn lẻ</span>
-              <span>•</span>
-              <span className="text-purple-400 font-semibold">{collabCount} Phối hợp A2A</span>
-              <span>•</span>
-              <span className="text-slate-400">{standbyCount} Standby</span>
+              <span>{Object.entries(systemStatus?.runtimeWorkers ?? {}).map(([provider, count]) => `${provider}: ${count}`).join(' · ') || 'Chưa có heartbeat đã xác minh còn hiệu lực'}</span>
             </div>
           </div>
 
@@ -1015,6 +1022,26 @@ export default function AdminCenterPage() {
             </div>
           </div>
         </div>
+      </section>
+
+      <section aria-labelledby="ai-work-heading" className="px-4 lg:px-8 py-5 border-b border-white/5 bg-[#0F172A]/60">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <h2 id="ai-work-heading" className="text-sm font-bold text-cyan-300">Luồng công việc AI</h2>
+          <span className="text-xs text-amber-300">Human Gate · Chủ sở hữu phê duyệt riêng · Không tính là AI worker</span>
+        </div>
+        {systemStatus?.workExecution ? (
+          <dl className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 text-sm">
+            {([
+              ['currentTask', 'Nhiệm vụ hiện tại'], ['stage', 'Giai đoạn'],
+              ['checkpointStatus', 'Checkpoint'], ['lastAction', 'Hành động gần nhất'], ['nextAction', 'Hành động tiếp theo'],
+            ] as const).map(([key, label]) => (
+              <div key={key} className="min-w-0 rounded-xl border border-white/10 p-3">
+                <dt className="text-xs text-slate-400 mb-2">{label}</dt>
+                <dd className="text-slate-100 whitespace-pre-wrap break-words">{systemStatus.workExecution![key]}</dd>
+              </div>
+            ))}
+          </dl>
+        ) : <p className="text-sm text-slate-400">Chưa có luồng công việc hợp lệ từ heartbeat Node01 đã xác minh còn hiệu lực.</p>}
       </section>
 
       {/* UNIVERSAL SWARM BROADCAST COMMAND BAR (THANH CHỈ HUY TÁC CHIẾN SIÊU TỐC) */}
@@ -2392,3 +2419,5 @@ export default function AdminCenterPage() {
     </div>
   );
 }
+
+[executed on device: huy-ai-node-01 (3d9d4003-83b9-4fae-ab79-1bd43ee9288b)]
