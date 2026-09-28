@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { CANONICAL_59_AGENTS, AgentCard } from "@/data/ai-agency-canonical";
+import { CANONICAL_59_AGENTS } from "@/data/ai-agency-canonical";
 
 export interface AgentLiveTelemetry {
   id: string;

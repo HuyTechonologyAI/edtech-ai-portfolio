@@ -15,10 +15,8 @@ import {
   AlertTriangle,
   AlertCircle,
   Search,
-  Filter,
   RefreshCw,
   LogOut,
-  ChevronRight,
   Bot,
   Sparkles,
   Clock,
@@ -28,27 +26,18 @@ import {
   Database,
   Terminal,
   Zap,
-  Globe,
   Radio,
-  SlidersHorizontal,
   X,
   Play,
   Pause,
   Flame,
   Share2,
-  Network,
-  MessageSquare,
   Send,
   StopCircle,
-  CornerDownRight,
-  Check,
 } from "lucide-react";
 import {
   CANONICAL_59_AGENTS,
   AgentCard,
-  AgentTier,
-  AgentState,
-  QuotaDomainId,
 } from "@/data/ai-agency-canonical";
 import { AgentLiveTelemetry, LiveEvent } from "@/app/api/admincenter/telemetry/route";
 
@@ -190,13 +179,13 @@ export default function AdminCenterPage() {
   const [telemetryEvents, setTelemetryEvents] = useState<LiveEvent[]>([]);
   const [swarmMode, setSwarmMode] = useState<string>("AUTONOMOUS_LIVE");
   const [liveStreamEnabled, setLiveStreamEnabled] = useState<boolean>(true);
-  const [pollingRate, setPollingRate] = useState<number>(2500); // 2.5s default
+  const [pollingRate] = useState<number>(2500); // 2.5s default
   const [eventFilter, setEventFilter] = useState<string>("ALL");
   const [autoScrollLogs, setAutoScrollLogs] = useState<boolean>(true);
 
   // System & Node-01 Status
   const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null);
-  const [loadingStatus, setLoadingStatus] = useState<boolean>(false);
+  const [, setLoadingStatus] = useState<boolean>(false);
   const [lastSyncTime, setLastSyncTime] = useState<string>("Đang khởi tạo...");
   const logsContainerRef = useRef<HTMLDivElement>(null);
 
