@@ -505,3 +505,21 @@ describe('AdminCenter Runtime Pure Helpers', () => {
     });
   });
 });
+
+describe('runtime workers telemetry', () => {
+  it('exposes only nonnegative finite runtime worker counts from signed heartbeat metadata', () => {
+    const status = buildAdminCenterSystemStatus({
+      logicalCatalogSize: 59,
+      nodes: [{ id: 'huy-ai-node-01', name: 'Node01', status: 'online' }],
+      heartbeats: [{
+        node_id: 'huy-ai-node-01',
+        created_at: '2026-09-28T10:00:00.000Z',
+        metadata: { runtimeWorkers: { codex: 2, antigravity: 0, bad: -1, malformed: 'x' } },
+      }],
+      now: '2026-09-28T10:01:00.000Z',
+    });
+    assert.deepEqual(status.runtimeWorkers, { codex: 2, antigravity: 0 });
+    assert.equal(status.activeRuntimeWorkers, 2);
+    assert.equal(status.activeAgents, 0, 'canonical unverified agents must remain inactive');
+  });
+});
