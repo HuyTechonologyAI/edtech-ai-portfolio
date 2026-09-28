@@ -54,5 +54,3 @@ test('rejects oversized payloads, wrong keys and malformed signatures', () => {
   assert.equal(verifyNode01TelemetryEnvelope({ payload: 'x'.repeat(65537), signature }, publicKey), false);
   assert.equal(verifyNode01TelemetryEnvelope({ payload, signature: 'bad' }, publicKey), false);
 });
-
-[executed on device: huy-ai-node-01 (3d9d4003-83b9-4fae-ab79-1bd43ee9288b)]
