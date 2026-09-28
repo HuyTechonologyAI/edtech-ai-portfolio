@@ -252,7 +252,7 @@ export async function POST(req: Request) {
 
       // Update targeted agents with the real directive
       CANONICAL_59_AGENTS.forEach((agent) => {
-        if (targetBU === "ALL" || agent.businessUnit.includes(targetBU)) {
+        if (targetBU === "ALL" || agent.businessUnit.toLowerCase().includes(targetBU.toLowerCase())) {
           swarmState.customTasks[agent.id] = {
             task: `[CHỈ THỊ SUPERADMIN] ${directive}`,
             state: "ACTIVE",

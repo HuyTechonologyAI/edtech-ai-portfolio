@@ -13,6 +13,7 @@ import {
   Activity,
   CheckCircle2,
   AlertTriangle,
+  AlertCircle,
   Search,
   Filter,
   RefreshCw,
@@ -105,7 +106,31 @@ interface SystemStatus {
   }>;
 }
 
+interface ToastNotification {
+  id: string;
+  type: "success" | "info" | "warning" | "error";
+  title: string;
+  message: string;
+}
+
 export default function AdminCenterPage() {
+  // Toast notifications state
+  const [toasts, setToasts] = useState<ToastNotification[]>([]);
+  const [loadingAgentId, setLoadingAgentId] = useState<string | null>(null);
+  const [isDispatching, setIsDispatching] = useState<boolean>(false);
+
+  const addToast = (title: string, message: string, type: "success" | "info" | "warning" | "error" = "success") => {
+    const id = Date.now().toString() + Math.random().toString(36).substring(2, 5);
+    setToasts((prev) => [...prev.slice(-3), { id, title, message, type }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 4000);
+  };
+
+  const removeToast = (id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  };
+
   // Auth state
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [mustChangePassword, setMustChangePassword] = useState<boolean>(false);
@@ -354,6 +379,8 @@ export default function AdminCenterPage() {
 
   // Switch Swarm Mode (Autonomous Live / Standby / Emergency Freeze)
   const handleSetSwarmMode = async (mode: string) => {
+    setSwarmMode(mode);
+    addToast("Chế Độ Hoạt Động", `Đã chuyển chế độ Swarm sang: ${mode}`, "info");
     try {
       const res = await fetch("/api/admincenter/telemetry", {
         method: "POST",
@@ -365,15 +392,18 @@ export default function AdminCenterPage() {
         setSwarmMode(data.mode);
         fetchTelemetry();
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Set swarm mode error:", err);
+      addToast("Lỗi chuyển chế độ", err.message, "error");
     }
   };
 
   // Broadcast Directive to All AI or Specific BU
-  const handleBroadcast = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!broadcastPrompt.trim()) return;
+  const handleBroadcast = async (e?: React.FormEvent) => {
+    if (e && e.preventDefault) e.preventDefault();
+    const promptToSend =
+      broadcastPrompt.trim() ||
+      "Kiểm tra đồng bộ toàn diện hệ sinh thái 59 AI và xác nhận kết nối Node-01";
 
     setIsBroadcasting(true);
     setBroadcastFeedback("");
@@ -384,27 +414,137 @@ export default function AdminCenterPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "broadcast_directive",
-          directive: broadcastPrompt,
+          directive: promptToSend,
           targetBU: broadcastTargetBU,
           priority: broadcastPriority,
         }),
       });
 
       if (res.ok) {
-        setBroadcastFeedback(`[ĐÃ PHÁT LỆNH] Chỉ thị [${broadcastPriority}] gửi thành công tới ${broadcastTargetBU === "ALL" ? "toàn bộ 59 AI" : broadcastTargetBU}!`);
+        addToast(
+          "Phát Lệnh Tức Thì",
+          `Chỉ thị [${broadcastPriority}] gửi thành công tới ${
+            broadcastTargetBU === "ALL" ? "toàn bộ 59 AI" : broadcastTargetBU
+          }!`,
+          "success"
+        );
+        setBroadcastFeedback(
+          `[ĐÃ PHÁT LỆNH] Chỉ thị [${broadcastPriority}] gửi thành công tới ${
+            broadcastTargetBU === "ALL" ? "toàn bộ 59 AI" : broadcastTargetBU
+          }!`
+        );
         setBroadcastPrompt("");
         fetchTelemetry();
         setTimeout(() => setBroadcastFeedback(""), 4000);
       }
     } catch (err: any) {
       setBroadcastFeedback("Lỗi phát lệnh: " + err.message);
+      addToast("Lỗi phát lệnh", err.message, "error");
     } finally {
       setIsBroadcasting(false);
     }
   };
 
+  // Quick Mobilize BU
+  const handleQuickMobilizeBU = async (buKey: string, buDisplayName: string, directive: string) => {
+    // Optimistic UI update
+    setTelemetryAgents((prev) => {
+      const base =
+        prev.length > 0
+          ? prev
+          : CANONICAL_59_AGENTS.map((c) => ({
+              ...c,
+              currentThought: "Đang duy trì nhịp tim chuẩn.",
+              targetPeer: null,
+              tokensPerSec: 0,
+              tokensUsed: 0,
+              latencyMs: 35,
+              progressPct: 0,
+              lastHeartbeat: "Standby",
+            }));
+      return base.map((agent) =>
+        agent.businessUnit.toLowerCase().includes(buKey.toLowerCase()) || buKey === "ALL"
+          ? {
+              ...agent,
+              state: "ACTIVE" as const,
+              currentThought: `[KÍCH HOẠT NHANH] Đang thực thi chỉ thị: ${directive}`,
+              tokensPerSec: 45,
+            }
+          : agent
+      );
+    });
+
+    addToast(
+      `⚡ Kích hoạt ${buDisplayName}`,
+      `Đã phân bổ chỉ thị tới các AI thuộc ${buDisplayName}`,
+      "success"
+    );
+
+    try {
+      const res = await fetch("/api/admincenter/telemetry", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "broadcast_directive",
+          directive: `[CHIẾN DỊCH ${buDisplayName.toUpperCase()}] ${directive}`,
+          targetBU: buKey,
+          priority: "P1",
+        }),
+      });
+      if (res.ok) {
+        fetchTelemetry();
+      }
+    } catch (err: any) {
+      addToast("Lỗi phân bổ", err.message, "error");
+    }
+  };
+
   // Direct Agent Action (Activate / Standby / Quarantine)
   const handleAgentControl = async (agentId: string, agentAction: string, task?: string) => {
+    setLoadingAgentId(agentId);
+    const nextState = agentAction === "activate" ? "ACTIVE" : "STANDBY";
+
+    // Optimistic instant state update (<10ms)
+    setTelemetryAgents((prev) => {
+      const base =
+        prev.length > 0
+          ? prev
+          : CANONICAL_59_AGENTS.map((c) => ({
+              ...c,
+              currentThought: "Đang duy trì nhịp tim chuẩn.",
+              targetPeer: null,
+              tokensPerSec: 0,
+              tokensUsed: 0,
+              latencyMs: 35,
+              progressPct: 0,
+              lastHeartbeat: "Standby",
+            }));
+      return base.map((a) =>
+        a.id === agentId
+          ? {
+              ...a,
+              state: nextState as any,
+              currentTask:
+                task ||
+                (nextState === "ACTIVE"
+                  ? "Đang xử lý nhiệm vụ phân bổ thời gian thực"
+                  : a.currentTask),
+              currentThought:
+                nextState === "ACTIVE"
+                  ? "Đã nhận lệnh kích hoạt trực tiếp từ SuperAdmin."
+                  : "Đưa về trạng thái nhịp tim chờ Standby.",
+              tokensPerSec: nextState === "ACTIVE" ? (a.tokensPerSec || 45) : 0,
+            }
+          : a
+      );
+    });
+
+    addToast(
+      agentAction === "activate" ? "Đã Kích Hoạt" : "Đã Đưa Về Standby",
+      `Agent ${agentId} đã chuyển sang trạng thái ${nextState}`,
+      "info"
+    );
+
     try {
       const res = await fetch("/api/admincenter/telemetry", {
         method: "POST",
@@ -419,13 +559,18 @@ export default function AdminCenterPage() {
       if (res.ok) {
         fetchTelemetry();
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Agent control error:", err);
+      addToast("Lỗi điều khiển", err.message, "error");
+    } finally {
+      setLoadingAgentId(null);
     }
   };
 
   // Emergency Freeze All
   const handleEmergencyFreeze = async () => {
+    setSwarmMode("PAUSED_SAFE");
+    addToast("Dừng Khẩn Cấp", "Đã gửi lệnh đóng băng an toàn tức thì tới toàn bộ AI", "warning");
     try {
       const res = await fetch("/api/admincenter/telemetry", {
         method: "POST",
@@ -433,11 +578,11 @@ export default function AdminCenterPage() {
         body: JSON.stringify({ action: "emergency_freeze" }),
       });
       if (res.ok) {
-        setSwarmMode("PAUSED_SAFE");
         fetchTelemetry();
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Emergency freeze error:", err);
+      addToast("Lỗi dừng khẩn cấp", err.message, "error");
     }
   };
 
@@ -450,14 +595,25 @@ export default function AdminCenterPage() {
 
   const executeDispatch = async () => {
     if (!dispatchAgent) return;
-    await handleAgentControl(dispatchAgent.id, "activate", dispatchPrompt || "Thực thi tác vụ điều phối trực tiếp");
-    setDispatchMessage(
-      `[ĐÃ GỬI LỆNH] Chỉ thị đã được nạp vào hàng đợi PGMQ cho Agent ${dispatchAgent.id} (${dispatchAgent.name}) trên Node-01.`
-    );
-    setTimeout(() => {
-      setDispatchAgent(null);
-      setDispatchMessage("");
-    }, 2000);
+    setIsDispatching(true);
+    try {
+      const task = dispatchPrompt || "Thực thi tác vụ điều phối trực tiếp";
+      await handleAgentControl(dispatchAgent.id, "activate", task);
+      setDispatchMessage(
+        `[ĐÃ GỬI LỆNH] Chỉ thị đã được nạp vào hàng đợi PGMQ cho Agent ${dispatchAgent.id} (${dispatchAgent.name}) trên Node-01.`
+      );
+      addToast(
+        "Giao Việc Thành Công",
+        `Đã phân công tác vụ cho ${dispatchAgent.name} (${dispatchAgent.id})`,
+        "success"
+      );
+      setTimeout(() => {
+        setDispatchAgent(null);
+        setDispatchMessage("");
+      }, 1500);
+    } finally {
+      setIsDispatching(false);
+    }
   };
 
   // Effective Agents List (combining telemetry with fallback)
@@ -499,7 +655,7 @@ export default function AdminCenterPage() {
     return effectiveAgents.filter((agent) => {
       if (swarmFilter === "ACTIVE") return agent.state === "ACTIVE" || agent.state === "COLLABORATING";
       if (swarmFilter === "COLLAB") return agent.state === "COLLABORATING";
-      if (swarmFilter === "STANDBY") return agent.state === "STANDBY" || agent.state === "PAUSED";
+      if (swarmFilter === "STANDBY") return agent.state === "STANDBY" || agent.state === "PAUSED" || agent.state === "WARM_STANDBY" || agent.state === "COLD_STANDBY";
       return true;
     });
   }, [effectiveAgents, swarmFilter]);
@@ -507,7 +663,7 @@ export default function AdminCenterPage() {
   // Dynamic Live Metrics
   const activeCount = effectiveAgents.filter((a) => a.state === "ACTIVE" || a.state === "COLLABORATING").length;
   const collabCount = effectiveAgents.filter((a) => a.state === "COLLABORATING").length;
-  const standbyCount = effectiveAgents.filter((a) => a.state === "STANDBY" || a.state === "PAUSED").length;
+  const standbyCount = effectiveAgents.filter((a) => a.state === "STANDBY" || a.state === "PAUSED" || a.state === "WARM_STANDBY" || a.state === "COLD_STANDBY").length;
   const totalTokensPerSec = effectiveAgents.reduce((acc, a) => acc + (a.tokensPerSec || 0), 0);
   const totalTokensUsed = effectiveAgents.reduce((acc, a) => acc + (a.tokensUsed || 0), 0);
 
@@ -685,8 +841,18 @@ export default function AdminCenterPage() {
         <div className="flex items-center gap-2.5">
           {/* Live Stream Mode Badge & Toggle */}
           <button
-            onClick={() => setLiveStreamEnabled(!liveStreamEnabled)}
-            className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all flex items-center gap-1.5 ${
+            onClick={() => {
+              const next = !liveStreamEnabled;
+              setLiveStreamEnabled(next);
+              addToast(
+                "Chế độ Telemetry",
+                next
+                  ? "Đã bật cập nhật thời gian thực (chu kỳ 2.5s)"
+                  : "Đã tạm dừng cập nhật thời gian thực",
+                "info"
+              );
+            }}
+            className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 ${
               liveStreamEnabled
                 ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/30"
                 : "bg-slate-800 border-white/10 text-slate-400 hover:text-white"
@@ -830,7 +996,7 @@ export default function AdminCenterPage() {
               {swarmMode === "AUTONOMOUS_LIVE" ? (
                 <button
                   onClick={handleEmergencyFreeze}
-                  className="w-full py-1.5 px-2.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 text-[11px] font-bold flex items-center justify-center gap-1 transition-all"
+                  className="w-full py-1.5 px-2.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 active:scale-95 text-rose-300 border border-rose-500/40 text-[11px] font-bold flex items-center justify-center gap-1 transition-all cursor-pointer"
                   title="Dừng khẩn cấp toàn bộ AI ngay lập tức"
                 >
                   <StopCircle className="w-3.5 h-3.5 text-rose-400" />
@@ -839,7 +1005,7 @@ export default function AdminCenterPage() {
               ) : (
                 <button
                   onClick={() => handleSetSwarmMode("AUTONOMOUS_LIVE")}
-                  className="w-full py-1.5 px-2.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-[11px] font-bold flex items-center justify-center gap-1 transition-all"
+                  className="w-full py-1.5 px-2.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 active:scale-95 text-emerald-300 border border-emerald-500/40 text-[11px] font-bold flex items-center justify-center gap-1 transition-all cursor-pointer"
                   title="Bật chế độ tự động vận hành liên tác tử"
                 >
                   <Play className="w-3.5 h-3.5 text-emerald-400" />
@@ -901,8 +1067,8 @@ export default function AdminCenterPage() {
             {/* Action Buttons */}
             <button
               type="submit"
-              disabled={isBroadcasting || !broadcastPrompt.trim()}
-              className="py-2 px-4 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-xs shadow-lg shadow-cyan-500/25 transition-all flex items-center gap-1.5 disabled:opacity-40"
+              disabled={isBroadcasting}
+              className="py-2 px-4 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 active:scale-95 text-white font-bold text-xs shadow-lg shadow-cyan-500/25 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-40"
             >
               {isBroadcasting ? (
                 <>
@@ -1018,20 +1184,38 @@ export default function AdminCenterPage() {
                   Kích hoạt nhanh theo Khối:
                 </span>
                 <button
-                  onClick={() => handleBroadcast({ preventDefault: () => {} } as any)}
-                  className="px-3 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 text-xs font-bold transition-all"
+                  onClick={() =>
+                    handleQuickMobilizeBU(
+                      "HUY TECHNOLOGY AI",
+                      "Khối R&D",
+                      "Tối ưu hóa API endpoints, rà soát hiệu năng Next.js và đồng bộ dịch vụ backend"
+                    )
+                  }
+                  className="px-3 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 active:scale-95 border border-cyan-500/30 text-cyan-300 text-xs font-bold transition-all cursor-pointer shadow-sm hover:shadow-cyan-500/20"
                 >
                   ⚡ Khối R&D (Next.js & API)
                 </button>
                 <button
-                  onClick={() => handleBroadcast({ preventDefault: () => {} } as any)}
-                  className="px-3 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-300 text-xs font-bold transition-all"
+                  onClick={() =>
+                    handleQuickMobilizeBU(
+                      "MARKETING & GROWTH",
+                      "Khối Marketing",
+                      "Khởi động phân tích lưu lượng, SEO content và tối ưu tỷ lệ tương tác"
+                    )
+                  }
+                  className="px-3 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 active:scale-95 border border-purple-500/30 text-purple-300 text-xs font-bold transition-all cursor-pointer shadow-sm hover:shadow-purple-500/20"
                 >
                   🚀 Khối Marketing (SEO & Traffic)
                 </button>
                 <button
-                  onClick={() => handleBroadcast({ preventDefault: () => {} } as any)}
-                  className="px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-xs font-bold transition-all"
+                  onClick={() =>
+                    handleQuickMobilizeBU(
+                      "TECHNICAL OPERATIONS",
+                      "Khối OPS",
+                      "Giám sát hạ tầng Node-01, kiểm tra nhịp tim telemetry và an toàn dữ liệu"
+                    )
+                  }
+                  className="px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 active:scale-95 border border-emerald-500/30 text-emerald-300 text-xs font-bold transition-all cursor-pointer shadow-sm hover:shadow-emerald-500/20"
                 >
                   🛡️ Khối Vận Hành OPS (Dell Node-01)
                 </button>
@@ -1042,7 +1226,7 @@ export default function AdminCenterPage() {
                 <span className="text-slate-400 text-[11px]">Hiển thị:</span>
                 <button
                   onClick={() => setSwarmFilter("ALL")}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer active:scale-95 ${
                     swarmFilter === "ALL" ? "bg-white/20 text-white" : "bg-white/5 text-slate-400 hover:text-white"
                   }`}
                 >
@@ -1050,7 +1234,7 @@ export default function AdminCenterPage() {
                 </button>
                 <button
                   onClick={() => setSwarmFilter("ACTIVE")}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer active:scale-95 ${
                     swarmFilter === "ACTIVE" ? "bg-emerald-500/30 text-emerald-300 border border-emerald-500/40" : "bg-white/5 text-slate-400 hover:text-white"
                   }`}
                 >
@@ -1059,7 +1243,7 @@ export default function AdminCenterPage() {
                 </button>
                 <button
                   onClick={() => setSwarmFilter("COLLAB")}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer active:scale-95 ${
                     swarmFilter === "COLLAB" ? "bg-purple-500/30 text-purple-300 border border-purple-500/40" : "bg-white/5 text-slate-400 hover:text-white"
                   }`}
                 >
@@ -1068,8 +1252,8 @@ export default function AdminCenterPage() {
                 </button>
                 <button
                   onClick={() => setSwarmFilter("STANDBY")}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
-                    swarmFilter === "STANDBY" ? "bg-white/20 text-white" : "bg-white/5 text-slate-400 hover:text-white"
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer active:scale-95 ${
+                    swarmFilter === "STANDBY" ? "bg-white/20 text-white border border-white/20" : "bg-white/5 text-slate-400 hover:text-white"
                   }`}
                 >
                   Standby ({standbyCount})
@@ -1202,24 +1386,36 @@ export default function AdminCenterPage() {
                             {isRunning ? (
                               <button
                                 onClick={() => handleAgentControl(agent.id, "standby")}
-                                className="px-2.5 py-1 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[11px] font-bold transition-all"
+                                disabled={loadingAgentId === agent.id}
+                                className="px-2.5 py-1 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 active:scale-95 text-amber-300 border border-amber-500/30 text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 disabled:opacity-50"
                                 title="Đưa về trạng thái chờ"
                               >
-                                Standby
+                                {loadingAgentId === agent.id ? (
+                                  <RefreshCw className="w-3 h-3 animate-spin" />
+                                ) : (
+                                  <Pause className="w-3 h-3" />
+                                )}
+                                <span>Standby</span>
                               </button>
                             ) : (
                               <button
                                 onClick={() => handleAgentControl(agent.id, "activate")}
-                                className="px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-[11px] font-bold transition-all"
+                                disabled={loadingAgentId === agent.id}
+                                className="px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 active:scale-95 text-emerald-300 border border-emerald-500/40 text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 disabled:opacity-50"
                                 title="Kích hoạt tức thì"
                               >
-                                Kích Hoạt
+                                {loadingAgentId === agent.id ? (
+                                  <RefreshCw className="w-3 h-3 animate-spin" />
+                                ) : (
+                                  <Play className="w-3 h-3" />
+                                )}
+                                <span>Kích Hoạt</span>
                               </button>
                             )}
 
                             <button
                               onClick={() => handleDispatchAction(agent)}
-                              className="px-3 py-1 rounded-lg bg-cyan-500/20 hover:bg-cyan-500 text-cyan-300 hover:text-black text-[11px] font-bold transition-all flex items-center gap-1 border border-cyan-500/30"
+                              className="px-3 py-1 rounded-lg bg-cyan-500/20 hover:bg-cyan-500 active:scale-95 text-cyan-300 hover:text-black text-[11px] font-bold transition-all flex items-center gap-1 border border-cyan-500/30 cursor-pointer"
                             >
                               <Zap className="w-3 h-3" />
                               <span>Giao Việc</span>
@@ -2137,17 +2333,62 @@ export default function AdminCenterPage() {
                 </button>
                 <button
                   type="button"
+                  disabled={isDispatching}
                   onClick={executeDispatch}
-                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-xs font-bold text-white shadow-lg shadow-cyan-500/20 transition-all flex items-center gap-1.5"
+                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 active:scale-95 text-xs font-bold text-white shadow-lg shadow-cyan-500/20 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                 >
-                  <ArrowRight className="w-3.5 h-3.5" />
-                  <span>Xác Nhận & Gửi Chỉ Thị</span>
+                  {isDispatching ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      <span>Đang gửi chỉ thị...</span>
+                    </>
+                  ) : (
+                    <>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                      <span>Xác Nhận & Gửi Chỉ Thị</span>
+                    </>
+                  )}
                 </button>
               </div>
             </div>
           </div>
         </div>
       )}
+
+      {/* FLOATING TOAST NOTIFICATION CONTAINER (FEEDBACK TỨC THỜI <10MS) */}
+      <div className="fixed bottom-5 right-5 z-[100] flex flex-col gap-2 max-w-sm w-full pointer-events-none">
+        {toasts.map((toast) => (
+          <div
+            key={toast.id}
+            className={`pointer-events-auto flex items-start justify-between gap-3 p-3.5 rounded-2xl border backdrop-blur-xl shadow-2xl transition-all animate-in slide-in-from-bottom-2 ${
+              toast.type === "success"
+                ? "bg-[#07131B]/95 border-emerald-500/40 text-emerald-300"
+                : toast.type === "warning"
+                ? "bg-[#1C1206]/95 border-amber-500/40 text-amber-300"
+                : toast.type === "error"
+                ? "bg-[#1F0A0A]/95 border-rose-500/40 text-rose-300"
+                : "bg-[#0A1224]/95 border-cyan-500/40 text-cyan-300"
+            }`}
+          >
+            <div className="flex items-start gap-2.5">
+              {toast.type === "success" && <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />}
+              {toast.type === "warning" && <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />}
+              {toast.type === "error" && <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />}
+              {toast.type === "info" && <Sparkles className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />}
+              <div>
+                <h4 className="text-xs font-bold text-white">{toast.title}</h4>
+                <p className="text-[11px] text-slate-300 mt-0.5 leading-snug">{toast.message}</p>
+              </div>
+            </div>
+            <button
+              onClick={() => removeToast(toast.id)}
+              className="text-slate-400 hover:text-white p-0.5 rounded transition-colors cursor-pointer"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
