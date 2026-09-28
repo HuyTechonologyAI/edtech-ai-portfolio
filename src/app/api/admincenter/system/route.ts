@@ -56,6 +56,8 @@ function telemetryResponse(
         providerHealth: system.providerHealth,
         backlogTaskStatuses: system.backlogTaskStatuses,
         latestBottleneck: system.latestBottleneck,
+        runtimeWorkers: system.runtimeWorkers,
+        activeRuntimeWorkers: system.activeRuntimeWorkers,
         runtimeDispatchEnabled: system.runtimeDispatchEnabled,
         nodeMetrics: system.metrics,
         telemetryErrors,
