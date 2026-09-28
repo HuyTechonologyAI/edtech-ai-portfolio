@@ -63,6 +63,8 @@ interface SystemStatus {
     providerHealth?: Record<string, unknown> | null;
     backlogTaskStatuses?: Record<string, unknown> | null;
     latestBottleneck?: string | null;
+    runtimeWorkers?: Record<string, number> | null;
+    activeRuntimeWorkers?: number | null;
     runtimeDispatchEnabled?: boolean | null;
     nodeMetrics?: { cpu?: number | null; ram?: number | null; disk?: number | null; queue?: number | null } | null;
     telemetryErrors?: string[] | null;
@@ -337,6 +339,8 @@ export default function AdminCenterPage() {
 
   const fleet = systemStatus?.aiFleet;
   const runtime = systemStatus?.runtime;
+  const runtimeActiveLabel = `${telemetry(runtime?.activeRuntimeWorkers)} active`;
+  const runtimeWorkerDetail = Object.entries(runtime?.runtimeWorkers ?? {}).map(([name, count]) => `${name}: ${count}`).join(" | ") || `Supervisor: ${telemetry(runtime?.supervisorState)}`;
   const anchor = systemStatus?.topology?.authoritativeAnchor;
   const metrics = runtime?.nodeMetrics;
   const metricFields = { "CPU (%)": metrics?.cpu, "RAM (%)": metrics?.ram, "Disk (%)": metrics?.disk, "Queue": metrics?.queue };
@@ -551,8 +555,8 @@ export default function AdminCenterPage() {
       <section className="px-4 lg:px-8 py-6 border-b border-white/5 bg-[#0A1124]/40">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { label: "Tổng Lực Lượng AI", value: `${telemetry(fleet?.activeAgents)}/${telemetry(fleet?.verifiedAgents)} verified`, detail: `Catalog ${fleet?.totalAgents ?? 59} | ${telemetry(fleet?.unverifiedAgents)} unverified`, icon: Bot },
-            { label: "Trạng Thái Tiếp Nhận", value: `${telemetry(fleet?.activeAgents)}/${telemetry(fleet?.verifiedAgents)} verified`, detail: `Standby: ${telemetry(fleet?.standbyAgents)} | ${telemetry(systemStatus?.snapshotStatus || systemStatus?.status)}`, icon: Activity },
+            { label: "Catalog AI đã xác minh", value: `${telemetry(fleet?.activeAgents)}/${telemetry(fleet?.verifiedAgents)} verified`, detail: `Catalog ${fleet?.totalAgents ?? 59} | ${telemetry(fleet?.unverifiedAgents)} unverified`, icon: Bot },
+            { label: "AI Runtime đang làm việc", value: runtimeActiveLabel, detail: runtimeWorkerDetail, icon: Activity },
             { label: "Node01 authoritative", value: telemetry(anchor?.status), detail: telemetry(anchor?.hostname), icon: Server },
             { label: "Hàng Đợi Nhiệm Vụ", value: telemetry(systemStatus?.queue?.pendingTasks), detail: `Pending | ${telemetry(systemStatus?.queue?.runningTasks)} running | ${telemetry(systemStatus?.queue?.failedTasks)} failed`, icon: Zap },
           ].map(({ label, value, detail, icon: Icon }) => (
