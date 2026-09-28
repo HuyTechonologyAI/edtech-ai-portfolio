@@ -15,10 +15,8 @@ import {
   AlertTriangle,
   AlertCircle,
   Search,
-  Filter,
   RefreshCw,
   LogOut,
-  ChevronRight,
   Bot,
   Sparkles,
   Clock,
@@ -28,31 +26,25 @@ import {
   Database,
   Terminal,
   Zap,
-  Globe,
   Radio,
-  SlidersHorizontal,
   X,
   Play,
   Pause,
   Flame,
   Share2,
-  Network,
-  MessageSquare,
   Send,
   StopCircle,
-  CornerDownRight,
-  Check,
 } from "lucide-react";
 import {
   CANONICAL_59_AGENTS,
   AgentCard,
-  AgentTier,
-  AgentState,
-  QuotaDomainId,
 } from "@/data/ai-agency-canonical";
 import { AgentLiveTelemetry, LiveEvent } from "@/app/api/admincenter/telemetry/route";
 
 interface SystemStatus {
+  runtimeWorkers: Record<string, number>;
+  activeRuntimeWorkers: number;
+  workExecution: { currentTask: string; stage: string; checkpointStatus: string; lastAction: string; nextAction: string } | null;
   timestamp: string;
   status: string;
   topology: {
@@ -113,14 +105,22 @@ interface ToastNotification {
   message: string;
 }
 
+function getErrorMessage(error: unknown): string {
+  if (typeof error === "object" && error !== null && "message" in error && typeof error.message === "string") {
+    return error.message;
+  }
+  return String(error);
+}
+
 export default function AdminCenterPage() {
   // Toast notifications state
+  const toastIdRef = useRef(0);
   const [toasts, setToasts] = useState<ToastNotification[]>([]);
   const [loadingAgentId, setLoadingAgentId] = useState<string | null>(null);
   const [isDispatching, setIsDispatching] = useState<boolean>(false);
 
   const addToast = (title: string, message: string, type: "success" | "info" | "warning" | "error" = "success") => {
-    const id = Date.now().toString() + Math.random().toString(36).substring(2, 5);
+    const id = `toast-${++toastIdRef.current}`;
     setToasts((prev) => [...prev.slice(-3), { id, title, message, type }]);
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
@@ -179,13 +179,13 @@ export default function AdminCenterPage() {
   const [telemetryEvents, setTelemetryEvents] = useState<LiveEvent[]>([]);
   const [swarmMode, setSwarmMode] = useState<string>("AUTONOMOUS_LIVE");
   const [liveStreamEnabled, setLiveStreamEnabled] = useState<boolean>(true);
-  const [pollingRate, setPollingRate] = useState<number>(2500); // 2.5s default
+  const [pollingRate] = useState<number>(2500); // 2.5s default
   const [eventFilter, setEventFilter] = useState<string>("ALL");
   const [autoScrollLogs, setAutoScrollLogs] = useState<boolean>(true);
 
   // System & Node-01 Status
   const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null);
-  const [loadingStatus, setLoadingStatus] = useState<boolean>(false);
+  const [, setLoadingStatus] = useState<boolean>(false);
   const [lastSyncTime, setLastSyncTime] = useState<string>("Đang khởi tạo...");
   const logsContainerRef = useRef<HTMLDivElement>(null);
 
@@ -237,8 +237,11 @@ export default function AdminCenterPage() {
       if (res.ok) {
         const data = await res.json();
         setSystemStatus(data);
+      } else {
+        setSystemStatus(null);
       }
     } catch (err) {
+      setSystemStatus(null);
       console.error("Fetch status error:", err);
     } finally {
       setLoadingStatus(false);
@@ -247,9 +250,12 @@ export default function AdminCenterPage() {
 
   // Initial load
   useEffect(() => {
-    checkSession();
-    fetchTelemetry();
-    fetchSystemStatus();
+    const initialLoad = setTimeout(() => {
+      void checkSession();
+      void fetchTelemetry();
+      void fetchSystemStatus();
+    }, 0);
+    return () => clearTimeout(initialLoad);
   }, []);
 
   // Real-time Polling Engine
@@ -303,8 +309,8 @@ export default function AdminCenterPage() {
       } else {
         setLoginError(data.error || "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.");
       }
-    } catch (err: any) {
-      setLoginError("Không thể kết nối máy chủ xác thực: " + err.message);
+    } catch (err: unknown) {
+      setLoginError("Không thể kết nối máy chủ xác thực: " + getErrorMessage(err));
     } finally {
       setIsLoggingIn(false);
     }
@@ -370,8 +376,8 @@ export default function AdminCenterPage() {
       } else {
         setPasswordChangeError(data.error || "Đổi mật khẩu thất bại.");
       }
-    } catch (err: any) {
-      setPasswordChangeError("Lỗi hệ thống khi đổi mật khẩu: " + err.message);
+    } catch (err: unknown) {
+      setPasswordChangeError("Lỗi hệ thống khi đổi mật khẩu: " + getErrorMessage(err));
     } finally {
       setIsChangingPassword(false);
     }
@@ -392,9 +398,9 @@ export default function AdminCenterPage() {
         setSwarmMode(data.mode);
         fetchTelemetry();
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Set swarm mode error:", err);
-      addToast("Lỗi chuyển chế độ", err.message, "error");
+      addToast("Lỗi chuyển chế độ", getErrorMessage(err), "error");
     }
   };
 
@@ -437,9 +443,9 @@ export default function AdminCenterPage() {
         fetchTelemetry();
         setTimeout(() => setBroadcastFeedback(""), 4000);
       }
-    } catch (err: any) {
-      setBroadcastFeedback("Lỗi phát lệnh: " + err.message);
-      addToast("Lỗi phát lệnh", err.message, "error");
+    } catch (err: unknown) {
+      setBroadcastFeedback("Lỗi phát lệnh: " + getErrorMessage(err));
+      addToast("Lỗi phát lệnh", getErrorMessage(err), "error");
     } finally {
       setIsBroadcasting(false);
     }
@@ -466,9 +472,9 @@ export default function AdminCenterPage() {
         agent.businessUnit.toLowerCase().includes(buKey.toLowerCase()) || buKey === "ALL"
           ? {
               ...agent,
-              state: "ACTIVE" as const,
-              currentThought: `[KÍCH HOẠT NHANH] Đang thực thi chỉ thị: ${directive}`,
-              tokensPerSec: 45,
+              state: "STANDBY" as const,
+              currentThought: `[KÍCH HOẠT NHANH] Chờ xác minh thực thi chỉ thị: ${directive}`,
+              tokensPerSec: 0,
             }
           : agent
       );
@@ -494,8 +500,8 @@ export default function AdminCenterPage() {
       if (res.ok) {
         fetchTelemetry();
       }
-    } catch (err: any) {
-      addToast("Lỗi phân bổ", err.message, "error");
+    } catch (err: unknown) {
+      addToast("Lỗi phân bổ", getErrorMessage(err), "error");
     }
   };
 
@@ -523,7 +529,7 @@ export default function AdminCenterPage() {
         a.id === agentId
           ? {
               ...a,
-              state: nextState as any,
+              state: (nextState === "ACTIVE" ? "STANDBY" : nextState) as AgentLiveTelemetry["state"],
               currentTask:
                 task ||
                 (nextState === "ACTIVE"
@@ -533,7 +539,7 @@ export default function AdminCenterPage() {
                 nextState === "ACTIVE"
                   ? "Đã nhận lệnh kích hoạt trực tiếp từ SuperAdmin."
                   : "Đưa về trạng thái nhịp tim chờ Standby.",
-              tokensPerSec: nextState === "ACTIVE" ? (a.tokensPerSec || 45) : 0,
+              tokensPerSec: 0,
             }
           : a
       );
@@ -559,9 +565,9 @@ export default function AdminCenterPage() {
       if (res.ok) {
         fetchTelemetry();
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Agent control error:", err);
-      addToast("Lỗi điều khiển", err.message, "error");
+      addToast("Lỗi điều khiển", getErrorMessage(err), "error");
     } finally {
       setLoadingAgentId(null);
     }
@@ -580,9 +586,9 @@ export default function AdminCenterPage() {
       if (res.ok) {
         fetchTelemetry();
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Emergency freeze error:", err);
-      addToast("Lỗi dừng khẩn cấp", err.message, "error");
+      addToast("Lỗi dừng khẩn cấp", getErrorMessage(err), "error");
     }
   };
 
@@ -618,9 +624,14 @@ export default function AdminCenterPage() {
 
   // Effective Agents List (combining telemetry with fallback)
   const effectiveAgents: AgentLiveTelemetry[] = useMemo(() => {
-    if (telemetryAgents.length > 0) return telemetryAgents;
+    if (telemetryAgents.length > 0) return telemetryAgents.map((agent) => ({
+      ...agent,
+      state: agent.state === 'ACTIVE' || agent.state === 'COLLABORATING' ? 'STANDBY' : agent.state,
+      tokensPerSec: 0,
+    }));
     return CANONICAL_59_AGENTS.map((c) => ({
       ...c,
+      state: "STANDBY",
       currentThought: "Đang duy trì nhịp tim chuẩn, sẵn sàng tiếp nhận luồng xử lý từ SuperAdmin.",
       targetPeer: null,
       tokensPerSec: 0,
@@ -901,20 +912,16 @@ export default function AdminCenterPage() {
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-[11px] font-semibold text-cyan-300 uppercase tracking-wider flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                AI Đang Hoạt Động
+                AI Runtime đang làm việc
               </span>
               <Activity className="w-4 h-4 text-cyan-400" />
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-black text-white">{activeCount}</span>
-              <span className="text-xs text-slate-400">/ 59 AI Agency</span>
+              <span className="text-2xl font-black text-white">{systemStatus?.activeRuntimeWorkers ?? 0}</span>
+              <span className="text-xs text-slate-400">workers · Node01</span>
             </div>
             <div className="flex items-center gap-2 mt-2 text-[10px] text-slate-300">
-              <span className="text-emerald-400 font-semibold">{activeCount - collabCount} Đơn lẻ</span>
-              <span>•</span>
-              <span className="text-purple-400 font-semibold">{collabCount} Phối hợp A2A</span>
-              <span>•</span>
-              <span className="text-slate-400">{standbyCount} Standby</span>
+              <span>{Object.entries(systemStatus?.runtimeWorkers ?? {}).map(([provider, count]) => `${provider}: ${count}`).join(' · ') || 'Chưa có heartbeat đã xác minh còn hiệu lực'}</span>
             </div>
           </div>
 
@@ -1015,6 +1022,26 @@ export default function AdminCenterPage() {
             </div>
           </div>
         </div>
+      </section>
+
+      <section aria-labelledby="ai-work-heading" className="px-4 lg:px-8 py-5 border-b border-white/5 bg-[#0F172A]/60">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <h2 id="ai-work-heading" className="text-sm font-bold text-cyan-300">Luồng công việc AI</h2>
+          <span className="text-xs text-amber-300">Human Gate · Chủ sở hữu phê duyệt riêng · Không tính là AI worker</span>
+        </div>
+        {systemStatus?.workExecution ? (
+          <dl className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 text-sm">
+            {([
+              ['currentTask', 'Nhiệm vụ hiện tại'], ['stage', 'Giai đoạn'],
+              ['checkpointStatus', 'Checkpoint'], ['lastAction', 'Hành động gần nhất'], ['nextAction', 'Hành động tiếp theo'],
+            ] as const).map(([key, label]) => (
+              <div key={key} className="min-w-0 rounded-xl border border-white/10 p-3">
+                <dt className="text-xs text-slate-400 mb-2">{label}</dt>
+                <dd className="text-slate-100 whitespace-pre-wrap break-words">{systemStatus.workExecution![key]}</dd>
+              </div>
+            ))}
+          </dl>
+        ) : <p className="text-sm text-slate-400">Chưa có luồng công việc hợp lệ từ heartbeat Node01 đã xác minh còn hiệu lực.</p>}
       </section>
 
       {/* UNIVERSAL SWARM BROADCAST COMMAND BAR (THANH CHỈ HUY TÁC CHIẾN SIÊU TỐC) */}

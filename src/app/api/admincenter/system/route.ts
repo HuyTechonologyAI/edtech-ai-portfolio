@@ -1,96 +1,154 @@
 import { NextResponse } from "next/server";
-import { getLiveTelemetryData } from "../telemetry/route";
+import { readSignedHeartbeatMetadata } from "@/lib/node01-telemetry-auth";
+import { cookies } from "next/headers";
+import { buildAdminCenterSystemStatus } from "@/lib/admincenter-runtime";
 
-export async function GET() {
-  const telemetry = getLiveTelemetryData();
-
-  const systemStatus = {
-    timestamp: new Date().toISOString(),
-    status: telemetry.swarmMode === "AUTONOMOUS_LIVE" ? "SWARM_AUTONOMOUS_OPERATIONAL" : "READY_FOR_AI_INGESTION",
-    topology: {
-      controlPlane: {
-        node: "Lenovo-ThinkPad",
-        role: "REMOTE_CONTROL_PLANE_ONLY",
-        status: "ACTIVE",
-        storagePolicy: "ZERO_PERMANENT_STORAGE",
+function telemetryResponse(
+  system: ReturnType<typeof buildAdminCenterSystemStatus>,
+  telemetryErrors: string[],
+) {
+  return NextResponse.json(
+    {
+      ...system,
+      aiFleet: {
+        totalAgents: system.logicalAgents,
+        verifiedAgents: system.verifiedAgents,
+        activeAgents: system.activeAgents,
+        standbyAgents: Math.max(0, system.verifiedAgents - system.activeAgents),
+        unverifiedAgents: system.unverifiedAgents,
+        quarantinedAgents: 0,
+        businessUnitsCount: 6,
+        quotaUtilizationPct: 0,
+        tokensUsedTotal: 0,
+        tokensLimitTotal: 0,
       },
-      authoritativeAnchor: {
-        node: "Dell-Precision-M4800",
-        peerName: "huy-node01",
-        tailscaleIP: "100.79.240.108",
-        lanIP: "192.168.1.230:41641",
-        role: "AUTHORITATIVE_STORAGE_ANCHOR",
-        status: "CONNECTED",
-        storageRoots: {
-          canonicalProjects: "/mnt/data1/Projects/HUY-AI-Center",
-          directivesAndPayloads: "/mnt/data1/HUY-AI",
-          stagingSpool: "/mnt/data1/HUY-AI/staging",
-          protectedZone: "/mnt/data2 (R4_PROTECTED_LOCKED)",
+      queue: {
+        ...system.queue,
+        pendingTasks: system.queue.pending,
+        runningTasks: system.queue.running,
+        completedTasks: system.queue.completed,
+        failedTasks: system.queue.failed,
+        totalTasks: system.queue.total,
+        dispatcherStatus: system.runtimeDispatchEnabled ? "RUNNING" : "DISABLED",
+      },
+      topology: {
+        controlPlane: {
+          node: "Lenovo ThinkPad",
+          role: "REMOTE_CONTROL_PLANE_ONLY",
+          storagePolicy: "ZERO_PERMANENT_STORAGE",
+        },
+        authoritativeAnchor: {
+          node: system.node?.name ?? null,
+          name: system.node?.name ?? null,
+          status: system.node?.status ?? null,
+          hostname: system.node?.hostname ?? null,
+          specs: system.node?.specs ?? null,
+          storageRoots: {
+            canonicalProjects: "/mnt/data1/Projects",
+            directivesAndPayloads: "/mnt/data1/HUY-AI",
+            stagingSpool: "/mnt/data1/HUY-AI/staging",
+            protectedZone: "/mnt/data2 (R4_PROTECTED_LOCKED)",
+          },
         },
       },
+      runtime: {
+        sourceOfTruth: "NODE01_SUPABASE",
+        supervisorState: system.supervisorState,
+        providerHealth: system.providerHealth,
+        backlogTaskStatuses: system.backlogTaskStatuses,
+        latestBottleneck: system.latestBottleneck,
+        runtimeWorkers: system.runtimeWorkers,
+        activeRuntimeWorkers: system.activeRuntimeWorkers,
+        workExecution: system.workExecution,
+        runtimeDispatchEnabled: system.runtimeDispatchEnabled,
+        nodeMetrics: system.metrics,
+        telemetryErrors,
+      },
+      realAuditLogs: system.realAuditLogs.map((log) => ({
+        id: log.id,
+        timestamp: log.timestamp ?? log.created_at,
+        event: log.action_type,
+        actor: log.user_name || log.user_email || "SYSTEM",
+        details: JSON.stringify(log.details ?? {}),
+        level: "AUDIT",
+      })),
     },
-    aiFleet: {
-      totalAgents: telemetry.metrics.totalAgents,
-      activeAgents: telemetry.metrics.activeAgentsCount,
-      collaboratingAgents: telemetry.metrics.collaboratingCount,
-      standbyAgents: telemetry.metrics.standbyCount,
-      quarantinedAgents: 0,
-      businessUnitsCount: 6,
-      tokensPerSec: telemetry.metrics.tokensPerSecTotal,
-      quotaUtilizationPct: telemetry.metrics.totalTokensUsed > 0 ? Number(((telemetry.metrics.totalTokensUsed / 50000000) * 100).toFixed(2)) : 0,
-      tokensUsedTotal: telemetry.metrics.totalTokensUsed,
-      tokensLimitTotal: 50000000,
-    },
-    queue: {
-      pendingTasks: telemetry.metrics.pgmqQueueDepth,
-      runningTasks: telemetry.metrics.activeAgentsCount,
-      completedTasks: telemetry.metrics.pgmqMessagesProcessed,
-      failedTasks: 0,
-      dispatcherStatus: telemetry.swarmMode === "AUTONOMOUS_LIVE" ? "ACTIVE_STREAMING" : "STANDBY_READY",
-    },
-    realAuditLogs: [
-      {
-        id: "AUDIT-005",
-        timestamp: new Date().toISOString(),
-        event: "REALTIME_SWARM_TELEMETRY_ACTIVATED",
-        actor: "SuperAdmin Mission Control",
-        details: "Hệ thống hiển thị đa tác tử thời gian thực kích hoạt trên /admincenter. Nhịp tim 59 tác tử đồng bộ qua PGMQ Bus và Node-01.",
-        level: "INFO",
-      },
-      {
-        id: "AUDIT-001",
-        timestamp: "2026-09-26T16:39:52Z",
-        event: "MIGRATION_DELIVERY_SUCCESS",
-        actor: "Lenovo-Control-Plane",
-        details: "3 gói dữ liệu (PKG-01, PKG-02, PKG-03) tổng 95.51 MB nạp thành công vào Spool của Dell M4800 Node-01 qua Taildrop.",
-        level: "INFO",
-      },
-      {
-        id: "AUDIT-002",
-        timestamp: "2026-09-26T20:00:00Z",
-        event: "TOPOLOGY_RULE_ENFORCED",
-        actor: "System Architecture Guardian",
-        details: "Khóa cứng nguyên tắc: Lenovo là REMOTE_CONTROL_PLANE_ONLY; Node-01 là AUTHORITATIVE_STORAGE_ANCHOR. Phân vùng /mnt/data2 khóa R4 PROTECTED.",
-        level: "SECURITY",
-      },
-      {
-        id: "AUDIT-003",
-        timestamp: "2026-09-26T20:06:37Z",
-        event: "SUPERADMIN_GATEWAY_INITIALIZED",
-        actor: "Human Owner Gate",
-        details: "Cổng quản trị /admincenter kích hoạt với tài khoản SuperAdmin, yêu cầu đổi mật khẩu ngay lần đầu đăng nhập.",
-        level: "AUTH",
-      },
-      {
-        id: "AUDIT-004",
-        timestamp: "2026-09-26T20:08:00Z",
-        event: "AI_FLEET_STANDBY_ARMED",
-        actor: "HAIP Dispatcher Core",
-        details: "Toàn bộ 59 AI Agency thuộc 6 Business Units được khởi tạo ở trạng thái SẴN SÀNG (STANDBY), quota 0%, sạch dữ liệu test, sẵn sàng nhận việc.",
-        level: "READY",
-      },
-    ],
-  };
+    { status: 200, headers: { "Cache-Control": "no-store" } },
+  );
+}
 
-  return NextResponse.json(systemStatus);
+export async function GET() {
+  const sessionCookie = (await cookies()).get("admincenter_session")?.value;
+  if (sessionCookie !== "authenticated") {
+    return NextResponse.json(
+      { error: "UNAUTHORIZED" },
+      { status: 401, headers: { "Cache-Control": "no-store" } },
+    );
+  }
+  try {
+    // Import inside the handler so missing client configuration also fails closed.
+    const { supabaseAdmin } = await import("@/lib/supabase-admin");
+    const reads = [
+      { table: "nodes", limit: 20, newest: false },
+      { table: "node_heartbeats", limit: 50, newest: true },
+      { table: "agents", limit: 100, newest: false },
+      { table: "ai_providers", limit: 50, newest: false },
+      { table: "ai_tasks", limit: 100, newest: true },
+      { table: "audit_logs", limit: 50, newest: true },
+    ] as const;
+    const results = await Promise.all(
+      reads.map(async ({ table, limit, newest }) => {
+        let query = supabaseAdmin.schema("public").from(table).select("*");
+        if (newest) {
+          query = query.order("created_at", { ascending: false });
+        }
+        return await query.limit(limit);
+      }),
+    );
+    const telemetryErrors = reads
+      .filter((_, index) => results[index].error)
+      .map(({ table }) => table);
+    const [nodes, heartbeatRows, agents, providers, tasks, auditLogs] = results.map(
+      ({ data, error }) => (error ? [] : (data ?? [])),
+    );
+    const heartbeats = heartbeatRows.map((row) => {
+      const signedMetadata = readSignedHeartbeatMetadata(row);
+      return {
+        ...row,
+        timestamp: row.created_at,
+        signedTelemetry: signedMetadata !== null,
+        metadata: signedMetadata ?? {},
+        cpu: row.cpu_usage_pct == null ? undefined : Number(row.cpu_usage_pct),
+        ram: row.ram_usage_pct == null ? undefined : Number(row.ram_usage_pct),
+        disk: row.disk_usage_pct == null ? undefined : Number(row.disk_usage_pct),
+        queue: row.queue_depth,
+      };
+    });
+
+    return telemetryResponse(
+      buildAdminCenterSystemStatus({
+        logicalCatalogSize: 59,
+        nodes,
+        heartbeats,
+        agents,
+        providers,
+        tasks,
+        auditLogs,
+      }),
+      telemetryErrors,
+    );
+  } catch {
+    return telemetryResponse(
+      buildAdminCenterSystemStatus({
+        logicalCatalogSize: 59,
+        nodes: [],
+        heartbeats: [],
+        agents: [],
+        providers: [],
+        tasks: [],
+        auditLogs: [],
+      }),
+      ["supabase"],
+    );
+  }
 }
