@@ -44,7 +44,7 @@ interface SwarmState {
     targetBU: string;
     priority: string;
   } | null;
-  customTasks: Record<string, { task: string; state: string; thought: string }>;
+  customTasks: Record<string, { task: string; state: AgentLiveTelemetry["state"]; thought: string }>;
   events: LiveEvent[];
   startedAt: number;
 }
@@ -135,7 +135,7 @@ export function getLiveTelemetryData() {
     if (isPaused) {
       state = "PAUSED";
     } else if (custom?.state) {
-      state = custom.state as any;
+      state = custom.state;
     }
 
     // Commands express intent, not verified execution of a catalog agent.
@@ -327,7 +327,10 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ error: "Unknown action" }, { status: 400 });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    const message = typeof err === "object" && err !== null && "message" in err && typeof err.message === "string"
+      ? err.message
+      : String(err);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

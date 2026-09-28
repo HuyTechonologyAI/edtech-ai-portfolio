@@ -116,14 +116,22 @@ interface ToastNotification {
   message: string;
 }
 
+function getErrorMessage(error: unknown): string {
+  if (typeof error === "object" && error !== null && "message" in error && typeof error.message === "string") {
+    return error.message;
+  }
+  return String(error);
+}
+
 export default function AdminCenterPage() {
   // Toast notifications state
+  const toastIdRef = useRef(0);
   const [toasts, setToasts] = useState<ToastNotification[]>([]);
   const [loadingAgentId, setLoadingAgentId] = useState<string | null>(null);
   const [isDispatching, setIsDispatching] = useState<boolean>(false);
 
   const addToast = (title: string, message: string, type: "success" | "info" | "warning" | "error" = "success") => {
-    const id = Date.now().toString() + Math.random().toString(36).substring(2, 5);
+    const id = `toast-${++toastIdRef.current}`;
     setToasts((prev) => [...prev.slice(-3), { id, title, message, type }]);
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
@@ -253,9 +261,12 @@ export default function AdminCenterPage() {
 
   // Initial load
   useEffect(() => {
-    checkSession();
-    fetchTelemetry();
-    fetchSystemStatus();
+    const initialLoad = setTimeout(() => {
+      void checkSession();
+      void fetchTelemetry();
+      void fetchSystemStatus();
+    }, 0);
+    return () => clearTimeout(initialLoad);
   }, []);
 
   // Real-time Polling Engine
@@ -309,8 +320,8 @@ export default function AdminCenterPage() {
       } else {
         setLoginError(data.error || "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.");
       }
-    } catch (err: any) {
-      setLoginError("Không thể kết nối máy chủ xác thực: " + err.message);
+    } catch (err: unknown) {
+      setLoginError("Không thể kết nối máy chủ xác thực: " + getErrorMessage(err));
     } finally {
       setIsLoggingIn(false);
     }
@@ -376,8 +387,8 @@ export default function AdminCenterPage() {
       } else {
         setPasswordChangeError(data.error || "Đổi mật khẩu thất bại.");
       }
-    } catch (err: any) {
-      setPasswordChangeError("Lỗi hệ thống khi đổi mật khẩu: " + err.message);
+    } catch (err: unknown) {
+      setPasswordChangeError("Lỗi hệ thống khi đổi mật khẩu: " + getErrorMessage(err));
     } finally {
       setIsChangingPassword(false);
     }
@@ -398,9 +409,9 @@ export default function AdminCenterPage() {
         setSwarmMode(data.mode);
         fetchTelemetry();
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Set swarm mode error:", err);
-      addToast("Lỗi chuyển chế độ", err.message, "error");
+      addToast("Lỗi chuyển chế độ", getErrorMessage(err), "error");
     }
   };
 
@@ -443,9 +454,9 @@ export default function AdminCenterPage() {
         fetchTelemetry();
         setTimeout(() => setBroadcastFeedback(""), 4000);
       }
-    } catch (err: any) {
-      setBroadcastFeedback("Lỗi phát lệnh: " + err.message);
-      addToast("Lỗi phát lệnh", err.message, "error");
+    } catch (err: unknown) {
+      setBroadcastFeedback("Lỗi phát lệnh: " + getErrorMessage(err));
+      addToast("Lỗi phát lệnh", getErrorMessage(err), "error");
     } finally {
       setIsBroadcasting(false);
     }
@@ -500,8 +511,8 @@ export default function AdminCenterPage() {
       if (res.ok) {
         fetchTelemetry();
       }
-    } catch (err: any) {
-      addToast("Lỗi phân bổ", err.message, "error");
+    } catch (err: unknown) {
+      addToast("Lỗi phân bổ", getErrorMessage(err), "error");
     }
   };
 
@@ -565,9 +576,9 @@ export default function AdminCenterPage() {
       if (res.ok) {
         fetchTelemetry();
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Agent control error:", err);
-      addToast("Lỗi điều khiển", err.message, "error");
+      addToast("Lỗi điều khiển", getErrorMessage(err), "error");
     } finally {
       setLoadingAgentId(null);
     }
@@ -586,9 +597,9 @@ export default function AdminCenterPage() {
       if (res.ok) {
         fetchTelemetry();
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Emergency freeze error:", err);
-      addToast("Lỗi dừng khẩn cấp", err.message, "error");
+      addToast("Lỗi dừng khẩn cấp", getErrorMessage(err), "error");
     }
   };
 
