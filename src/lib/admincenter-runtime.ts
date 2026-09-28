@@ -79,6 +79,18 @@ function asRecord(value: unknown): Record<string, unknown> | null {
     : null;
 }
 
+function sanitizeRuntimeWorkers(value: unknown): Record<string, number> {
+  const record = asRecord(value);
+  if (!record) return {};
+  const workers: Record<string, number> = {};
+  for (const [provider, count] of Object.entries(record)) {
+    if (typeof count === 'number' && Number.isFinite(count) && count >= 0) {
+      workers[provider] = Math.trunc(count);
+    }
+  }
+  return workers;
+}
+
 export interface BuildRuntimeSnapshotParams {
   logicalCatalogSize?: number;
   agents?: AgentRecord[] | null;
@@ -370,6 +382,8 @@ export interface AdminCenterSystemStatus extends RuntimeSnapshot {
   provider_health: Record<string, unknown> | null;
   backlogTaskStatuses: Record<string, unknown> | null;
   backlog: Record<string, unknown> | null;
+  runtimeWorkers: Record<string, number>;
+  activeRuntimeWorkers: number;
   latestBottleneck: string | null;
   bottleneck: string | null;
   telemetry?: Record<string, unknown> | null;
@@ -574,6 +588,8 @@ export function buildAdminCenterSystemStatus(
     asRecord(meta?.backlogTaskStatuses) ?? asRecord(meta?.backlog_task_statuses) ?? asRecord(meta?.backlog);
   const backlog =
     asRecord(meta?.backlog) ?? asRecord(meta?.backlogTaskStatuses) ?? asRecord(meta?.backlog_task_statuses);
+  const runtimeWorkers = sanitizeRuntimeWorkers(meta?.runtimeWorkers ?? meta?.runtime_workers);
+  const activeRuntimeWorkers = Object.values(runtimeWorkers).reduce((sum, count) => sum + count, 0);
 
   const latestBottleneck =
     (typeof meta?.latestBottleneck === 'string' ? meta.latestBottleneck : null) ??
@@ -592,6 +608,8 @@ export function buildAdminCenterSystemStatus(
         provider_health,
         backlogTaskStatuses,
         backlog,
+        runtimeWorkers,
+        activeRuntimeWorkers,
         bottleneck,
         latestBottleneck,
       }
@@ -625,6 +643,8 @@ export function buildAdminCenterSystemStatus(
     provider_health,
     backlogTaskStatuses,
     backlog,
+    runtimeWorkers,
+    activeRuntimeWorkers,
     latestBottleneck,
     bottleneck,
     telemetry,
