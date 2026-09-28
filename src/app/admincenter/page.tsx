@@ -96,6 +96,16 @@ interface SystemStatus {
     failedTasks: number;
     dispatcherStatus: string;
   };
+  runtime?: {
+    sourceOfTruth?: string | null;
+    supervisorState?: string | null;
+    runtimeWorkers?: Record<string, number> | null;
+    activeRuntimeWorkers?: number | null;
+    providerHealth?: Record<string, unknown> | null;
+    backlogTaskStatuses?: Record<string, unknown> | null;
+    latestBottleneck?: string | null;
+    nodeMetrics?: { cpu?: number | null; ram?: number | null; disk?: number | null; queue?: number | null } | null;
+  };
   realAuditLogs: Array<{
     id: string;
     timestamp: string;
@@ -666,6 +676,10 @@ export default function AdminCenterPage() {
   const standbyCount = effectiveAgents.filter((a) => a.state === "STANDBY" || a.state === "PAUSED" || a.state === "WARM_STANDBY" || a.state === "COLD_STANDBY").length;
   const totalTokensPerSec = effectiveAgents.reduce((acc, a) => acc + (a.tokensPerSec || 0), 0);
   const totalTokensUsed = effectiveAgents.reduce((acc, a) => acc + (a.tokensUsed || 0), 0);
+  const runtimeActiveCount = systemStatus?.runtime?.activeRuntimeWorkers ?? 0;
+  const runtimeWorkerDetail = Object.entries(systemStatus?.runtime?.runtimeWorkers ?? {})
+    .map(([provider, count]) => `${provider}: ${count}`)
+    .join(" | ");
 
   // Filtered Live Events
   const filteredEvents = useMemo(() => {
@@ -901,20 +915,18 @@ export default function AdminCenterPage() {
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-[11px] font-semibold text-cyan-300 uppercase tracking-wider flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                AI Đang Hoạt Động
+                AI Runtime Thực Tế
               </span>
               <Activity className="w-4 h-4 text-cyan-400" />
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-black text-white">{activeCount}</span>
-              <span className="text-xs text-slate-400">/ 59 AI Agency</span>
+              <span className="text-2xl font-black text-white">{runtimeActiveCount}</span>
+              <span className="text-xs text-slate-400">provider worker(s)</span>
             </div>
             <div className="flex items-center gap-2 mt-2 text-[10px] text-slate-300">
-              <span className="text-emerald-400 font-semibold">{activeCount - collabCount} Đơn lẻ</span>
+              <span className="text-emerald-400 font-semibold">{systemStatus?.runtime?.supervisorState ?? "TELEMETRY_PENDING"}</span>
               <span>•</span>
-              <span className="text-purple-400 font-semibold">{collabCount} Phối hợp A2A</span>
-              <span>•</span>
-              <span className="text-slate-400">{standbyCount} Standby</span>
+              <span className="text-slate-400">{runtimeWorkerDetail || "Chưa có heartbeat runtime"}</span>
             </div>
           </div>
 
