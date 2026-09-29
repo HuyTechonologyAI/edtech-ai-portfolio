@@ -25,6 +25,11 @@ export function LegacyShellWrapper({ children }: { children: React.ReactNode }) 
     return <>{children}</>;
   }
 
+  // For /admincenter: isolate from legacy UI chrome — standalone ops dashboard
+  if (pathname?.startsWith("/admincenter")) {
+    return <>{children}</>;
+  }
+
   // For all legacy routes: render original layout chrome
   return (
     <>
