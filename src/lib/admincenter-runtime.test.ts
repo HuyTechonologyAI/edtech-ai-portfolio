@@ -1,5 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import {
   buildRuntimeSnapshot,
   isAgentDispatchable,
@@ -555,4 +556,68 @@ it('does not fall back to older work when the newest Node01 report is unsigned o
     assert.equal(status.activeRuntimeWorkers, 0);
     assert.equal(status.workExecution, null);
   }
+});
+
+it('projects live A2A evidence only from fresh signed Node01 metadata', () => {
+  const status = runtimeStatus({
+    runtimeAgents: [
+      { id: 'coordinator', role: 'COORDINATOR', state: 'WAITING_HUMAN', taskId: '08b-ollama-dell', stage: 'HUMAN_GATE' },
+      { id: 'codex', role: 'IMPLEMENTER', provider: 'codex', state: 'STANDBY', taskId: '08a-model-gateway', stage: 'DELIVERY' },
+    ],
+    a2aTimeline: [
+      { sequence: 1, taskId: '08a-model-gateway', stage: 'CROSS_REVIEW', ownerAgent: 'DETERMINISTIC_QA_SECURITY', status: 'VERIFIED', nextStep: 'DELIVERY' },
+    ],
+    handoffs: [
+      { sequence: 1, taskId: '08a-model-gateway', fromAgent: 'CODEX', toAgent: 'DETERMINISTIC_QA_SECURITY', fromStage: 'IMPLEMENTATION', toStage: 'CROSS_REVIEW', status: 'VERIFIED' },
+    ],
+    providerAttempts: [
+      { sequence: 1, taskId: '08a-model-gateway', provider: 'codex', role: 'IMPLEMENTER', stage: 'IMPLEMENTATION', status: 'VERIFIED' },
+    ],
+    checkpointHistory: [
+      { sequence: 1, taskId: '08a-model-gateway', stage: 'DELIVERY', ownerAgent: 'COORDINATOR_RECOVERY', status: 'VERIFIED' },
+    ],
+    currentOwner: 'COORDINATOR',
+    lastAction: '08A delivered',
+    nextAction: 'Human approval required for 08B',
+  });
+  assert.equal(status.runtimeAgents.length, 2);
+  assert.equal(status.runtimeAgents[0].id, 'coordinator');
+  assert.equal(status.a2aTimeline[0].stage, 'CROSS_REVIEW');
+  assert.equal(status.handoffs[0].toAgent, 'DETERMINISTIC_QA_SECURITY');
+  assert.equal(status.providerAttempts[0].provider, 'codex');
+  assert.equal(status.checkpointHistory[0].stage, 'DELIVERY');
+  assert.equal(status.currentOwner, 'COORDINATOR');
+  assert.equal(status.nextAction, 'Human approval required for 08B');
+});
+
+
+it('fails closed for A2A evidence from unsigned or stale heartbeat data', () => {
+  const metadata = {
+    runtimeAgents: [{ id: 'fake', role: 'IMPLEMENTER', state: 'RUNNING', taskId: 'x', stage: 'IMPLEMENTATION' }],
+    a2aTimeline: [{ sequence: 1, taskId: 'x', stage: 'PLAN', ownerAgent: 'FAKE', status: 'VERIFIED' }],
+    handoffs: [{ sequence: 1, taskId: 'x', fromAgent: 'A', toAgent: 'B', fromStage: 'PLAN', toStage: 'IMPLEMENTATION', status: 'VERIFIED' }],
+    providerAttempts: [{ sequence: 1, taskId: 'x', provider: 'fake', role: 'IMPLEMENTER', stage: 'IMPLEMENTATION', status: 'VERIFIED' }],
+    checkpointHistory: [{ sequence: 1, taskId: 'x', stage: 'PLAN', ownerAgent: 'FAKE', status: 'VERIFIED' }],
+    currentOwner: 'FAKE',
+  };
+  for (const extra of [{ signedTelemetry: false }, { timestamp: now - 60001 }]) {
+    const status = runtimeStatus(metadata, extra);
+    assert.deepEqual(status.runtimeAgents, []);
+    assert.deepEqual(status.a2aTimeline, []);
+    assert.deepEqual(status.handoffs, []);
+    assert.deepEqual(status.providerAttempts, []);
+    assert.deepEqual(status.checkpointHistory, []);
+    assert.equal(status.currentOwner, null);
+  }
+});
+
+
+it('AdminCenter visibly separates live runtime agents from A2A flow', () => {
+  const source = readFileSync(new URL('../app/admincenter/page.tsx', import.meta.url), 'utf8');
+  assert.match(source, /Runtime Active Agents/i);
+  assert.match(source, /A2A Flow/i);
+  assert.match(source, /runtimeAgents/);
+  assert.match(source, /a2aTimeline/);
+  assert.match(source, /handoffs/);
+  assert.match(source, /providerAttempts/);
 });
