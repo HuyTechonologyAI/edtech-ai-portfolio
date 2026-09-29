@@ -45,6 +45,14 @@ interface SystemStatus {
   runtimeWorkers: Record<string, number>;
   activeRuntimeWorkers: number;
   workExecution: { currentTask: string; stage: string; checkpointStatus: string; lastAction: string; nextAction: string } | null;
+  runtimeAgents: Array<{ id: string; role: string; provider?: string; state: string; taskId: string; stage: string; lastAction?: string; nextAction?: string }>;
+  a2aTimeline: Array<{ sequence?: number; taskId: string; stage: string; ownerAgent: string; status: string; completedWork?: string; nextStep?: string; createdAt?: string; checkpointId?: string }>;
+  handoffs: Array<{ sequence?: number; taskId: string; fromAgent: string; toAgent: string; fromStage: string; toStage: string; timestamp?: string; status: string }>;
+  providerAttempts: Array<{ sequence?: number; taskId: string; provider: string; role: string; stage: string; status: string; timestamp?: string; checkpointId?: string }>;
+  checkpointHistory: Array<{ sequence?: number; taskId: string; stage: string; ownerAgent: string; status: string; completedWork?: string; nextStep?: string; createdAt?: string; checkpointId?: string }>;
+  currentOwner: string | null;
+  lastAction: string | null;
+  nextAction: string | null;
   timestamp: string;
   status: string;
   topology: {
@@ -1042,6 +1050,57 @@ export default function AdminCenterPage() {
             ))}
           </dl>
         ) : <p className="text-sm text-slate-400">Chưa có luồng công việc hợp lệ từ heartbeat Node01 đã xác minh còn hiệu lực.</p>}
+      </section>
+
+      <section aria-labelledby="runtime-a2a-heading" className="px-4 lg:px-8 py-5 border-b border-white/5 bg-[#070B14]">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+          <div className="rounded-2xl border border-cyan-500/20 bg-[#0F172A]/80 p-4">
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <h2 id="runtime-a2a-heading" className="text-sm font-bold text-cyan-300">Runtime Active Agents</h2>
+              <span className="text-[11px] text-slate-400">Signed Node01 · {systemStatus?.runtimeAgents?.length ?? 0} runtime actors</span>
+            </div>
+            {(systemStatus?.runtimeAgents?.length ?? 0) > 0 ? (
+              <div className="space-y-2">
+                {systemStatus!.runtimeAgents.slice(-8).reverse().map((agent) => (
+                  <div key={`${agent.id}-${agent.taskId}-${agent.stage}`} className="rounded-xl border border-white/10 p-3 text-xs">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="font-mono font-bold text-cyan-200">{agent.id}</span>
+                      <span className="text-emerald-300">{agent.state}</span>
+                    </div>
+                    <p className="text-slate-300 mt-1">{agent.role}{agent.provider ? ` · ${agent.provider}` : ""}</p>
+                    <p className="text-slate-400 mt-1 font-mono break-all">{agent.taskId} · {agent.stage}</p>
+                  </div>
+                ))}
+              </div>
+            ) : <p className="text-sm text-slate-400">Không có runtime agent trong heartbeat ký số còn hiệu lực.</p>}
+          </div>
+
+          <div className="rounded-2xl border border-indigo-500/20 bg-[#0F172A]/80 p-4">
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <h2 className="text-sm font-bold text-indigo-300">A2A Flow</h2>
+              <span className="text-[11px] text-slate-400">Owner: {systemStatus?.currentOwner ?? "TELEMETRY_PENDING"}</span>
+            </div>
+            {(systemStatus?.a2aTimeline?.length ?? 0) > 0 ? (
+              <div className="space-y-2">
+                {systemStatus!.a2aTimeline.slice(-8).reverse().map((event, index) => (
+                  <div key={event.checkpointId ?? `${event.taskId}-${event.stage}-${index}`} className="rounded-xl border border-white/10 p-3 text-xs">
+                    <div className="flex flex-wrap items-center gap-2 text-slate-200">
+                      <span className="font-mono text-indigo-200">{event.ownerAgent}</span>
+                      <ArrowRight className="w-3 h-3 text-slate-500" />
+                      <span>{event.stage}</span>
+                      <span className="ml-auto text-emerald-300">{event.status}</span>
+                    </div>
+                    <p className="text-slate-400 mt-1 font-mono break-all">{event.taskId}</p>
+                  </div>
+                ))}
+              </div>
+            ) : <p className="text-sm text-slate-400">Chưa có A2A checkpoint hợp lệ từ Node01.</p>}
+            <div className="grid grid-cols-2 gap-3 mt-3 text-xs">
+              <div className="rounded-xl border border-white/10 p-3"><span className="text-slate-400">Handoffs</span><strong className="block text-white mt-1">{systemStatus?.handoffs?.length ?? 0}</strong></div>
+              <div className="rounded-xl border border-white/10 p-3"><span className="text-slate-400">Provider Attempts</span><strong className="block text-white mt-1">{systemStatus?.providerAttempts?.length ?? 0}</strong></div>
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* UNIVERSAL SWARM BROADCAST COMMAND BAR (THANH CHỈ HUY TÁC CHIẾN SIÊU TỐC) */}

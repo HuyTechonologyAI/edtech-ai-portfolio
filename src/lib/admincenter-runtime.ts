@@ -113,6 +113,48 @@ function sanitizeWorkExecution(value: unknown): WorkExecution | null {
   return result as unknown as WorkExecution;
 }
 
+export type RuntimeEvidence = Record<string, string | number>;
+
+function safeEvidenceText(value: unknown, max = 512): string | null {
+  if (typeof value !== 'string' || !value.trim() || value.length > max || /[\u0000-\u001f\u007f]/.test(value)) return null;
+  return value.trim();
+}
+
+function sanitizeEvidenceList(
+  value: unknown,
+  required: string[],
+  optional: string[] = [],
+): RuntimeEvidence[] {
+  if (!Array.isArray(value)) return [];
+  return value.slice(-32).flatMap(item => {
+    const record = asRecord(item);
+    if (!record) return [];
+    const result: RuntimeEvidence = {};
+    for (const key of required) {
+      const text = safeEvidenceText(record[key], 512);
+      if (!text) return [];
+      result[key] = text;
+    }
+    for (const key of optional) {
+      const field = record[key];
+      if (field === undefined || field === null || field === '') continue;
+      if (key === 'sequence') {
+        if (typeof field !== 'number' || !Number.isSafeInteger(field) || field < 0) return [];
+        result[key] = field;
+      } else {
+        const text = safeEvidenceText(field, 512);
+        if (!text) return [];
+        result[key] = text;
+      }
+    }
+    return [result];
+  });
+}
+
+function safeOptionalEvidenceText(value: unknown, max = 512): string | null {
+  return value === undefined || value === null || value === '' ? null : safeEvidenceText(value, max);
+}
+
 export interface BuildRuntimeSnapshotParams {
   logicalCatalogSize?: number;
   agents?: AgentRecord[] | null;
@@ -407,6 +449,14 @@ export interface AdminCenterSystemStatus extends RuntimeSnapshot {
   runtimeWorkers: Record<string, number>;
   activeRuntimeWorkers: number;
   workExecution: WorkExecution | null;
+  runtimeAgents: RuntimeEvidence[];
+  a2aTimeline: RuntimeEvidence[];
+  handoffs: RuntimeEvidence[];
+  providerAttempts: RuntimeEvidence[];
+  checkpointHistory: RuntimeEvidence[];
+  currentOwner: string | null;
+  lastAction: string | null;
+  nextAction: string | null;
   latestBottleneck: string | null;
   bottleneck: string | null;
   telemetry?: Record<string, unknown> | null;
@@ -618,6 +668,19 @@ export function buildAdminCenterSystemStatus(
       ? runtimeHeartbeat.metadata : null;
   const runtimeWorkers = sanitizeRuntimeWorkers(runtimeMeta?.runtimeWorkers ?? runtimeMeta?.runtime_workers);
   const workExecution = sanitizeWorkExecution(runtimeMeta?.workExecution);
+  const runtimeAgents = sanitizeEvidenceList(runtimeMeta?.runtimeAgents,
+    ['id', 'role', 'state', 'taskId', 'stage'], ['provider', 'lastAction', 'nextAction']);
+  const a2aTimeline = sanitizeEvidenceList(runtimeMeta?.a2aTimeline,
+    ['taskId', 'stage', 'ownerAgent', 'status'], ['sequence', 'completedWork', 'nextStep', 'createdAt', 'checkpointId']);
+  const handoffs = sanitizeEvidenceList(runtimeMeta?.handoffs,
+    ['taskId', 'fromAgent', 'toAgent', 'fromStage', 'toStage', 'status'], ['sequence', 'timestamp']);
+  const providerAttempts = sanitizeEvidenceList(runtimeMeta?.providerAttempts,
+    ['taskId', 'provider', 'role', 'stage', 'status'], ['sequence', 'timestamp', 'checkpointId']);
+  const checkpointHistory = sanitizeEvidenceList(runtimeMeta?.checkpointHistory,
+    ['taskId', 'stage', 'ownerAgent', 'status'], ['sequence', 'completedWork', 'nextStep', 'createdAt', 'checkpointId']);
+  const currentOwner = safeOptionalEvidenceText(runtimeMeta?.currentOwner, 128);
+  const lastAction = safeOptionalEvidenceText(runtimeMeta?.lastAction);
+  const nextAction = safeOptionalEvidenceText(runtimeMeta?.nextAction);
   const activeRuntimeWorkers = Object.values(runtimeWorkers).reduce((sum, count) => sum + count, 0);
 
   const latestBottleneck =
@@ -640,6 +703,14 @@ export function buildAdminCenterSystemStatus(
         runtimeWorkers,
         activeRuntimeWorkers,
         workExecution,
+        runtimeAgents,
+        a2aTimeline,
+        handoffs,
+        providerAttempts,
+        checkpointHistory,
+        currentOwner,
+        lastAction,
+        nextAction,
         bottleneck,
         latestBottleneck,
       }
@@ -676,6 +747,14 @@ export function buildAdminCenterSystemStatus(
     runtimeWorkers,
     activeRuntimeWorkers,
     workExecution,
+    runtimeAgents,
+    a2aTimeline,
+    handoffs,
+    providerAttempts,
+    checkpointHistory,
+    currentOwner,
+    lastAction,
+    nextAction,
     latestBottleneck,
     bottleneck,
     telemetry,
