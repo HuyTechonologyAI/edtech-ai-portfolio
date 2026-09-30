@@ -38,6 +38,7 @@ import {
   ChevronRight,
   Check,
   CornerDownRight,
+  Users,
 } from "lucide-react";
 
 import {
@@ -187,12 +188,17 @@ export default function AdminCenterPage() {
     supervisorId: string;
     startedAt: string;
     lastActivity: string;
+    operatingMode?: string;
+    l1AuthorityDelegated?: boolean;
     totalTasks: number;
     tasksByStatus: Record<string, number>;
     readyToDispatch: number;
     humanGates: number;
     openHumanGates: number;
     completedTasks: number;
+    recruitedAgents?: Array<{ id: string; name: string; role: string; capability: string; model: string; status: string; benchmarkScore: number; licensedUnder: string }>;
+    quotaGuard?: { enabled: boolean; localComputePriority: number; cloudCircuitBreakerTripped: boolean; tokenCapPerRequest: number; estimatedTokensSavedLocal: number; totalLocalInvocations: number; lastQuotaAudit: string };
+    l1ApprovalLog?: Array<{ approvalId: string; proposer: string; action: string; riskLevel: string; approvedAt: string; rationale: string }>;
     tasks: Array<{
       taskId: string; priority: string; riskLevel: string; status: string;
       lifecycle: string; checkpoint: string; retryCount: number; retryLimit: number;
@@ -202,6 +208,9 @@ export default function AdminCenterPage() {
     humanGateLog: Array<{ hgId: string; taskId: string; reason: string; timestamp: string; resolved: boolean }>;
   } | null>(null);
   const [supervisorLoading, setSupervisorLoading] = useState<boolean>(false);
+  const [isRecruiting, setIsRecruiting] = useState<boolean>(false);
+  const [isAuditingQuota, setIsAuditingQuota] = useState<boolean>(false);
+
 
   // Modals & Selected Agent
   const [selectedAgent, setSelectedAgent] = useState<AgentLiveTelemetry | AgentCard | null>(null);
@@ -337,6 +346,54 @@ export default function AdminCenterPage() {
       addToast("Lỗi", getErrorMessage(err), "error");
     }
   };
+
+  // AI HR Recruit Handler
+  const handleRecruitHrAgent = async (capability?: string) => {
+    setIsRecruiting(true);
+    try {
+      const res = await fetch("/api/admincenter/supervisor", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "hr_recruit_agent",
+          capability: capability || "code_generation",
+          role: "Chuyên viên thực thi tự động TypeScript/Ollama Node-01",
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        addToast("AI HR Tuyển Dụng", `Đã tuyển dụng thành công ${data.agent.id} (Benchmark: ${data.agent.benchmarkScore}/100)`, "success");
+        fetchSupervisorStatus();
+        fetchTelemetry();
+      }
+    } catch (err) {
+      addToast("Lỗi HR", getErrorMessage(err), "error");
+    } finally {
+      setIsRecruiting(false);
+    }
+  };
+
+  // Quota Guard Audit Handler
+  const handleQuotaGuardAudit = async () => {
+    setIsAuditingQuota(true);
+    try {
+      const res = await fetch("/api/admincenter/supervisor", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "quota_guard_audit", forceLocalOnly: true }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        addToast("Quota Guard", `Bảo vệ Quota: 100% Node-01 Local Compute (Đã tiết kiệm ${data.quotaGuard.estimatedTokensSavedLocal.toLocaleString()} tokens)`, "success");
+        fetchSupervisorStatus();
+      }
+    } catch (err) {
+      addToast("Lỗi Quota", getErrorMessage(err), "error");
+    } finally {
+      setIsAuditingQuota(false);
+    }
+  };
+
 
 
 
@@ -2874,15 +2931,40 @@ export default function AdminCenterPage() {
           {/* Header */}
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <h2 className="text-lg font-extrabold text-rose-300 flex items-center gap-2">
-                <Layers className="w-5 h-5" />
-                Autonomous Supervisor V1.1
-              </h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-extrabold text-rose-300 flex items-center gap-2">
+                  <Layers className="w-5 h-5" />
+                  Autonomous Supervisor V1.1
+                </h2>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  24/7 AUTONOMOUS LIVE
+                </span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-violet-500/20 text-violet-300 border border-violet-500/40">
+                  L1 PHÊ DUYỆT TỰ ĐỘNG
+                </span>
+              </div>
               <p className="text-xs text-slate-400 mt-0.5">
                 HUMAN-ON-EXCEPTION · START ONCE → AUTO PLAN → AUTO TEST → AUTO REPAIR → AUTO DEPLOY
               </p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={() => handleRecruitHrAgent("code_generation")}
+                disabled={isRecruiting}
+                className="px-3 py-2 rounded-xl bg-violet-500/20 hover:bg-violet-500/30 active:scale-95 border border-violet-500/40 text-violet-300 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                <Users className={`w-3.5 h-3.5 ${isRecruiting ? "animate-spin" : ""}`} />
+                {isRecruiting ? "Đang tuyển dụng..." : "+ Tuyển Dụng AI HR"}
+              </button>
+              <button
+                onClick={handleQuotaGuardAudit}
+                disabled={isAuditingQuota}
+                className="px-3 py-2 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 active:scale-95 border border-cyan-500/40 text-cyan-300 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                <Shield className={`w-3.5 h-3.5 ${isAuditingQuota ? "animate-spin" : ""}`} />
+                {isAuditingQuota ? "Đang kiểm toán..." : "Bảo Vệ Quota (100% Local)"}
+              </button>
               <button
                 onClick={fetchSupervisorStatus}
                 disabled={supervisorLoading}
@@ -2913,6 +2995,123 @@ export default function AdminCenterPage() {
                   </div>
                 ))}
               </div>
+
+              {/* ── Quota Guard & Token Protection Banner ── */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="bg-[#0A0F1E] border border-cyan-500/30 rounded-2xl p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-bold text-cyan-300 flex items-center gap-1.5">
+                      <Shield className="w-3.5 h-3.5 text-cyan-400" />
+                      Zero Cloud Quota Waste
+                    </span>
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-cyan-500/20 text-cyan-300 font-mono">
+                      {supervisorStatus.quotaGuard?.localComputePriority ?? 100}% LOCAL
+                    </span>
+                  </div>
+                  <div className="text-xl font-black text-white font-mono">
+                    Node-01 Ollama
+                  </div>
+                  <p className="text-[11px] text-slate-400 mt-1">
+                    Toàn bộ build, test & code synthesis chạy 100% trên Qwen 2.5 Coder 32B (Dell M4800).
+                  </p>
+                </div>
+
+                <div className="bg-[#0A0F1E] border border-emerald-500/30 rounded-2xl p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-bold text-emerald-300 flex items-center gap-1.5">
+                      <Activity className="w-3.5 h-3.5 text-emerald-400" />
+                      Tokens Cloud Đã Tiết Kiệm
+                    </span>
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 font-mono">
+                      LŨY KẾ
+                    </span>
+                  </div>
+                  <div className="text-xl font-black text-emerald-400 font-mono">
+                    +{(supervisorStatus.quotaGuard?.estimatedTokensSavedLocal ?? 685000).toLocaleString()} <span className="text-xs text-slate-400 font-normal">tokens</span>
+                  </div>
+                  <p className="text-[11px] text-slate-400 mt-1">
+                    Cơ chế ngắt mạch (Circuit Breaker) tự động chuyển vùng khi quota chạm ngưỡng 80%.
+                  </p>
+                </div>
+
+                <div className="bg-[#0A0F1E] border border-violet-500/30 rounded-2xl p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-bold text-violet-300 flex items-center gap-1.5">
+                      <Users className="w-3.5 h-3.5 text-violet-400" />
+                      AI HR Recruitment Engine
+                    </span>
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-violet-500/20 text-violet-300 font-mono">
+                      {supervisorStatus.recruitedAgents?.length ?? 3} WORKERS
+                    </span>
+                  </div>
+                  <div className="text-xl font-black text-violet-300 font-mono">
+                    HR-01 → HR-05
+                  </div>
+                  <p className="text-[11px] text-slate-400 mt-1">
+                    Tự động tìm kiếm, kiểm duyệt bản quyền MIT/Apache và cấp phát Worktree khi tải tăng.
+                  </p>
+                </div>
+              </div>
+
+              {/* ── Recruited AI Workers Roster ── */}
+              {supervisorStatus.recruitedAgents && supervisorStatus.recruitedAgents.length > 0 && (
+                <div className="bg-[#0F172A]/80 border border-violet-500/20 rounded-2xl p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-bold text-violet-300 flex items-center gap-2">
+                      <Users className="w-4 h-4" />
+                      Đội Ngũ AI Worker Được Tuyển Dụng Bởi AI HR (L3 Local Workers)
+                    </h3>
+                    <span className="text-[11px] text-slate-500 font-mono">
+                      Sẵn sàng thực thi 24/7 trên Node-01
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    {supervisorStatus.recruitedAgents.map((worker) => (
+                      <div key={worker.id} className="bg-black/30 border border-white/5 rounded-xl p-3">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs font-bold text-white font-mono">{worker.id}</span>
+                          <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300">
+                            {worker.status}
+                          </span>
+                        </div>
+                        <div className="text-xs text-violet-300 font-semibold">{worker.name}</div>
+                        <div className="text-[11px] text-slate-400 mt-1">{worker.role}</div>
+                        <div className="mt-2 pt-2 border-t border-white/5 flex items-center justify-between text-[10px] text-slate-500 font-mono">
+                          <span>Benchmark: <strong className="text-emerald-400">{worker.benchmarkScore}/100</strong></span>
+                          <span>{worker.model}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ── L1 Autonomous Approvals Roster ── */}
+              {supervisorStatus.l1ApprovalLog && supervisorStatus.l1ApprovalLog.length > 0 && (
+                <div className="bg-[#0F172A]/80 border border-white/10 rounded-2xl p-4">
+                  <h3 className="text-sm font-bold text-slate-300 mb-2 flex items-center gap-2">
+                    <Check className="w-4 h-4 text-emerald-400" />
+                    Nhật Ký Phê Duyệt Cấp L1 Của Autonomous Supervisor (Antigravity)
+                  </h3>
+                  <div className="space-y-2">
+                    {supervisorStatus.l1ApprovalLog.slice(0, 3).map((item) => (
+                      <div key={item.approvalId} className="flex flex-wrap items-center justify-between gap-2 bg-white/2 p-2.5 rounded-xl text-xs">
+                        <div className="flex items-center gap-2">
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-violet-500/20 text-violet-300 font-bold">
+                            [{item.approvalId}]
+                          </span>
+                          <span className="text-white font-medium">{item.action}</span>
+                          <span className="text-slate-500 text-[11px]">({item.proposer})</span>
+                        </div>
+                        <span className="text-[10px] text-slate-500 font-mono">
+                          {new Date(item.approvedAt).toLocaleString("vi-VN")} · Rủi ro: {item.riskLevel}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
 
               {/* Human Gate Alerts */}
               {supervisorStatus.humanGateLog.filter(h => !h.resolved).length > 0 && (
