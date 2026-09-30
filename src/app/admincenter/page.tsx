@@ -182,7 +182,13 @@ export default function AdminCenterPage() {
     queueDepth: number; inProgress: number; completed: number; failed: number; totalTasks: number;
     tasks: Array<{ taskId: string; fromAgent: string; toAgent: string; capability: string; priority: string; state: string; backend: string; createdAt: string; startedAt?: string; completedAt?: string; error?: string }>;
   } | null>(null);
-  const [ollamaHealth, setOllamaHealth] = useState<{ connected: boolean; availableModels?: string[]; error?: string } | null>(null);
+  const [ollamaHealth, setOllamaHealth] = useState<{
+    connected: boolean;
+    availableModels?: string[];
+    error?: string;
+    statusNote?: string;
+    source?: string;
+  } | null>(null);
   const [a2aExecuting, setA2aExecuting] = useState<boolean>(false);
   const [ollamaChecking, setOllamaChecking] = useState<boolean>(false);
 
@@ -659,9 +665,18 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
       void fetchSystemStatus();
       void fetchA2aQueue();
       void fetchSupervisorStatus();
+      void checkOllamaHealth();
     }, 0);
     return () => clearTimeout(initialLoad);
   }, []);
+
+  // Auto-verify Ollama when entering A2A tab
+  useEffect(() => {
+    if (activeTab === "a2a" && ollamaHealth === null && !ollamaChecking) {
+      void checkOllamaHealth();
+      void fetchA2aQueue();
+    }
+  }, [activeTab, ollamaHealth, ollamaChecking]);
 
   // Real-time Polling Engine
   useEffect(() => {
@@ -3456,6 +3471,12 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
                 </span>
               </div>
               <p className="text-xs text-slate-400 font-mono">http://100.79.240.108:11434</p>
+              {ollamaHealth?.statusNote && (
+                <p className="text-[11px] text-emerald-400/90 font-mono mt-1 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+                  <span>{ollamaHealth.statusNote}</span>
+                </p>
+              )}
               {ollamaHealth?.availableModels && ollamaHealth.availableModels.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 mt-2">
                   {ollamaHealth.availableModels.map((m) => (
