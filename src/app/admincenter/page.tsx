@@ -668,6 +668,7 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
       void checkOllamaHealth();
     }, 0);
     return () => clearTimeout(initialLoad);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Auto-verify Ollama when entering A2A tab
@@ -676,6 +677,7 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
       void checkOllamaHealth();
       void fetchA2aQueue();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, ollamaHealth, ollamaChecking]);
 
   // Real-time Polling Engine
