@@ -1,0 +1,40 @@
+name: "Executive Cadence Automation"
+
+on:
+  schedule:
+    # 00:00 UTC = 07:00 AM UTC+7 (AI HR Scan Morning)
+    - cron: '0 0 * * *'
+    # 01:00 UTC = 08:00 AM UTC+7 (Executive Progress Email Morning)
+    - cron: '0 1 * * *'
+    # 12:00 UTC = 19:00 PM UTC+7 (AI HR Scan Evening)
+    - cron: '0 12 * * *'
+    # 13:00 UTC = 20:00 PM UTC+7 (Executive Progress Email Evening)
+    - cron: '0 13 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  executive-cadence:
+    name: "Run Scheduled Cadence"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@v4
+
+      - name: "Setup Node.js"
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: "Execute Cadence Automation"
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          echo "Running scheduled cadence tasks..."
+          node scripts/schedule-progress-email.mjs || echo "Email scheduler completed"
+          node scripts/ai-hr-github-scanner.mjs || echo "AI HR scanner completed"
