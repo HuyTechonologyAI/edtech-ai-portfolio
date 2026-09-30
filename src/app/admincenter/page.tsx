@@ -280,6 +280,18 @@ export default function AdminCenterPage() {
   // Real-time Telemetry State
   const [telemetryAgents, setTelemetryAgents] = useState<AgentLiveTelemetry[]>([]);
   const [telemetryEvents, setTelemetryEvents] = useState<LiveEvent[]>([]);
+  const [telemetryNode01, setTelemetryNode01] = useState<{
+    peerName?: string;
+    lanIP?: string;
+    tailscaleIP?: string;
+    pingMs?: number;
+    status?: string;
+    cpuUsagePct?: number;
+    ramUsagePct?: number;
+    ramTotalMb?: number;
+    ramFreeMb?: number;
+    queueDepth?: number;
+  } | null>(null);
   const [swarmMode, setSwarmMode] = useState<string>("AUTONOMOUS_LIVE");
   const [liveStreamEnabled, setLiveStreamEnabled] = useState<boolean>(true);
   const [pollingRate] = useState<number>(2500); // 2.5s default
@@ -324,6 +336,7 @@ export default function AdminCenterPage() {
         const data = await res.json();
         if (data.agents) setTelemetryAgents(data.agents);
         if (data.events) setTelemetryEvents(data.events);
+        if (data.metrics?.node01) setTelemetryNode01(data.metrics.node01);
         if (data.swarmMode) setSwarmMode(data.swarmMode);
         setLastSyncTime(new Date().toLocaleTimeString("vi-VN"));
       }
@@ -1211,8 +1224,8 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
     if (eventFilter === "ALL") return telemetryEvents;
     return telemetryEvents.filter((evt) => {
       if (eventFilter === "DIRECTIVE") return evt.type === "DIRECTIVE";
-      if (eventFilter === "A2A") return evt.type === "A2A_COLLAB";
-      if (eventFilter === "SECURITY") return evt.type === "SECURITY";
+      if (eventFilter === "A2A") return evt.type === "A2A_COLLAB" || evt.type === "EXECUTION";
+      if (eventFilter === "SECURITY") return evt.type === "SECURITY" || evt.type === "AUDIT" || evt.type === "SYNC";
       return true;
     });
   }, [telemetryEvents, eventFilter]);
@@ -1510,7 +1523,7 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
               <span className="text-[11px] text-emerald-400 font-bold">CONNECTED</span>
             </div>
             <p className="text-[10px] text-slate-400 mt-2 font-mono truncate">
-              100.79.240.108 • /mnt/data2 R4 Lock
+              CPU: {telemetryNode01?.cpuUsagePct ?? 2}% • RAM: {telemetryNode01?.ramUsagePct ?? 7.2}% ({Math.round((telemetryNode01?.ramTotalMb ?? 32001) / 1024)}GB)
             </p>
           </div>
 
@@ -1892,6 +1905,45 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
         {/* ======================================================== */}
         {activeTab === "swarm" && (
           <div className="space-y-6">
+            {/* Primary Autonomous Controls in Swarm Command Deck */}
+            <div className="bg-gradient-to-r from-emerald-950/40 via-cyan-950/30 to-[#0F172A] border border-emerald-500/30 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4 shadow-xl">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                  <span className="text-xs font-mono font-bold text-emerald-300">ĐIỀU PHỐI ĐA TÁC TỬ TỰ ĐỘNG 24/7</span>
+                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-violet-500/20 text-violet-300 border border-violet-500/30">
+                    OLLAMA LOCAL (NODE-01)
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400 mt-1">
+                  Kích hoạt luồng làm việc tự động liên tục giữa các AI Worker &amp; trích xuất báo cáo tiến độ gửi email về huytechnologyai2025@gmail.com.
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleContinuousAutonomousDispatch}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-lg active:scale-95 ${
+                    isContinuousAutonomousActive
+                      ? "bg-emerald-500 text-black border border-emerald-400 ring-2 ring-emerald-400/50"
+                      : "bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300"
+                  }`}
+                >
+                  <Zap className={`w-3.5 h-3.5 ${isContinuousAutonomousActive ? "animate-spin text-black" : "text-emerald-400"}`} />
+                  {isContinuousAutonomousActive ? "🟢 ĐANG CHẠY 24/7 (BẤM ĐỂ DỪNG)" : "⚡ Kích Hoạt Điều Phối Đa Tác Tử (24/7)"}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSendProgressEmail}
+                  disabled={isSendingProgressEmail}
+                  className="px-3.5 py-2 rounded-xl bg-blue-500/20 hover:bg-blue-500/30 active:scale-95 border border-blue-500/40 text-blue-300 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                >
+                  <Mail className={`w-3.5 h-3.5 ${isSendingProgressEmail ? "animate-spin" : ""}`} />
+                  {isSendingProgressEmail ? "Đang tạo báo cáo..." : "📧 Gửi Báo Cáo Mail"}
+                </button>
+              </div>
+            </div>
+
             {/* Quick Mobilize Action Bar */}
             <div className="bg-[#0F172A]/80 border border-white/10 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
               <div className="flex flex-wrap items-center gap-2">
@@ -2239,54 +2291,81 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
                     ref={logsContainerRef}
                     className="flex-1 overflow-y-auto space-y-2.5 py-3 pr-1 font-mono text-xs"
                   >
-                    {filteredEvents.map((evt) => (
-                      <div
-                        key={evt.id}
-                        className="p-3 rounded-xl bg-[#070B14] border border-white/5 hover:border-white/20 transition-all text-xs"
-                      >
-                        {/* Timestamp & Type Badge */}
-                        <div className="flex items-center justify-between text-[10px] mb-1.5 text-slate-400">
-                          <div className="flex items-center gap-1.5">
-                            <span
-                              className={`px-1.5 py-0.2 rounded font-bold ${
-                                evt.type === "DIRECTIVE"
-                                  ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
-                                  : evt.type === "A2A_COLLAB"
-                                  ? "bg-purple-500/20 text-purple-300 border border-purple-500/30"
-                                  : evt.type === "SECURITY"
-                                  ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
-                                  : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
-                              }`}
-                            >
-                              {evt.type}
-                            </span>
-                            <span className="text-slate-300 truncate max-w-[140px]">{evt.businessUnit}</span>
-                          </div>
-
-                          <div className="flex items-center gap-1.5 text-slate-500">
-                            <span>{evt.latency}</span>
-                            <span>•</span>
-                            <span>{new Date(evt.timestamp).toLocaleTimeString("vi-VN")}</span>
-                          </div>
-                        </div>
-
-                        {/* Agents Communication Flow */}
-                        <div className="flex items-center gap-1.5 text-[11px] font-bold text-white mb-1">
-                          <span className="text-cyan-300">[{evt.fromAgent.id}] {evt.fromAgent.name}</span>
-                          {evt.toAgent && (
-                            <>
-                              <ArrowRight className="w-3 h-3 text-purple-400 shrink-0" />
-                              <span className="text-purple-300">[{evt.toAgent.id}] {evt.toAgent.name}</span>
-                            </>
-                          )}
-                        </div>
-
-                        {/* Content */}
-                        <p className="text-slate-300 text-xs font-sans leading-relaxed mt-1">
-                          {evt.content}
+                    {filteredEvents.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-12 px-4 text-center border border-dashed border-white/10 rounded-xl bg-black/20 my-2">
+                        <Terminal className="w-8 h-8 text-purple-400/50 mb-2 animate-pulse" />
+                        <p className="text-sm font-semibold text-slate-300">
+                          {eventFilter === "A2A"
+                            ? "Đang chờ gói tin Cộng tác A2A tiếp theo..."
+                            : eventFilter === "DIRECTIVE"
+                            ? "Chưa có chỉ thị mới phát sinh..."
+                            : eventFilter === "SECURITY"
+                            ? "Chưa ghi nhận cảnh báo an ninh hoặc sự kiện Node-01..."
+                            : "Đang nạp luồng sự kiện A2A..."}
                         </p>
+                        <p className="text-xs text-slate-500 mt-1 max-w-sm">
+                          Hệ thống đang đồng bộ trực tiếp với sổ cái Supabase PGMQ và trạm giám sát Dell Precision M4800 (100.79.240.108).
+                        </p>
+                        {eventFilter !== "ALL" && (
+                          <button
+                            type="button"
+                            onClick={() => setEventFilter("ALL")}
+                            className="mt-3 px-3 py-1 bg-white/10 hover:bg-white/20 text-white text-xs rounded-lg transition-colors cursor-pointer"
+                          >
+                            Xem tất cả ({telemetryEvents.length} sự kiện)
+                          </button>
+                        )}
                       </div>
-                    ))}
+                    ) : (
+                      filteredEvents.map((evt) => (
+                        <div
+                          key={evt.id}
+                          className="p-3 rounded-xl bg-[#070B14] border border-white/5 hover:border-white/20 transition-all text-xs"
+                        >
+                          {/* Timestamp & Type Badge */}
+                          <div className="flex items-center justify-between text-[10px] mb-1.5 text-slate-400">
+                            <div className="flex items-center gap-1.5">
+                              <span
+                                className={`px-1.5 py-0.2 rounded font-bold ${
+                                  evt.type === "DIRECTIVE"
+                                    ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
+                                    : evt.type === "A2A_COLLAB"
+                                    ? "bg-purple-500/20 text-purple-300 border border-purple-500/30"
+                                    : evt.type === "SECURITY"
+                                    ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                                    : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                                }`}
+                              >
+                                {evt.type}
+                              </span>
+                              <span className="text-slate-300 truncate max-w-[140px]">{evt.businessUnit}</span>
+                            </div>
+
+                            <div className="flex items-center gap-1.5 text-slate-500">
+                              <span>{evt.latency}</span>
+                              <span>•</span>
+                              <span>{new Date(evt.timestamp).toLocaleTimeString("vi-VN")}</span>
+                            </div>
+                          </div>
+
+                          {/* Agents Communication Flow */}
+                          <div className="flex items-center gap-1.5 text-[11px] font-bold text-white mb-1">
+                            <span className="text-cyan-300">[{evt.fromAgent.id}] {evt.fromAgent.name}</span>
+                            {evt.toAgent && (
+                              <>
+                                <ArrowRight className="w-3 h-3 text-purple-400 shrink-0" />
+                                <span className="text-purple-300">[{evt.toAgent.id}] {evt.toAgent.name}</span>
+                              </>
+                            )}
+                          </div>
+
+                          {/* Content */}
+                          <p className="text-slate-300 text-xs font-sans leading-relaxed mt-1">
+                            {evt.content}
+                          </p>
+                        </div>
+                      ))
+                    )}
                   </div>
 
                   {/* Node-01 Connectivity Live Status Footer */}
