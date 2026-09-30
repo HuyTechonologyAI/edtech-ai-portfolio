@@ -1211,7 +1211,6 @@ export async function POST(req: Request) {
       message: `Đã chuyển báo cáo tổng hợp tiến độ (${weightedPercentage}%) và công việc của các AI qua email huytechnologyai2025@gmail.com.`,
     });
   }
-
   // ── Reset supervisor ────────────────────────────────────────────────────────
   if (action === "reset") {
     globalForSupervisor.__HUY_SUPERVISOR__ = initSupervisor();

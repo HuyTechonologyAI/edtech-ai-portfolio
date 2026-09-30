@@ -422,7 +422,6 @@ export default function AdminCenterPage() {
       setIsDispatchingAutonomous(false);
     }
   };
-
   // Dispatch Progress Report Email to SuperAdmin / Root of Trust
   const handleSendProgressEmail = async () => {
     setIsSendingProgressEmail(true);
