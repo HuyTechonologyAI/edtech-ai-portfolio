@@ -35,7 +35,6 @@ import {
   Send,
   StopCircle,
   Network,
-  Filter,
   ChevronRight,
   Check,
   CornerDownRight,
@@ -2611,7 +2610,7 @@ export default function AdminCenterPage() {
                 <p className="text-xs text-rose-400 mt-1 font-mono">{ollamaHealth.error}</p>
               )}
               {ollamaHealth === null && (
-                <p className="text-xs text-slate-500 mt-1">Nhấn "Kiểm tra Ollama" để xác minh kết nối tới Node-01</p>
+                <p className="text-xs text-slate-500 mt-1">Nhấn &quot;Kiểm tra Ollama&quot; để xác minh kết nối tới Node-01</p>
               )}
             </div>
           </div>

@@ -208,7 +208,6 @@ export async function POST(req: Request) {
         const reader = ollamaRes.body?.getReader();
         if (!reader) { await writer.close(); return; }
 
-        let fullResponse = "";
         let totalTokens = 0;
 
         while (true) {
@@ -222,7 +221,6 @@ export async function POST(req: Request) {
             try {
               const parsed = JSON.parse(line);
               if (parsed.response) {
-                fullResponse += parsed.response;
                 totalTokens += 1;
               }
               await writer.write(encoder.encode(`data: ${JSON.stringify(parsed)}\n\n`));

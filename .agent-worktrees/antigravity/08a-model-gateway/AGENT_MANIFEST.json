@@ -1,0 +1,16 @@
+{
+  "worker_id": "ANTIGRAVITY-AGY",
+  "worktree_id": "antigravity/08a-model-gateway",
+  "task_id": "08a-model-gateway",
+  "capability": "api_gateway",
+  "execution_backend": "OLLAMA_LOCAL",
+  "model": "qwen2.5-coder:32b",
+  "node": "huy-node01 @ 100.79.240.108",
+  "checkpoint": "TASK_CREATED",
+  "lifecycle_phase": "PREDICT",
+  "retry_count": 0,
+  "retry_limit": 5,
+  "created_at": "2026-09-29T12:58:00Z",
+  "status": "QUEUED",
+  "description": "Build Ollama model gateway adapter — TEST FIRST lifecycle"
+}
