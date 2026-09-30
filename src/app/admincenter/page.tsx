@@ -213,7 +213,6 @@ export default function AdminCenterPage() {
   const [supervisorLoading, setSupervisorLoading] = useState<boolean>(false);
   const [isRecruiting, setIsRecruiting] = useState<boolean>(false);
   const [isAuditingQuota, setIsAuditingQuota] = useState<boolean>(false);
-  const [isDispatchingAutonomous, setIsDispatchingAutonomous] = useState<boolean>(false);
   const [isSendingProgressEmail, setIsSendingProgressEmail] = useState<boolean>(false);
   const [isContinuousAutonomousActive, setIsContinuousAutonomousActive] = useState<boolean>(false);
   const [liveAutonomousLogs, setLiveAutonomousLogs] = useState<Array<{ id: string; time: string; message: string; type: string }>>([
