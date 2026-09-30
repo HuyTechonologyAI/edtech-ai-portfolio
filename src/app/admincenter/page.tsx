@@ -39,6 +39,7 @@ import {
   Check,
   CornerDownRight,
   Users,
+  Mail,
 } from "lucide-react";
 
 import {
@@ -211,6 +212,7 @@ export default function AdminCenterPage() {
   const [isRecruiting, setIsRecruiting] = useState<boolean>(false);
   const [isAuditingQuota, setIsAuditingQuota] = useState<boolean>(false);
   const [isDispatchingAutonomous, setIsDispatchingAutonomous] = useState<boolean>(false);
+  const [isSendingProgressEmail, setIsSendingProgressEmail] = useState<boolean>(false);
 
 
   // Modals & Selected Agent
@@ -418,6 +420,32 @@ export default function AdminCenterPage() {
       addToast("Lỗi Điều Phối", getErrorMessage(err), "error");
     } finally {
       setIsDispatchingAutonomous(false);
+    }
+  };
+  // Dispatch Progress Report Email to SuperAdmin / Root of Trust
+  const handleSendProgressEmail = async () => {
+    setIsSendingProgressEmail(true);
+    try {
+      const res = await fetch("/api/admincenter/supervisor", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "send_progress_email" }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        addToast(
+          "Báo Cáo Email",
+          `Đã chuyển báo cáo tổng hợp tiến độ (${data.progressPercentage}%) tới huytechnologyai2025@gmail.com!`,
+          "success"
+        );
+        fetchSupervisorStatus();
+      } else {
+        addToast("Lỗi Email", data.error || "Không gửi được email báo cáo", "error");
+      }
+    } catch (err) {
+      addToast("Lỗi Email", getErrorMessage(err), "error");
+    } finally {
+      setIsSendingProgressEmail(false);
     }
   };
   const checkOllamaHealth = async () => {
@@ -3215,6 +3243,14 @@ export default function AdminCenterPage() {
               >
                 <Shield className={`w-3.5 h-3.5 ${isAuditingQuota ? "animate-spin" : ""}`} />
                 {isAuditingQuota ? "Đang kiểm toán..." : "Bảo Vệ Quota (100% Local)"}
+              </button>
+              <button
+                onClick={handleSendProgressEmail}
+                disabled={isSendingProgressEmail}
+                className="px-3 py-2 rounded-xl bg-blue-500/20 hover:bg-blue-500/30 active:scale-95 border border-blue-500/40 text-blue-300 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                <Mail className={`w-3.5 h-3.5 ${isSendingProgressEmail ? "animate-spin" : ""}`} />
+                {isSendingProgressEmail ? "Đang gửi mail..." : "📧 Gửi Báo Cáo Mail"}
               </button>
               <button
                 onClick={fetchSupervisorStatus}
