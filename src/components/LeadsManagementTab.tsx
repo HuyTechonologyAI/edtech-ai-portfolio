@@ -10,7 +10,7 @@ interface Lead {
   phone_number: string | null;
   source: string;
   target_item_title: string | null;
-  metadata: any;
+  metadata: { clientIp?: string; userAgent?: string };
   created_at: string;
 }
 
@@ -19,21 +19,22 @@ export default function LeadsManagementTab() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [sourceFilter, setSourceFilter] = useState("ALL");
-  const [exporting, setExporting] = useState(false);
+  const [, setExporting] = useState(false);
 
   const fetchLeads = async () => {
-    setLoading(true);
-    try {
+    return (async () => {
       const res = await fetch("/api/leads");
       const data = await res.json();
       if (data.success) {
         setLeads(data.leads || []);
       }
-    } catch (error) {
-      console.error("Lỗi khi tải leads:", error);
-    } finally {
-      setLoading(false);
-    }
+    })()
+      .catch((error) => {
+        console.error("Lỗi khi tải leads:", error);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
   useEffect(() => {
@@ -217,7 +218,7 @@ export default function LeadsManagementTab() {
                   <td className="p-4 space-y-0.5 text-foreground/60 text-[10px]">
                     <div className="flex items-center gap-1.5">
                       <Laptop className="w-3.5 h-3.5 text-foreground/30" />
-                      <span>{getBriefUserAgent(lead.metadata?.userAgent)}</span>
+                      <span>{getBriefUserAgent(lead.metadata?.userAgent || "")}</span>
                     </div>
                     {lead.metadata?.clientIp && (
                       <p className="font-mono text-foreground/30 pl-5">IP: {lead.metadata.clientIp}</p>

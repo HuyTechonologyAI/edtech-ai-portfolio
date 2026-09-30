@@ -131,7 +131,7 @@ export default function FeatureFlagsTab() {
             <div className="flex items-center justify-between p-4 bg-background rounded-xl border border-red-500/20 shadow-[0_0_20px_rgba(239,68,68,0.05)]">
               <div>
                 <p className="font-bold text-red-400">Chế Độ Bảo Trì (Maintenance)</p>
-                <p className="text-xs text-foreground/50 mt-1">Chặn toàn bộ truy cập, chỉ hiển thị trang "Đang nâng cấp".</p>
+                <p className="text-xs text-foreground/50 mt-1">Chặn toàn bộ truy cập, chỉ hiển thị trang &quot;Đang nâng cấp&quot;.</p>
               </div>
               <button onClick={() => toggleFlag("maintenanceMode")} className="text-red-500 transition-transform hover:scale-105 cursor-pointer">
                 {flags.maintenanceMode ? <ToggleRight className="w-10 h-10" /> : <ToggleLeft className="w-10 h-10 text-foreground/30" />}

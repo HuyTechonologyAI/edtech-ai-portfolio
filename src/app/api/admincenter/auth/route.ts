@@ -1,3 +1,5 @@
+
+import { getErrorMessage } from "@/lib/error-message";
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createHash, randomBytes } from "node:crypto";
@@ -70,7 +72,6 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const action = body.action || "login";
-    const cookieStore = await cookies();
 
     // 1. LOGOUT ACTION
     if (action === "logout") {
@@ -226,10 +227,10 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ error: "Thao tác không được hỗ trợ" }, { status: 400 });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Auth endpoint error:", err);
     return NextResponse.json(
-      { error: "Lỗi xử lý xác thực: " + (err.message || "Unknown") },
+      { error: "Lỗi xử lý xác thực: " + (getErrorMessage(err) || "Unknown") },
       { status: 500 }
     );
   }

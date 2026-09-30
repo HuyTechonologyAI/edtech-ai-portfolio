@@ -1,5 +1,8 @@
 "use client";
 
+import { getErrorMessage } from "@/lib/error-message";
+
+import { useRouter } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
 import { Star, Send, Loader2, MessageSquare, AlertCircle } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
@@ -13,6 +16,7 @@ interface Review {
 }
 
 export function CommentSection({ itemType, itemId }: { itemType: string; itemId: number }) {
+  const router = useRouter();
   const { user } = useAuth();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -24,15 +28,17 @@ export function CommentSection({ itemType, itemId }: { itemType: string; itemId:
   const [errorMsg, setErrorMsg] = useState("");
 
   const fetchReviews = useCallback(async () => {
-    try {
+    return (async () => {
       const res = await fetch(`/api/comments?itemType=${itemType}&itemId=${itemId}`);
       const data = await res.json();
       setReviews(data.reviews || []);
-    } catch (err) {
-      console.error("Failed to fetch reviews", err);
-    } finally {
-      setIsLoading(false);
-    }
+    })()
+      .catch((err) => {
+        console.error("Failed to fetch reviews", err);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   }, [itemType, itemId]);
 
   useEffect(() => {
@@ -75,8 +81,8 @@ export function CommentSection({ itemType, itemId }: { itemType: string; itemId:
       
       // Tự động xóa thông báo sau 6 giây
       setTimeout(() => setSuccessMsg(""), 6000);
-    } catch (err: any) {
-      setErrorMsg(err.message);
+    } catch (err: unknown) {
+      setErrorMsg(getErrorMessage(err));
     } finally {
       setIsSubmitting(false);
     }
@@ -188,7 +194,7 @@ export function CommentSection({ itemType, itemId }: { itemType: string; itemId:
             </p>
             <button
               onClick={() => {
-                window.location.href = "/auth";
+                router.push("/auth");
               }}
               className="px-4 py-2 bg-surface border border-border hover:border-secondary/40 rounded-xl text-xs font-bold text-secondary transition-all"
             >

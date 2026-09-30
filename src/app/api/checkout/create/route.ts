@@ -1,3 +1,5 @@
+
+import { getErrorMessage } from "@/lib/error-message";
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
@@ -39,7 +41,7 @@ export async function POST(req: NextRequest) {
       const qrUrl = `https://img.vietqr.io/image/${bankId}-${accountNo}-compact2.png?amount=${amount}&addInfo=${memoCode}&accountName=${accountName}`;
 
       return NextResponse.json({ success: true, orderId: order.id, memoCode, amount, qrUrl });
-    } catch (dbError: any) {
+    } catch {
       // Fallback mô phỏng giao dịch cao cấp
       const bankId = process.env.NEXT_PUBLIC_BANK_ID || "ACB";
       const accountNo = process.env.NEXT_PUBLIC_ACCOUNT_NO || "37780997";
@@ -55,7 +57,7 @@ export async function POST(req: NextRequest) {
         isFallback: true 
       });
     }
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
   }
 }

@@ -68,24 +68,28 @@ export default function PageBuilderTab() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  useEffect(() => {
-    fetchContent();
-  }, []);
+
 
   const fetchContent = async () => {
-    try {
+    return (async () => {
       const res = await fetch("/api/admin/content?id=home_page");
       const json = await res.json();
       if (json.data) {
         // Merge with default to ensure no missing keys
         setContent({ ...DEFAULT_CONTENT, ...json.data });
       }
-    } catch (error) {
-      console.error("Lỗi khi tải nội dung trang chủ:", error);
-    } finally {
-      setIsLoading(false);
-    }
+    })()
+      .catch((error) => {
+        console.error("Lỗi khi tải nội dung trang chủ:", error);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   };
+
+  useEffect(() => {
+    fetchContent();
+  }, []);
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -108,14 +112,14 @@ export default function PageBuilderTab() {
       } else {
         alert("Có lỗi xảy ra khi lưu nội dung.");
       }
-    } catch (error) {
+    } catch {
       alert("Không thể kết nối đến server.");
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleStatChange = (index: number, field: keyof HomePageContent['stats'][0], value: any) => {
+  const handleStatChange = (index: number, field: keyof HomePageContent['stats'][0], value: HomePageContent['stats'][0][keyof HomePageContent['stats'][0]]) => {
     const newStats = [...content.stats];
     newStats[index] = { ...newStats[index], [field]: value };
     setContent({ ...content, stats: newStats });

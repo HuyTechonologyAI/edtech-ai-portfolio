@@ -1,3 +1,5 @@
+
+import { getErrorMessage } from "@/lib/error-message";
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { verifyAdminAuth } from "@/lib/admin-auth";
@@ -17,7 +19,7 @@ export async function GET(req: NextRequest) {
     if (error) throw error;
 
     return NextResponse.json({ success: true, folders: data || [] });
-  } catch (error: any) {
+  } catch {
     // Trả về dữ liệu cây thư mục mẫu cao cấp nếu bảng chưa được khởi tạo SQL
     const fallbackFolders = [
       { id: 1, name: "🚀 Khởi Đầu Trí Tuệ Nhân Tạo", type: "RESOURCE", parent_id: null },
@@ -54,8 +56,8 @@ export async function POST(req: NextRequest) {
 
     if (error) throw error;
     return NextResponse.json({ success: true, folder: data?.[0] });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
   }
 }
 
@@ -77,7 +79,7 @@ export async function DELETE(req: NextRequest) {
 
     if (error) throw error;
     return NextResponse.json({ success: true });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
   }
 }

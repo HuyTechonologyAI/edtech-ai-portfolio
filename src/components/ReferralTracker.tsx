@@ -20,7 +20,7 @@ export function ReferralTracker() {
         
         console.log(`[Affiliate Engine] Đã ghi nhận Attribution Cookie cho đối tác: ${cleanRef}`);
       }
-    } catch (e) {
+    } catch {
       // Silent error handler
     }
   }, [searchParams]);

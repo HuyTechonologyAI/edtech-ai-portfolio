@@ -1,5 +1,8 @@
 "use client";
 
+import { getErrorMessage } from "@/lib/error-message";
+
+import type { ContentItem } from "@/types/content";
 import { useState, useEffect } from "react";
 import { Search, FileText, Download, Eye, FileDown, Loader2, TrendingUp, Lock, Folder } from "lucide-react";
 import { TiltCard } from "@/components/TiltCard";
@@ -24,7 +27,7 @@ interface FolderItem {
 
 export default function ResourcesPage() {
   const { user } = useAuth();
-  const [resources, setResources] = useState<any[]>([]);
+  const [resources, setResources] = useState<ContentItem[]>([]);
   const [folders, setFolders] = useState<FolderItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -68,8 +71,8 @@ export default function ResourcesPage() {
   // CƠ CHẾ KIỂM SOÁT QUOTA TÀI KHOẢN MIỄN PHÍ VÀ KHÁCH VÃNG LAI
   // Giới hạn: Đọc tối đa 2 tài liệu/ngày, Tải 1 tài liệu miễn phí/ngày
   const checkFreemiumQuota = (type: "READ_DOC" | "DOWNLOAD_DOC", itemId: string) => {
-    const isUserPremium = user?.app_metadata?.is_premium === true || (user as any)?.user_metadata?.is_premium === true;
-    const isUserAdmin = user?.app_metadata?.role === "admin" || (user as any)?.user_metadata?.role === "admin";
+    const isUserPremium = user?.app_metadata?.is_premium === true || user?.user_metadata?.is_premium === true;
+    const isUserAdmin = user?.app_metadata?.role === "admin" || user?.user_metadata?.role === "admin";
     if (isUserPremium || isUserAdmin) return true;
 
     const todayStr = new Date().toISOString().split("T")[0];
@@ -133,8 +136,8 @@ export default function ResourcesPage() {
       } else {
         alert(data.error || "Không thể khởi tạo đường dẫn tải bảo mật Signed URL. Vui lòng thử lại.");
       }
-    } catch (err: any) {
-      alert("Lỗi kết nối máy chủ cấp phép: " + err.message);
+    } catch (err: unknown) {
+      alert("Lỗi kết nối máy chủ cấp phép: " + getErrorMessage(err));
     } finally {
       setDownloadingId(null);
     }
@@ -267,7 +270,7 @@ export default function ResourcesPage() {
         </div>
 
         {/* Banner thông báo Lượt xem/Tải giới hạn trong ngày cho Freemember / Khách */}
-        {(!user || (user?.app_metadata?.is_premium !== true && (user as any)?.user_metadata?.is_premium !== true && user?.app_metadata?.role !== "admin" && (user as any)?.user_metadata?.role !== "admin")) && (
+        {(!user || (user?.app_metadata?.is_premium !== true && user?.user_metadata?.is_premium !== true && user?.app_metadata?.role !== "admin" && user?.user_metadata?.role !== "admin")) && (
           <div className="mb-8 bg-gradient-to-r from-surface to-surface/40 border border-secondary/30 p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center border border-secondary/20 shrink-0">
@@ -404,8 +407,8 @@ export default function ResourcesPage() {
               const totalViews = stats?.total || 0;
               const todayViews = stats?.today || 0;
 
-              const isUserPremium = user?.app_metadata?.is_premium === true || (user as any)?.user_metadata?.is_premium === true;
-              const isUserAdmin = user?.app_metadata?.role === "admin" || (user as any)?.user_metadata?.role === "admin";
+              const isUserPremium = user?.app_metadata?.is_premium === true || user?.user_metadata?.is_premium === true;
+              const isUserAdmin = user?.app_metadata?.role === "admin" || user?.user_metadata?.role === "admin";
               const canDownloadPremium = isUserPremium || isUserAdmin;
 
               // Tìm mapping thư mục trực quan
@@ -480,7 +483,7 @@ export default function ResourcesPage() {
                             </Link>
                           ) : (
                             <button 
-                              onClick={() => handleSecureDownload(item.id, item.isPremium)}
+                              onClick={() => handleSecureDownload(item.id, !!item.isPremium)}
                               disabled={downloadingId === item.id}
                               className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl transition-all text-xs font-bold hover-glow cursor-pointer ${item.isPremium ? 'bg-orange-500 text-black hover:bg-orange-600' : 'bg-secondary text-black hover:bg-secondary/90'} ${downloadingId === item.id ? 'opacity-70 cursor-wait' : ''}`}
                             >
@@ -509,8 +512,8 @@ export default function ResourcesPage() {
       </div>
 
       {(() => {
-        const isUserPremium = user?.app_metadata?.is_premium === true || (user as any)?.user_metadata?.is_premium === true;
-        const isUserAdmin = user?.app_metadata?.role === "admin" || (user as any)?.user_metadata?.role === "admin";
+        const isUserPremium = user?.app_metadata?.is_premium === true || user?.user_metadata?.is_premium === true;
+        const isUserAdmin = user?.app_metadata?.role === "admin" || user?.user_metadata?.role === "admin";
         let computedMaxPages = 5;
 
         if (isUserPremium || isUserAdmin) {

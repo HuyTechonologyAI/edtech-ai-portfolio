@@ -1,12 +1,13 @@
 "use client";
 
+import { useHydrated } from "@/hooks/use-browser-state";
 import { useState, useEffect, useRef } from "react";
 import { Globe, Check, ChevronDown } from "lucide-react";
 
 declare global {
   interface Window {
     googleTranslateElementInit: () => void;
-    google: any;
+    google?: { translate?: { TranslateElement?: new (options: { pageLanguage: string; autoDisplay: boolean; includedLanguages: string }, elementId: string) => object } };
   }
 }
 
@@ -22,20 +23,23 @@ const LANGUAGES = [
   { code: "hi", label: "हिन्दी", flag: "🇮🇳", name: "Hindi" },
 ];
 
+function readLanguageCookie() {
+  const match = document.cookie.match(/(?:^|;)\s*googtrans=([^;]*)/);
+  return match?.[1]?.split("/").at(-1) || "vi";
+}
+
+function writeLanguageCookie(value: string) {
+  document.cookie = `googtrans=${value}; path=/;`;
+  document.cookie = `googtrans=${value}; domain=.${window.location.hostname}; path=/;`;
+}
+
 export function LanguageSwitcher() {
   const [isOpen, setIsOpen] = useState(false);
-  const [currentLang, setCurrentLang] = useState("vi");
+  const hydrated = useHydrated();
+  const currentLang = hydrated ? readLanguageCookie() : "vi";
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // 1. Phân tích ngôn ngữ hiện tại từ Google Translate Cookie
-    const match = document.cookie.match(/(?:^|;)\s*googtrans=([^;]*)/);
-    if (match && match[1]) {
-      const parts = match[1].split("/");
-      const langCode = parts[parts.length - 1];
-      if (langCode) setCurrentLang(langCode);
-    }
-
     // 2. Nhúng Script Google Translate tự động ngầm
     if (!document.getElementById("google-translate-script")) {
       window.googleTranslateElementInit = () => {
@@ -80,13 +84,11 @@ export function LanguageSwitcher() {
   }, []);
 
   const selectLanguage = (code: string) => {
-    setCurrentLang(code);
     setIsOpen(false);
 
     // Cấu hình cookie dịch tự động toàn diện của Google
     const val = `/vi/${code}`;
-    document.cookie = `googtrans=${val}; path=/;`;
-    document.cookie = `googtrans=${val}; domain=.${window.location.hostname}; path=/;`;
+    writeLanguageCookie(val);
     
     // Tải lại trang để Google DOM Parser áp dụng dịch thuật triệt để lên 100% nội dung
     window.location.reload();

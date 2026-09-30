@@ -23,7 +23,7 @@ export default function SystemHealthTab() {
       } else {
         setRevalidateStatus({ type: "error", message: data.error || "Lỗi xóa cache" });
       }
-    } catch (error: any) {
+    } catch {
       setRevalidateStatus({ type: "error", message: "Không thể kết nối đến server" });
     } finally {
       setIsRevalidating(false);

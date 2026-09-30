@@ -1,7 +1,9 @@
 "use client";
 
+import { getErrorMessage } from "@/lib/error-message";
+
 import { useState, useEffect, useCallback } from "react";
-import { Gift, Plus, Trash2, Edit2, CheckCircle2, AlertCircle, Loader2, Sparkles, UserCheck, Flame, ToggleLeft, ToggleRight, Bot, Zap, HelpCircle } from "lucide-react";
+import { Gift, Plus, Trash2, Loader2, Sparkles, ToggleLeft, ToggleRight, Bot, Zap } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
 
 interface DailyTaskItem {
@@ -39,8 +41,7 @@ export default function DailyTasksAdminTab() {
   const [generatingAi, setGeneratingAi] = useState(false);
 
   const fetchTasks = useCallback(async () => {
-    setLoading(true);
-    try {
+    return (async () => {
       const res = await fetch("/api/admin/tasks");
       const data = await res.json();
       if (res.ok) {
@@ -48,12 +49,19 @@ export default function DailyTasksAdminTab() {
       } else {
         setErrorMsg(data.error);
       }
-    } catch (err: any) {
-      setErrorMsg(err.message);
-    } finally {
-      setLoading(false);
-    }
+    })()
+      .catch((err: unknown) => {
+        setErrorMsg(getErrorMessage(err));
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
+
+  const refreshTasks = () => {
+    setLoading(true);
+    return fetchTasks();
+  };
 
   useEffect(() => {
     fetchTasks();
@@ -85,7 +93,7 @@ export default function DailyTasksAdminTab() {
       if (data.task) {
         setTasks(prev => [data.task, ...prev]);
       } else {
-        fetchTasks();
+        refreshTasks();
       }
 
       // Reset
@@ -93,8 +101,8 @@ export default function DailyTasksAdminTab() {
       setRewardPoints(10);
       setCustomTarget("");
       alert("Đã tạo nhiệm vụ hàng ngày thành công!");
-    } catch (err: any) {
-      alert("Lỗi tạo nhiệm vụ: " + err.message);
+    } catch (err: unknown) {
+      alert("Lỗi tạo nhiệm vụ: " + getErrorMessage(err));
     }
   };
 
@@ -110,8 +118,8 @@ export default function DailyTasksAdminTab() {
       } else {
         alert("Lỗi xử lý payload từ AI.");
       }
-    } catch (err: any) {
-      alert("Lỗi kết nối AI: " + err.message);
+    } catch (err: unknown) {
+      alert("Lỗi kết nối AI: " + getErrorMessage(err));
     } finally {
       setGeneratingAi(false);
     }
@@ -136,8 +144,8 @@ export default function DailyTasksAdminTab() {
         setAiSuggestions(prev => prev.filter(item => item.title !== sug.title));
         alert("⚡ Đã đăng tự động kịch bản AI lên Checklist của học viên thành công!");
       }
-    } catch (err: any) {
-      alert("Lỗi đăng tác vụ: " + err.message);
+    } catch (err: unknown) {
+      alert("Lỗi đăng tác vụ: " + getErrorMessage(err));
     }
   };
 
@@ -154,8 +162,8 @@ export default function DailyTasksAdminTab() {
       if (!res.ok) throw new Error("Cập nhật trạng thái thất bại");
 
       setTasks(prev => prev.map(t => t.id === item.id ? { ...t, is_active: targetState } : t));
-    } catch (err: any) {
-      alert("Lỗi: " + err.message);
+    } catch (err: unknown) {
+      alert("Lỗi: " + getErrorMessage(err));
     } finally {
       setActionLoading(null);
     }
@@ -170,8 +178,8 @@ export default function DailyTasksAdminTab() {
       if (!res.ok) throw new Error("Xóa thất bại");
 
       setTasks(prev => prev.filter(t => t.id !== id));
-    } catch (err: any) {
-      alert("Lỗi: " + err.message);
+    } catch (err: unknown) {
+      alert("Lỗi: " + getErrorMessage(err));
     } finally {
       setActionLoading(null);
     }
@@ -179,6 +187,7 @@ export default function DailyTasksAdminTab() {
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {errorMsg && <p role="alert" className="text-red-400">{errorMsg}</p>}
       {/* Informative Header Banner */}
       <div className="bg-gradient-to-r from-orange-500/10 via-surface to-amber-500/5 border border-orange-500/20 p-5 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="space-y-1">
@@ -214,7 +223,7 @@ export default function DailyTasksAdminTab() {
             {generatingAi ? (
               <>
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                <span>AI Đang "Động Não"...</span>
+                <span>AI Đang &quot;Động Não&quot;...</span>
               </>
             ) : (
               <>

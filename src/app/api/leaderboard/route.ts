@@ -96,7 +96,7 @@ export async function GET(req: NextRequest) {
       currentUserRank,
       total: ranked.length,
     });
-  } catch (error: any) {
+  } catch {
     // Fallback demo data khi DB chưa có dữ liệu
     const fallback = [
       { rank: 1, displayName: "Minh T.", avatarLetter: "M", points: 248, streak_count: 14, streakBadge: { label: "🔥 Tuần Streak", color: "orange" }, rankBadge: "🥇", isCurrentUser: false },

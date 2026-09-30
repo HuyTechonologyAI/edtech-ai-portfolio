@@ -1,3 +1,5 @@
+
+import { getErrorMessage } from "@/lib/error-message";
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
@@ -11,7 +13,7 @@ export async function POST(req: NextRequest) {
     
     let descriptionsString = "";
     if (payload.data && Array.isArray(payload.data)) {
-      descriptionsString = payload.data.map((tx: any) => tx.description || "").join(" ");
+      descriptionsString = payload.data.map((tx: { description?: string }) => tx.description || "").join(" ");
     } else if (payload.data && payload.data.description) {
       descriptionsString = payload.data.description;
     } else {
@@ -53,13 +55,13 @@ export async function POST(req: NextRequest) {
         await supabase.auth.admin.updateUserById(order.user_id, {
           user_metadata: { is_premium: true }
         });
-      } catch (authErr) {
+      } catch {
         console.log("Cần Service Role Auth Key để tự động gán metadata cho User ID:", order.user_id);
       }
     }
 
     return NextResponse.json({ success: true, processedMemo: memoCode, orderId: order.id });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
   }
 }

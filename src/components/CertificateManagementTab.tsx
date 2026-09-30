@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Award, Search, Plus, Trash2, Eye, Printer, Sparkles, Brain, CheckCircle2, AlertCircle, FileText, Download, RefreshCw } from "lucide-react";
+import { Award, Search, Plus, Trash2, Eye, Sparkles, Brain, RefreshCw } from "lucide-react";
 
 export function CertificateManagementTab() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [aiAnalysisResult, setAiAnalysisResult] = useState<any | null>({
+  const [aiAnalysisResult, setAiAnalysisResult] = useState({
     completionRate: "92.4%",
     topCourse: "Master AI & Automation Thực Chiến",
     viralShares: 486,

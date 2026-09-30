@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { ArrowRight, Bot, Zap, BookOpen, Brain, Users, Star, FileText, Workflow } from "lucide-react";
+import { Bot, Zap, BookOpen, Brain, Users, Star, FileText, Workflow } from "lucide-react";
 import { motion, Variants } from "framer-motion";
 import { TiltCard } from "@/components/TiltCard";
 import { EcosystemSection } from "@/components/EcosystemSection";
@@ -76,37 +76,7 @@ function AnimatedCounter({ target, suffix = "", prefix = "", duration = 2000 }: 
 }
 
 // === Typewriter Text Component ===
-function TypewriterText({ phrases, delay = 2500 }: { phrases: string[]; delay?: number }) {
-  const [index, setIndex] = useState(0);
-  const [subIndex, setSubIndex] = useState(0);
-  const [reverse, setReverse] = useState(false);
 
-  useEffect(() => {
-    if (subIndex === phrases[index].length + 1 && !reverse) {
-      const timeout = setTimeout(() => setReverse(true), delay);
-      return () => clearTimeout(timeout);
-    }
-
-    if (subIndex === 0 && reverse) {
-      setReverse(false);
-      setIndex((prev) => (prev + 1) % phrases.length);
-      return;
-    }
-
-    const timeout = setTimeout(() => {
-      setSubIndex((prev) => prev + (reverse ? -1 : 1));
-    }, reverse ? 40 : 80);
-
-    return () => clearTimeout(timeout);
-  }, [subIndex, index, reverse, phrases, delay]);
-
-  return (
-    <span className="text-secondary neon-glow-text inline-block min-w-[280px] text-left">
-      {phrases[index].substring(0, subIndex)}
-      <span className="typewriter-cursor" />
-    </span>
-  );
-}
 
 export default function Home() {
   const [pageContent, setPageContent] = useState<HomePageContent>(DEFAULT_CONTENT);
@@ -346,11 +316,11 @@ export default function Home() {
                   <ul className="text-sm text-foreground/70 space-y-2.5">
                     <li className="flex items-start gap-2">
                       <span className="text-secondary mt-0.5">•</span> 
-                      <span>Danh hiệu <strong>"Người thợ trẻ giỏi toàn quốc" (2020)</strong> do TW Đoàn TNCS Hồ Chí Minh trao tặng.</span>
+                      <span>Danh hiệu <strong>&quot;Người thợ trẻ giỏi toàn quốc&quot; (2020)</strong> do TW Đoàn TNCS Hồ Chí Minh trao tặng.</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-secondary mt-0.5">•</span> 
-                      <span>Giải Nhất <strong>"Khởi nghiệp ĐMST OCOP"</strong> tỉnh Đồng Nai (2020).</span>
+                      <span>Giải Nhất <strong>&quot;Khởi nghiệp ĐMST OCOP&quot;</strong> tỉnh Đồng Nai (2020).</span>
                     </li>
                   </ul>
                 </div>

@@ -1,3 +1,5 @@
+
+import { getErrorMessage } from "@/lib/error-message";
 /**
  * Central AI Gateway with Intelligent Quota Failover & Multi-Provider Pooling
  * Huy Technology AI Hub - Hệ thống điều phối AI xuyên suốt hệ sinh thái
@@ -229,7 +231,7 @@ export async function dispatchAiCompletion(
 
       if (provider.type === "fallback") {
         // Deterministic Fallback Generator
-        const text = generateSmartHeuristicResponse(prompt, options.systemPrompt);
+        const text = generateSmartHeuristicResponse(prompt);
         provider.status = "healthy";
         provider.latencyMs = Date.now() - reqStart;
         provider.lastUsed = new Date().toISOString();
@@ -242,22 +244,22 @@ export async function dispatchAiCompletion(
           failoversOccurred: failovers,
         };
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       provider.failedRequests++;
-      const isQuotaError = err?.message?.includes("429") || 
-                           err?.message?.includes("quota") || 
-                           err?.message?.includes("ResourceExhausted") ||
-                           err?.message?.includes("rate limit");
+      const isQuotaError = getErrorMessage(err)?.includes("429") ||
+                           getErrorMessage(err)?.includes("quota") ||
+                           getErrorMessage(err)?.includes("ResourceExhausted") ||
+                           getErrorMessage(err)?.includes("rate limit");
 
       provider.status = isQuotaError ? "quota_exceeded" : "unreachable";
       failovers.push(`${provider.name} (${isQuotaError ? "Hết Quota/Rate Limit" : "Lỗi kết nối"})`);
-      console.warn(`[AI Gateway Failover] ${provider.name} thất bại -> Chuyển hướng provider tiếp theo. Lỗi: ${err?.message}`);
+      console.warn(`[AI Gateway Failover] ${provider.name} thất bại -> Chuyển hướng provider tiếp theo. Lỗi: ${getErrorMessage(err)}`);
     }
   }
 
   // Nếu tất cả provider thất bại, kích hoạt heuristic cứu sinh khẩn cấp
   return {
-    text: generateSmartHeuristicResponse(prompt, options.systemPrompt),
+    text: generateSmartHeuristicResponse(prompt),
     providerUsed: "emergency-heuristic",
     providerName: "Huy Technology Emergency Heuristic Engine",
     latencyMs: Date.now() - startTime,
@@ -268,11 +270,9 @@ export async function dispatchAiCompletion(
 /**
  * Bộ sinh nội dung chuẩn hóa Offline trong tình huống cạn kiệt toàn bộ API
  */
-function generateSmartHeuristicResponse(prompt: string, systemPrompt?: string): string {
+function generateSmartHeuristicResponse(prompt: string): string {
   const isSlide = prompt.toLowerCase().includes("slide") || prompt.toLowerCase().includes("marp") || prompt.toLowerCase().includes("presenton");
   const isLesson = prompt.toLowerCase().includes("giáo án") || prompt.toLowerCase().includes("kế hoạch bài dạy") || prompt.toLowerCase().includes("cv 5512");
-  const isVideo = prompt.toLowerCase().includes("video") || prompt.toLowerCase().includes("moneyprinter");
-  const isImage = prompt.toLowerCase().includes("comfyui") || prompt.toLowerCase().includes("prompt ảnh");
 
   if (isSlide) {
     return `---

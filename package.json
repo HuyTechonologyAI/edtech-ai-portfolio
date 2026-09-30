@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "lint:quality-gate": "node scripts/lint-ci.mjs",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "node scripts/run-tests.mjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
     if (error) throw error;
 
     return NextResponse.json({ success: true, status: data?.status || "PENDING" });
-  } catch (error: any) {
+  } catch {
     return NextResponse.json({ success: true, status: "PENDING", isFallback: true });
   }
 }

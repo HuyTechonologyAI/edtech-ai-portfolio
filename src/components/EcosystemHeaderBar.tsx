@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+
 import { Sparkles, ExternalLink, GraduationCap, Calculator, Cpu } from "lucide-react";
 
 export function EcosystemHeaderBar() {

@@ -1,5 +1,7 @@
 "use client";
 
+import { getErrorMessage } from "@/lib/error-message";
+
 import { useState, useEffect, useCallback } from "react";
 import { Loader2, CheckCircle, XCircle, Trash2, Star, MessageSquare, AlertCircle } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
@@ -21,10 +23,10 @@ export default function CommentModerationTab() {
   const [isLoading, setIsLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
 
-  const logAudit = async (actionType: string, targetResource: string, details: any = {}) => {
+  const logAudit = async (actionType: string, targetResource: string, details: Record<string, unknown> = {}) => {
     if (!user) return;
     try {
-      const uMeta = (user as any).user_metadata || {};
+      const uMeta = user.user_metadata || {};
       await fetch("/api/admin/audit-logs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -43,17 +45,18 @@ export default function CommentModerationTab() {
   };
 
   const fetchComments = useCallback(async () => {
-    setIsLoading(true);
-    try {
+    return (async () => {
       const res = await fetch("/api/admin/comments");
       if (!res.ok) throw new Error("Không thể tải danh sách bình luận");
       const data = await res.json();
       setComments(data.comments || []);
-    } catch (err: any) {
-      setErrorMsg(err.message);
-    } finally {
-      setIsLoading(false);
-    }
+    })()
+      .catch((err: unknown) => {
+        setErrorMsg(getErrorMessage(err));
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   }, []);
 
   useEffect(() => {
@@ -80,8 +83,8 @@ export default function CommentModerationTab() {
         `Bình luận #${id} của ${targetComm?.user_email || "Học viên"}`,
         { id, previousStatus: targetComm?.status, newStatus: targetStatus, content: targetComm?.content }
       );
-    } catch (err: any) {
-      alert("Lỗi: " + err.message);
+    } catch (err: unknown) {
+      alert("Lỗi: " + getErrorMessage(err));
     }
   };
 
@@ -100,8 +103,8 @@ export default function CommentModerationTab() {
         `Bình luận #${id} của ${targetComm?.user_email || "Học viên"}`,
         { id, content: targetComm?.content }
       );
-    } catch (err: any) {
-      alert("Lỗi: " + err.message);
+    } catch (err: unknown) {
+      alert("Lỗi: " + getErrorMessage(err));
     }
   };
 

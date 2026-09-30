@@ -1,5 +1,7 @@
 "use client";
 
+import { getErrorMessage } from "@/lib/error-message";
+
 import { useState } from "react";
 import { X, Mail, Phone, User, Sparkles, Loader2, ShieldCheck } from "lucide-react";
 
@@ -74,8 +76,8 @@ export function LeadCaptureModal({ isOpen, onClose, onSuccess, targetItemTitle, 
 
       // Kích hoạt callback thành công
       onSuccess(fullName.trim(), email.trim(), phoneNumber.trim());
-    } catch (err: any) {
-      setErrorMsg(err.message || "Đã xảy ra lỗi, vui lòng thử lại!");
+    } catch (err: unknown) {
+      setErrorMsg(getErrorMessage(err) || "Đã xảy ra lỗi, vui lòng thử lại!");
     } finally {
       setLoading(false);
     }
@@ -111,7 +113,7 @@ export function LeadCaptureModal({ isOpen, onClose, onSuccess, targetItemTitle, 
         {/* Body Form */}
         <form onSubmit={handleSubmit} className="space-y-4 text-left relative z-10">
           <p className="text-xs text-foreground/75 leading-relaxed bg-background/50 border border-border p-3.5 rounded-xl">
-            Để tải vĩnh viễn tài liệu <strong className="text-secondary">"{targetItemTitle}"</strong> và nhận kịch bản tự động hóa (JSON Make/n8n) gửi thẳng qua Zalo/Email, vui lòng cung cấp thông tin liên hệ của bạn bên dưới.
+            Để tải vĩnh viễn tài liệu <strong className="text-secondary">&quot;{targetItemTitle}&quot;</strong> và nhận kịch bản tự động hóa (JSON Make/n8n) gửi thẳng qua Zalo/Email, vui lòng cung cấp thông tin liên hệ của bạn bên dưới.
           </p>
 
           {errorMsg && (

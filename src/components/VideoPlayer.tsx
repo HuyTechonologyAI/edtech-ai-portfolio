@@ -1,5 +1,8 @@
 "use client";
 
+import Image from "next/image";
+
+import { useHydrated } from "@/hooks/use-browser-state";
 import dynamic from "next/dynamic";
 import { useState, useEffect } from "react";
 import { Play, Clock, RotateCcw, X } from "lucide-react";
@@ -25,12 +28,23 @@ function getStartTime(url: string): number {
   return tMatch ? parseInt(tMatch[1], 10) : 0;
 }
 
-export function VideoPlayer({ url, playing = false, controls = true }: { url: string; playing?: boolean; controls?: boolean }) {
-  const [mounted, setMounted] = useState(false);
-  const [showToast, setShowToast] = useState(false);
-  const [savedTime, setSavedTime] = useState(0);
+type VideoPlayerProps = { url: string; playing?: boolean; controls?: boolean };
+
+export function VideoPlayer(props: VideoPlayerProps) {
+  const hydrated = useHydrated();
+  if (!hydrated) return <div className="w-full h-full bg-surface animate-pulse min-h-[200px] rounded-xl" />;
+  return <VideoPlayerContent key={props.url} {...props} />;
+}
+
+function readResumeTime(url: string) {
+  try { return Number.parseFloat(localStorage.getItem(`video_resume_${encodeURIComponent(url.trim())}`) || "0") || 0; } catch { return 0; }
+}
+
+function VideoPlayerContent({ url, controls = true }: VideoPlayerProps) {
+  const [savedTime, setSavedTime] = useState(() => readResumeTime(url));
+  const [showToast, setShowToast] = useState(() => savedTime > 5);
   const [iframeKey, setIframeKey] = useState(0);
-  const [hasResumed, setHasResumed] = useState(false);
+  const [hasResumed, setHasResumed] = useState(() => savedTime > 5);
 
   // States hỗ trợ cơ chế Anti-bypass
   const [duration, setDuration] = useState(0);
@@ -45,17 +59,12 @@ export function VideoPlayer({ url, playing = false, controls = true }: { url: st
   const storageKey = typeof window !== "undefined" ? `video_resume_${encodeURIComponent(cleanUrl)}` : "";
 
   const { user } = useAuth();
-  const isUserPremium = user?.app_metadata?.is_premium === true || (user as any)?.user_metadata?.is_premium === true;
-  const isUserAdmin = user?.app_metadata?.role === "admin" || (user as any)?.user_metadata?.role === "admin";
+  const isUserPremium = user?.app_metadata?.is_premium === true || user?.user_metadata?.is_premium === true;
+  const isUserAdmin = user?.app_metadata?.role === "admin" || user?.user_metadata?.role === "admin";
   const hasUnlimitedAccess = isUserPremium || isUserAdmin;
 
-  const [unlockedQuota, setUnlockedQuota] = useState(hasUnlimitedAccess);
-
-  useEffect(() => {
-    if (hasUnlimitedAccess) {
-      setUnlockedQuota(true);
-    }
-  }, [hasUnlimitedAccess]);
+  const [quotaApproved, setUnlockedQuota] = useState(false);
+  const unlockedQuota = hasUnlimitedAccess || quotaApproved;
 
   const handleAttemptPlay = async () => {
     if (hasUnlimitedAccess) {
@@ -151,25 +160,10 @@ export function VideoPlayer({ url, playing = false, controls = true }: { url: st
   };
 
   useEffect(() => {
-    setMounted(true);
-    if (!storageKey) return;
-
-    // Kiểm tra bộ nhớ đệm để đề xuất tiếp tục phát
-    const saved = localStorage.getItem(storageKey);
-    if (saved) {
-      const sec = parseFloat(saved);
-      if (sec > 5) {
-        setSavedTime(sec);
-        setShowToast(true);
-        setHasResumed(true);
-
-        const timer = setTimeout(() => {
-          setShowToast(false);
-        }, 8000);
-        return () => clearTimeout(timer);
-      }
-    }
-  }, [storageKey]);
+    if (!showToast) return;
+    const timer = setTimeout(() => setShowToast(false), 8000);
+    return () => clearTimeout(timer);
+  }, [showToast]);
 
   // Bộ lắng nghe tiến trình xem video (Anti-bypass & Auto resume)
   const handleProgress = (state: { playedSeconds: number; played: number }) => {
@@ -255,15 +249,6 @@ export function VideoPlayer({ url, playing = false, controls = true }: { url: st
     return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   };
 
-  if (!mounted) {
-    return (
-      <div className="w-full h-full bg-surface flex flex-col items-center justify-center animate-pulse min-h-[200px] rounded-xl border border-white/5">
-        <Play className="h-10 w-10 text-secondary/40 mb-3" />
-        <div className="text-foreground/40 font-medium text-xs">Đang nạp trình phát video...</div>
-      </div>
-    );
-  }
-
   const targetStartSeconds = hasResumed && savedTime > 5 ? Math.floor(savedTime) : urlStartTime;
 
   return (
@@ -274,7 +259,7 @@ export function VideoPlayer({ url, playing = false, controls = true }: { url: st
           className="absolute inset-0 w-full h-full cursor-pointer group flex items-center justify-center z-10 overflow-hidden bg-surface"
         >
           {ytId && (
-            <img 
+            <Image unoptimized width={640} height={480}
               src={`https://img.youtube.com/vi/${ytId}/hqdefault.jpg`}
               alt="Video Thumbnail Preview"
               className="w-full h-full object-cover opacity-75 group-hover:opacity-90 group-hover:scale-105 transition-all duration-500"

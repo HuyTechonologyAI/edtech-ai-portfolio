@@ -3029,7 +3029,7 @@ export default function AdminCenterPage() {
           ) : (
             <div className="bg-[#0F172A]/80 border border-white/10 rounded-2xl p-8 text-center">
               <Layers className="w-8 h-8 text-slate-600 mx-auto mb-3" />
-              <p className="text-slate-400 text-sm mb-4">Supervisor chưa được tải. Nhấn "Làm mới" để kết nối.</p>
+              <p className="text-slate-400 text-sm mb-4">Supervisor chưa được tải. Nhấn &quot;Làm mới&quot; để kết nối.</p>
               <button
                 onClick={fetchSupervisorStatus}
                 className="px-4 py-2 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-300 text-xs font-bold"

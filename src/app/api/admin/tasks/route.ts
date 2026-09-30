@@ -1,3 +1,5 @@
+
+import { getErrorMessage } from "@/lib/error-message";
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { verifyAdminAuth } from "@/lib/admin-auth";
@@ -11,7 +13,7 @@ export async function GET() {
 
     if (error) throw error;
     return NextResponse.json({ tasks: data || [] });
-  } catch (error: any) {
+  } catch {
     // Return sample active list if table is newly added / not run SQL yet
     const fallbackTasks = [
       { id: 1, title: "Đọc Ebook Tối ưu hóa Workflow chuyên sâu trong 10 phút", reward_points: 10, target_type: "READ_EBOOK", is_active: true, created_by: "admin@zentratech.io" },
@@ -49,8 +51,8 @@ export async function POST(req: NextRequest) {
 
     if (error) throw error;
     return NextResponse.json({ success: true, task: data?.[0] });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
   }
 }
 
@@ -73,8 +75,8 @@ export async function PUT(req: NextRequest) {
 
     if (error) throw error;
     return NextResponse.json({ success: true });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
   }
 }
 
@@ -96,7 +98,7 @@ export async function DELETE(req: NextRequest) {
 
     if (error) throw error;
     return NextResponse.json({ success: true });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
   }
 }

@@ -1,32 +1,17 @@
 "use client";
 
+import { useLocalStorageState } from "@/hooks/use-browser-state";
 import { useState, useEffect } from "react";
-import { Check, Sparkles, ShieldCheck, Zap, HelpCircle, ArrowRight, Layers } from "lucide-react";
+import { Check, Sparkles, HelpCircle, ArrowRight, Layers } from "lucide-react";
 import Link from "next/link";
-import { useAuth } from "@/components/AuthProvider";
+import type { PricingTier, MatrixFeature } from "@/types/content";
 
 export default function PricingPage() {
-  const { user } = useAuth();
   const [isYearly, setIsYearly] = useState(true);
-  const [customTiersList, setCustomTiersList] = useState<any[] | null>(null);
-  const [customMatrixList, setCustomMatrixList] = useState<any[] | null>(null);
+  const [customTiersList, setCustomTiersList] = useLocalStorageState<PricingTier[] | null>("custom_saas_tiers", null);
+  const [customMatrixList, setCustomMatrixList] = useLocalStorageState<MatrixFeature[] | null>("custom_matrix_features", null);
 
   useEffect(() => {
-    // 1. Nạp nhanh từ LocalStorage trước để phản hồi tức thì
-    const cachedTiers = localStorage.getItem("custom_saas_tiers");
-    const cachedMatrix = localStorage.getItem("custom_matrix_features");
-
-    if (cachedTiers) {
-      try {
-        setCustomTiersList(JSON.parse(cachedTiers));
-      } catch { /* ignore */ }
-    }
-    if (cachedMatrix) {
-      try {
-        setCustomMatrixList(JSON.parse(cachedMatrix));
-      } catch { /* ignore */ }
-    }
-
     // 2. Luôn nạp từ Server API để cập nhật bản mới nhất từ database
     fetch(`/api/admin/settings?t=${Date.now()}`, { cache: "no-store", headers: { "Cache-Control": "no-cache" } })
       .then(res => res.json())
@@ -34,16 +19,16 @@ export default function PricingPage() {
         if (data.success && data.settings) {
           if (data.settings.saas_tiers) {
             setCustomTiersList(data.settings.saas_tiers);
-            localStorage.setItem("custom_saas_tiers", JSON.stringify(data.settings.saas_tiers));
+
           }
           if (data.settings.matrix_features) {
             setCustomMatrixList(data.settings.matrix_features);
-            localStorage.setItem("custom_matrix_features", JSON.stringify(data.settings.matrix_features));
+
           }
         }
       })
       .catch(() => {});
-  }, []);
+  }, [setCustomTiersList, setCustomMatrixList]);
 
   const baseTiers = [
     {
@@ -106,7 +91,7 @@ export default function PricingPage() {
     }
   ];
 
-  const matrixFeatures = [
+  const matrixFeatures: MatrixFeature[] = [
     { name: "Xem trước Tài liệu", free: "5 trang đầu", pro: "Không giới hạn", enterprise: "Không giới hạn" },
     { name: "Tải tài nguyên Ebook/Slide Premium", free: false, pro: true, enterprise: true },
     { name: "Truy cập Kho Prompt chuyên sâu", free: false, pro: true, enterprise: true },
@@ -301,7 +286,7 @@ export default function PricingPage() {
 
         {/* Tiers Grid view */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch mb-16">
-          {(customTiersList || baseTiers).map((tier: any) => {
+          {(customTiersList || baseTiers).map((tier) => {
             const currentPrice = isYearly ? tier.priceYearly : tier.priceMonthly;
             const originalPrice = isYearly ? tier.originalYearly : null;
             const isFeatured = tier.featured ?? (tier.id === "pro");
@@ -362,7 +347,7 @@ export default function PricingPage() {
                   {/* Danh sách checkmark */}
                   <div className="space-y-2.5 pt-2">
                     <div className="text-[11px] font-bold uppercase tracking-wider text-foreground/40">Đặc quyền bao gồm:</div>
-                    {getDynamicFeatures(tier.id, baseTiers.find((t: any) => t.id === tier.id)?.features || []).map((feat: any, idx: number) => (
+                    {getDynamicFeatures(tier.id, baseTiers.find((t) => t.id === tier.id)?.features || []).map((feat, idx) => (
                       <div key={idx} className="flex items-start gap-2 text-xs text-foreground/80">
                         <Check className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${isFeatured ? 'text-secondary' : 'text-secondary/60'}`} />
                         <span>{feat}</span>
@@ -414,7 +399,7 @@ export default function PricingPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5 text-xs">
-                {(customMatrixList || matrixFeatures).map((row: any, idx: number) => (
+                {(customMatrixList || matrixFeatures).map((row, idx) => (
                   <tr key={idx} className="hover:bg-white/5 transition-colors">
                     <td className="p-4 font-medium text-foreground/80">{row.name}</td>
                     

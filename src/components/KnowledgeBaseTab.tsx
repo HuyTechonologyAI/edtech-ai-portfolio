@@ -1,5 +1,7 @@
 "use client";
 
+import { getErrorMessage } from "@/lib/error-message";
+
 import { useState, useEffect } from "react";
 import {
   Brain, Database, RefreshCw, Trash2, Plus, Loader2,
@@ -28,7 +30,7 @@ export function KnowledgeBaseTab() {
   const [stats, setStats] = useState<IngestStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isIngesting, setIsIngesting] = useState(false);
-  const [ingestResult, setIngestResult] = useState<any>(null);
+  const [ingestResult, setIngestResult] = useState<{ success: boolean; error?: string; errors?: string[]; stats?: { resources: number; videos: number; totalChunks: number } } | null>(null);
   const [showManualForm, setShowManualForm] = useState(false);
   const [manualForm, setManualForm] = useState({
     sourceTitle: "",
@@ -40,8 +42,7 @@ export function KnowledgeBaseTab() {
 
   // Tải danh sách và stats
   const fetchData = async () => {
-    setIsLoading(true);
-    try {
+    return (async () => {
       const [chunksRes, statsRes] = await Promise.all([
         fetch("/api/knowledge?limit=200"),
         fetch("/api/knowledge/ingest"),
@@ -52,7 +53,7 @@ export function KnowledgeBaseTab() {
 
       if (chunksData.success) {
         setGroups(
-          (chunksData.data || []).map((g: any) => ({
+          (chunksData.data || []).map((g: KnowledgeGroup) => ({
             source_title: g.source_title,
             source_type: g.source_type,
             source_id: g.source_id,
@@ -64,11 +65,18 @@ export function KnowledgeBaseTab() {
       if (statsData.success) {
         setStats(statsData.stats);
       }
-    } catch (err) {
-      console.error("Failed to load knowledge data:", err);
-    } finally {
-      setIsLoading(false);
-    }
+    })()
+      .catch((err) => {
+        console.error("Failed to load knowledge data:", err);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
+
+  const refreshData = () => {
+    setIsLoading(true);
+    return fetchData();
   };
 
   useEffect(() => {
@@ -84,9 +92,9 @@ export function KnowledgeBaseTab() {
       const res = await fetch("/api/knowledge/ingest", { method: "POST" });
       const data = await res.json();
       setIngestResult(data);
-      fetchData();
-    } catch (err: any) {
-      setIngestResult({ success: false, error: err.message });
+      refreshData();
+    } catch (err: unknown) {
+      setIngestResult({ success: false, error: getErrorMessage(err) });
     } finally {
       setIsIngesting(false);
     }
@@ -112,12 +120,12 @@ export function KnowledgeBaseTab() {
       if (data.success) {
         setManualForm({ sourceTitle: "", sourceType: "MANUAL", content: "" });
         setShowManualForm(false);
-        fetchData();
+        refreshData();
       } else {
         alert("Lỗi nạp tri thức: " + (data.error || "Unknown"));
       }
-    } catch (err: any) {
-      alert("Lỗi kết nối: " + err.message);
+    } catch (err: unknown) {
+      alert("Lỗi kết nối: " + getErrorMessage(err));
     } finally {
       setManualSubmitting(false);
     }
@@ -134,12 +142,12 @@ export function KnowledgeBaseTab() {
       const res = await fetch(`/api/knowledge?${params}`, { method: "DELETE" });
       const data = await res.json();
       if (data.success) {
-        fetchData();
+        refreshData();
       } else {
         alert("Lỗi xóa: " + data.error);
       }
-    } catch (err: any) {
-      alert("Lỗi: " + err.message);
+    } catch (err: unknown) {
+      alert("Lỗi: " + getErrorMessage(err));
     }
   };
 
@@ -198,7 +206,7 @@ export function KnowledgeBaseTab() {
           </button>
 
           <button
-            onClick={fetchData}
+            onClick={refreshData}
             className="p-2 text-foreground/40 hover:text-secondary rounded-lg transition-all"
             title="Làm mới"
           >

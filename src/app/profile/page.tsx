@@ -1,6 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import Image from "next/image";
+
+import { getErrorMessage } from "@/lib/error-message";
+
+import { useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import { User, Mail, Shield, Sparkles, Save, Loader2, CheckCircle2, AlertCircle, Crown, Image as ImageIcon, Phone, MapPin, Briefcase, Heart, Target, Award, Download } from "lucide-react";
@@ -35,7 +39,10 @@ export default function ProfilePage() {
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
-  useEffect(() => {
+  const [previousUser, setPreviousUser] = useState<typeof user | undefined>(undefined);
+  if (previousUser !== user) {
+    setPreviousUser(user);
+
     if (user) {
       const meta = user.user_metadata || {};
       setFullName(meta.full_name || user.email?.split("@")[0] || "");
@@ -46,7 +53,8 @@ export default function ProfilePage() {
       setInterests(meta.interests || "");
       setGoals(meta.goals || "");
     }
-  }, [user]);
+
+  }
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,7 +65,7 @@ export default function ProfilePage() {
     setSuccessMsg("");
 
     try {
-      const { data, error } = await supabase.auth.updateUser({
+      const { error } = await supabase.auth.updateUser({
         data: {
           full_name: fullName.trim(),
           avatar_url: avatarUrl.trim(),
@@ -75,8 +83,8 @@ export default function ProfilePage() {
       
       // Tự động xóa thông báo sau 6 giây
       setTimeout(() => setSuccessMsg(""), 6000);
-    } catch (err: any) {
-      setErrorMsg(err.message || "Không thể cập nhật hồ sơ. Vui lòng thử lại.");
+    } catch (err: unknown) {
+      setErrorMsg(getErrorMessage(err) || "Không thể cập nhật hồ sơ. Vui lòng thử lại.");
     } finally {
       setIsSaving(false);
     }
@@ -109,8 +117,8 @@ export default function ProfilePage() {
     );
   }
 
-  const isPremium = user?.app_metadata?.is_premium || (user as any)?.user_metadata?.is_premium;
-  const isAdmin = user?.app_metadata?.role === "admin" || (user as any)?.user_metadata?.role === "admin";
+  const isPremium = user?.app_metadata?.is_premium || user?.user_metadata?.is_premium;
+  const isAdmin = user?.app_metadata?.role === "admin" || user?.user_metadata?.role === "admin";
 
   return (
     <div className="container mx-auto px-4 py-12 max-w-5xl">
@@ -135,7 +143,7 @@ export default function ProfilePage() {
                 <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-secondary to-purple-500 animate-spin blur-sm opacity-40" />
                 <div className="absolute inset-0 rounded-full bg-surface border-2 border-secondary/40 flex items-center justify-center overflow-hidden z-10">
                   {avatarUrl ? (
-                    <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                    <Image unoptimized width={640} height={480} src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
                   ) : (
                     <span className="text-3xl font-black text-secondary">
                       {fullName[0]?.toUpperCase() || user.email?.[0]?.toUpperCase()}
@@ -290,7 +298,7 @@ export default function ProfilePage() {
                             : "bg-surface/40 border-white/5 hover:border-white/20 hover:bg-surface"
                         }`}
                       >
-                        <img 
+                        <Image unoptimized width={640} height={480}
                           src={preset.url} 
                           alt={preset.name} 
                           className="w-10 h-10 rounded-full bg-surface border border-white/5 group-hover:scale-105 transition-transform" 

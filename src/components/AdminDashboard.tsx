@@ -1,6 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { getErrorMessage } from "@/lib/error-message";
+
+import type { ContentItem, ContentForm, FolderItem } from "@/types/content";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { LogOut, Video, FileText, Plus, Trash2, Pencil, Loader2, X, Save, Eye, BarChart3, Users, Crown, MessageSquare, Shield, ClipboardList, Sparkles, Gift, Layers, Smartphone, Award, TrendingUp, Activity, Bell, Globe, ToggleLeft, FolderOpen, LayoutTemplate, Cpu } from "lucide-react";
 import UserManagementTab from "./UserManagementTab";
@@ -36,140 +39,139 @@ interface ViewStats {
 export default function AdminDashboard({ initialHasAdminCookie = false }: { initialHasAdminCookie?: boolean }) {
   const router = useRouter();
   const { user, loading: authLoading, signOut } = useAuth();
-  const [hasAdminCookie, setHasAdminCookie] = useState<boolean | null>(initialHasAdminCookie ? true : null);
+  const [sessionHasAdminCookie, setHasAdminCookie] = useState<boolean | null>(initialHasAdminCookie ? true : null);
+
+  const hasAdminCookie = initialHasAdminCookie || sessionHasAdminCookie;
 
   useEffect(() => {
-    if (initialHasAdminCookie) {
-      setHasAdminCookie(true);
-      return;
-    }
+    if (initialHasAdminCookie) return;
     fetch("/api/admin/session")
       .then((res) => res.json())
       .then((data) => {
         setHasAdminCookie(data.authenticated === true);
       })
       .catch(() => {
-        setHasAdminCookie(false);
-      });
-  }, [initialHasAdminCookie]);
+          setHasAdminCookie(false);
+        });
+    }, [initialHasAdminCookie]);
 
-  const isDemotedAssistant = user?.email === "drakengo1707@gmail.com" || user?.email === "marverick2024@gmail.com";
-  const isSuperAdminEmail = user?.email === "huytechnologyai2025@gmail.com";
-  const isSuperAdmin = !isDemotedAssistant && ((hasAdminCookie === true) || isSuperAdminEmail || !!(user && (user.app_metadata?.role === "admin" || (user as any).user_metadata?.role === "admin")));
-  const canManageContent = isSuperAdmin || isDemotedAssistant || !!(user && (user as any).user_metadata?.can_manage_content === true);
-  const canModerateComments = isSuperAdmin || isDemotedAssistant || !!(user && (user as any).user_metadata?.can_moderate_comments === true);
-  const canGrantPremium = isSuperAdmin || (!isDemotedAssistant && !!(user && (user as any).user_metadata?.can_grant_premium === true));
+    const isDemotedAssistant = user?.email === "drakengo1707@gmail.com" || user?.email === "marverick2024@gmail.com";
+    const isSuperAdminEmail = user?.email === "huytechnologyai2025@gmail.com";
+    const isSuperAdmin = !isDemotedAssistant && ((hasAdminCookie === true) || isSuperAdminEmail || !!(user && (user.app_metadata?.role === "admin" || user.user_metadata?.role === "admin")));
+    const canManageContent = isSuperAdmin || isDemotedAssistant || !!(user && user.user_metadata?.can_manage_content === true);
+    const canModerateComments = isSuperAdmin || isDemotedAssistant || !!(user && user.user_metadata?.can_moderate_comments === true);
+    const canGrantPremium = isSuperAdmin || (!isDemotedAssistant && !!(user && user.user_metadata?.can_grant_premium === true));
 
-  const isAssistant = !isSuperAdmin && (isDemotedAssistant || canManageContent || canModerateComments || canGrantPremium);
+    const isAssistant = !isSuperAdmin && (isDemotedAssistant || canManageContent || canModerateComments || canGrantPremium);
 
-  // User is student account if logged in via Supabase, but has no admin cookie and no sub-admin flags
-  const isStudentAccount = !authLoading && !!user && hasAdminCookie === false && !isSuperAdmin && !isAssistant;
+    // User is student account if logged in via Supabase, but has no admin cookie and no sub-admin flags
+    const isStudentAccount = !authLoading && !!user && hasAdminCookie === false && !isSuperAdmin && !isAssistant;
 
-  // Not logged in at all (no user and no admin cookie) -> Redirect to /admin/login only when session and auth load finish
-  useEffect(() => {
-    if (!authLoading && hasAdminCookie === false && !user) {
-      router.push("/admin/login");
-    }
-  }, [authLoading, hasAdminCookie, user, router]);
-
-  const isTabAllowed = (tab: string) => {
-    if (isSuperAdmin) return true;
-    
-    switch (tab) {
-      case "ai-hub":
-      case "videos":
-      case "resources":
-      case "media":
-      case "builder":
-      case "simulator":
-        return canManageContent;
-      case "comments":
-        return canModerateComments;
-      case "users":
-      case "premium":
-      case "certificates":
-      case "leads":
-      case "tasks":
-        return canGrantPremium;
-      default:
-        return false; // other settings are superadmin only
-    }
-  };
-  const [activeTab, setActiveTab] = useState<"ai-hub" | "videos" | "resources" | "users" | "premium" | "comments" | "roles" | "logs" | "trends" | "tasks" | "settings" | "simulator" | "certificates" | "growth" | "knowledge" | "leads" | "health" | "notifications" | "seo" | "flags" | "media" | "builder">("ai-hub");
-  const [items, setItems] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Form states
-  const [isAdding, setIsAdding] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [formData, setFormData] = useState<any>({});
-
-  // View stats for resources
-  const [viewStats, setViewStats] = useState<Record<number, ViewStats>>({});
-  const [showStatsId, setShowStatsId] = useState<number | null>(null);
-
-  // Folder Taxonomy states
-  const [selectedFolderId, setSelectedFolderId] = useState<number | null>(null);
-  const [foldersList, setFoldersList] = useState<any[]>([]);
-
-  const fetchFoldersList = async (type: string) => {
-    try {
-      const res = await fetch(`/api/admin/folders?type=${type}`);
-      const data = await res.json();
-      const loaded = data.folders || [];
-      if (loaded.length > 0) {
-        setFoldersList(loaded);
-      } else {
-        setFoldersList([
-          { id: 1, name: "🚀 Khởi Đầu Trí Tuệ Nhân Tạo", type: "RESOURCE", parent_id: null },
-          { id: 2, name: "⚡ Kỹ thuật Prompt Nâng Cao", type: "RESOURCE", parent_id: 1 },
-          { id: 3, name: "🤖 Tự Động Hóa Thực Chiến", type: "VIDEO", parent_id: null },
-          { id: 4, name: "🔗 n8n Workflow Enterprise", type: "VIDEO", parent_id: 3 },
-          { id: 5, name: "📦 Make.com Templates", type: "RESOURCE", parent_id: null }
-        ].filter(f => f.type === type));
+    // Not logged in at all (no user and no admin cookie) -> Redirect to /admin/login only when session and auth load finish
+    useEffect(() => {
+      if (!authLoading && hasAdminCookie === false && !user) {
+        router.push("/admin/login");
       }
-    } catch {
-      // Giữ nguyên danh sách hiện tại
+    }, [authLoading, hasAdminCookie, user, router]);
+
+    const isTabAllowed = (tab: string) => {
+      if (isSuperAdmin) return true;
+
+      switch (tab) {
+        case "ai-hub":
+        case "videos":
+        case "resources":
+        case "media":
+        case "builder":
+        case "simulator":
+          return canManageContent;
+        case "comments":
+          return canModerateComments;
+        case "users":
+        case "premium":
+        case "certificates":
+        case "leads":
+        case "tasks":
+          return canGrantPremium;
+        default:
+          return false; // other settings are superadmin only
+      }
+    };
+    const [activeTab, setActiveTab] = useState<"ai-hub" | "videos" | "resources" | "users" | "premium" | "comments" | "roles" | "logs" | "trends" | "tasks" | "settings" | "simulator" | "certificates" | "growth" | "knowledge" | "leads" | "health" | "notifications" | "seo" | "flags" | "media" | "builder">("ai-hub");
+    const [items, setItems] = useState<ContentItem[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    // Form states
+    const [isAdding, setIsAdding] = useState(false);
+    const [editingId, setEditingId] = useState<number | null>(null);
+    const [formData, setFormData] = useState<ContentForm>({});
+
+    // View stats for resources
+    const [viewStats, setViewStats] = useState<Record<number, ViewStats>>({});
+    const [showStatsId, setShowStatsId] = useState<number | null>(null);
+
+    // Folder Taxonomy states
+    const [selectedFolderId, setSelectedFolderId] = useState<number | null>(null);
+    const [foldersList, setFoldersList] = useState<FolderItem[]>([]);
+
+    const [previousTab, setPreviousTab] = useState(activeTab);
+    if (previousTab !== activeTab) {
+      setPreviousTab(activeTab);
+      setSelectedFolderId(null);
+      setIsLoading(true);
     }
+
+    const fetchFoldersList = async (type: string) => {
+      return (async () => {
+        const res = await fetch(`/api/admin/folders?type=${type}`);
+        const data = await res.json();
+        const loaded = data.folders || [];
+        if (loaded.length > 0) {
+          setFoldersList(loaded);
+        } else {
+          setFoldersList([
+            { id: 1, name: "🚀 Khởi Đầu Trí Tuệ Nhân Tạo", type: "RESOURCE", parent_id: null },
+            { id: 2, name: "⚡ Kỹ thuật Prompt Nâng Cao", type: "RESOURCE", parent_id: 1 },
+            { id: 3, name: "🤖 Tự Động Hóa Thực Chiến", type: "VIDEO", parent_id: null },
+            { id: 4, name: "🔗 n8n Workflow Enterprise", type: "VIDEO", parent_id: 3 },
+            { id: 5, name: "📦 Make.com Templates", type: "RESOURCE", parent_id: null }
+          ].filter(f => f.type === type));
+        }
+      })().catch(() => {
+        // Giữ nguyên danh sách hiện tại
+      });
   };
 
 
-  const fetchData = async () => {
-    setIsLoading(true);
-    try {
-      const res = await fetch(`/api/${activeTab}`);
-      const data = await res.json();
-      setItems(data[activeTab] || []);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const fetchData = useCallback(() => {
+    return fetch(`/api/${activeTab}`)
+      .then(res => res.json())
+      .then(data => setItems(data[activeTab] || []))
+      .catch(console.error)
+      .finally(() => setIsLoading(false));
+  }, [activeTab]);
 
   const fetchViewStats = async () => {
-    try {
+    return (async () => {
       const res = await fetch("/api/resources/views");
       const data = await res.json();
       setViewStats(data.stats || {});
-    } catch (error) {
-      console.error("Failed to fetch view stats", error);
-    }
+    })().catch((error) => {
+        console.error("Failed to fetch view stats", error);
+      });
   };
 
   useEffect(() => {
     fetchData();
-    setSelectedFolderId(null);
     if (activeTab === "resources") {
       fetchViewStats();
       fetchFoldersList("RESOURCE");
     } else if (activeTab === "videos") {
       fetchFoldersList("VIDEO");
     }
-  }, [activeTab]);
+  }, [activeTab, fetchData]);
 
-  useEffect(() => {
-    if (!authLoading && user) {
+  if (!authLoading && user) {
       if (!isTabAllowed(activeTab)) {
         const tabs: ("videos" | "resources" | "users" | "premium" | "comments" | "roles" | "logs" | "trends" | "tasks" | "settings" | "simulator" | "certificates" | "growth" | "knowledge" | "leads" | "health" | "notifications" | "seo" | "flags" | "media" | "builder")[] = [
           "videos", "resources", "media", "builder", "simulator", "comments", "users", "premium", "certificates", "leads", "tasks"
@@ -179,13 +181,12 @@ export default function AdminDashboard({ initialHasAdminCookie = false }: { init
           setActiveTab(firstAllowed);
         }
       }
-    }
-  }, [authLoading, user, activeTab]);
+  }
 
-  const logAudit = async (actionType: string, targetResource: string, details: any = {}) => {
+  const logAudit = async (actionType: string, targetResource: string, details: Record<string, unknown> = {}) => {
     if (!user) return;
     try {
-      const uMeta = (user as any).user_metadata || {};
+      const uMeta = user.user_metadata || {};
       await fetch("/api/admin/audit-logs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -224,12 +225,12 @@ export default function AdminDashboard({ initialHasAdminCookie = false }: { init
       );
       
       fetchData();
-    } catch (error) {
+    } catch {
       alert("Lỗi khi xóa");
     }
   };
 
-  const handleEdit = (item: any) => {
+  const handleEdit = (item: ContentItem) => {
     setEditingId(item.id);
     setIsAdding(false);
     // Pre-fill form with existing data
@@ -298,8 +299,8 @@ export default function AdminDashboard({ initialHasAdminCookie = false }: { init
       setEditingId(null);
       setFormData({});
       fetchData();
-    } catch (error: any) {
-      alert("Lỗi khi cập nhật: " + error.message);
+    } catch (error: unknown) {
+      alert("Lỗi khi cập nhật: " + getErrorMessage(error));
     }
   };
 
@@ -334,8 +335,8 @@ export default function AdminDashboard({ initialHasAdminCookie = false }: { init
       setIsAdding(false);
       setFormData({});
       fetchData();
-    } catch (error: any) {
-      alert("Lỗi: " + error.message);
+    } catch (error: unknown) {
+      alert("Lỗi: " + getErrorMessage(error));
     }
   };
 
@@ -410,7 +411,7 @@ export default function AdminDashboard({ initialHasAdminCookie = false }: { init
             <input
               type="checkbox"
               id={`isFeatured-${isEdit ? "edit" : "add"}`}
-              checked={formData.isFeatured || false}
+              checked={formData.isFeatured === true || formData.isFeatured === "true"}
               onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })}
               className="w-5 h-5 accent-secondary"
             />
@@ -470,7 +471,7 @@ export default function AdminDashboard({ initialHasAdminCookie = false }: { init
             <input
               type="checkbox"
               id={`isPremium-${isEdit ? "edit" : "add"}`}
-              checked={formData.isPremium || false}
+              checked={formData.isPremium === true || formData.isPremium === "true"}
               onChange={(e) => setFormData({ ...formData, isPremium: e.target.checked })}
               className="w-5 h-5 accent-secondary"
             />
@@ -506,7 +507,8 @@ export default function AdminDashboard({ initialHasAdminCookie = false }: { init
             <button
               onClick={async () => {
                 await signOut();
-                window.location.href = "/admin/login";
+                router.replace("/admin/login");
+                router.refresh();
               }}
               className="w-full py-3 bg-red-500 text-white rounded-xl font-bold text-sm hover:bg-red-600 transition-all shadow-[0_0_20px_rgba(239,68,68,0.3)]"
             >
@@ -738,22 +740,22 @@ export default function AdminDashboard({ initialHasAdminCookie = false }: { init
                     <span className="bg-cyan-500/20 text-cyan-300 text-[10px] px-2 py-0.5 rounded-full font-mono border border-cyan-500/30">Assistant Workspace</span>
                   </div>
                   <p className="text-xs text-foreground/70 mt-0.5">
-                    Xin chào <strong className="text-secondary">{(user as any)?.user_metadata?.full_name || user?.email}</strong>. Bạn đang truy cập hệ thống bằng tài khoản Trợ lý được cấp phép.
+                    Xin chào <strong className="text-secondary">{user?.user_metadata?.full_name || user?.email}</strong>. Bạn đang truy cập hệ thống bằng tài khoản Trợ lý được cấp phép.
                   </p>
                 </div>
               </div>
               <div className="flex flex-wrap gap-1.5 shrink-0">
-                {(user as any)?.user_metadata?.can_manage_content && (
+                {user?.user_metadata?.can_manage_content && (
                   <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded-lg font-semibold flex items-center gap-1">
                     📁 Quản lý Nội dung
                   </span>
                 )}
-                {(user as any)?.user_metadata?.can_moderate_comments && (
+                {user?.user_metadata?.can_moderate_comments && (
                   <span className="text-[10px] bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2.5 py-1 rounded-lg font-semibold flex items-center gap-1">
                     💬 Kiểm duyệt Bình luận
                   </span>
                 )}
-                {(user as any)?.user_metadata?.can_grant_premium && (
+                {user?.user_metadata?.can_grant_premium && (
                   <span className="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-1 rounded-lg font-semibold flex items-center gap-1">
                     👑 Quản lý VIP & Leads
                   </span>

@@ -1,5 +1,9 @@
 "use client";
 
+import Image from "next/image";
+
+import { getErrorMessage } from "@/lib/error-message";
+
 import { X, ExternalLink, Lock, Eye, Calendar, CalendarDays, CalendarRange, CalendarClock, Download, LogIn } from "lucide-react";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useAuth } from "@/components/AuthProvider";
@@ -24,23 +28,19 @@ interface FileViewerModalProps {
   isPremium?: boolean;
 }
 
-function extractDriveId(url: string): string | null {
-  const m1 = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
-  if (m1) return m1[1];
-  const m2 = url.match(/drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/);
-  if (m2) return m2[1];
-  return null;
+export function FileViewerModal(props: FileViewerModalProps) {
+  return props.isOpen ? <FileViewerContent key={props.fileUrl} {...props} /> : null;
 }
 
-export function FileViewerModal({
+function FileViewerContent({
   isOpen, onClose, fileUrl, title, resourceId, maxPreviewPages = 5, isPremium = false,
 }: FileViewerModalProps) {
   const [pageImages, setPageImages] = useState<string[]>([]);
   const [totalPages, setTotalPages] = useState(0);
-  const [loadingPdf, setLoadingPdf] = useState(false);
+  const [loadingPdf, setLoadingPdf] = useState(true);
   const [pdfError, setPdfError] = useState<string | null>(null);
   const [viewStats, setViewStats] = useState<ViewStats | null>(null);
-  const [hasRecordedView, setHasRecordedView] = useState(false);
+  const hasRecordedView = useRef(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
 
@@ -54,18 +54,6 @@ export function FileViewerModal({
   const [showDocSuccessBadge, setShowDocSuccessBadge] = useState(false);
   const maxScrollRef = useRef(0);
 
-  // Reset tracking states khi mở modal mới
-  useEffect(() => {
-    if (isOpen) {
-      setSecondsRead(0);
-      setMaxScrollPercent(0);
-      maxScrollRef.current = 0;
-      setDocCompletedToastShown(false);
-      setShowDocSuccessBadge(false);
-    }
-  }, [isOpen]);
-
-  // Bộ lắng nghe sự kiện cuộn trang Ebook để tính độ sâu cuộn tối đa
   useEffect(() => {
     const container = scrollRef.current;
     if (!container || !isOpen) return;
@@ -90,8 +78,7 @@ export function FileViewerModal({
     if (!isOpen || !resourceId || !user?.email) return;
 
     const interval = setInterval(() => {
-      setSecondsRead((prev) => {
-        const nextSeconds = prev + 15;
+      setSecondsRead(prev => prev + 15);
 
         fetch("/api/learning/progress", {
           method: "POST",
@@ -114,8 +101,7 @@ export function FileViewerModal({
         })
         .catch(err => console.error("Error logging document progress:", err));
 
-        return nextSeconds;
-      });
+
     }, 15000);
 
     return () => clearInterval(interval);
@@ -127,12 +113,13 @@ export function FileViewerModal({
     let cancelled = false;
 
     const loadPdf = async () => {
-      setLoadingPdf(true);
-      setPdfError(null);
-      setPageImages([]);
 
-      try {
+      return (async () => {
         const pdfjsLib = await import("pdfjs-dist");
+        if (cancelled) return;
+        setLoadingPdf(true);
+        setPdfError(null);
+        setPageImages([]);
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
 
         // Fetch PDF through our proxy to avoid CORS
@@ -156,34 +143,47 @@ export function FileViewerModal({
           canvas.height = viewport.height;
           const ctx = canvas.getContext("2d")!;
 
-          await page.render({ canvasContext: ctx, viewport } as any).promise;
+          await page.render({ canvas, canvasContext: ctx, viewport }).promise;
           images.push(canvas.toDataURL("image/jpeg", 0.85));
         }
 
         if (!cancelled) setPageImages(images);
-      } catch (err: any) {
-        if (!cancelled) {
-          console.error("PDF load error:", err);
-          setPdfError(err.message || "Không thể tải tài liệu");
-        }
-      } finally {
-        if (!cancelled) setLoadingPdf(false);
-      }
-    };
+      })()
+      .catch((err: unknown) => {
+          if (!cancelled) {
+            console.error("PDF load error:", err);
+            setPdfError(getErrorMessage(err) || "Không thể tải tài liệu");
+          }
+        })
+        .finally(() => {
+          if (!cancelled) setLoadingPdf(false);
+        });
+      };
 
-    loadPdf();
-    return () => { cancelled = true; };
-  }, [isOpen, fileUrl, maxPreviewPages]);
+      loadPdf();
+      return () => { cancelled = true; };
+    }, [isOpen, fileUrl, maxPreviewPages]);
 
-  // Record view
+    // Record view
+    const fetchViewStats = useCallback(async () => {
+      if (!resourceId) return;
+      return (async () => {
+        const res = await fetch(`/api/resources/views?resourceId=${resourceId}`);
+        const data = await res.json();
+        setViewStats(data.views || null);
+      })().catch((e) => { console.error(e); });
+  }, [resourceId]);
+
+
+
   useEffect(() => {
-    if (isOpen && resourceId && !hasRecordedView) {
+    if (isOpen && resourceId && !hasRecordedView.current) {
+      hasRecordedView.current = true;
       fetch("/api/resources/views", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ resourceId }),
       }).then(() => {
-        setHasRecordedView(true);
         fetchViewStats();
       }).catch(console.error);
 
@@ -200,21 +200,9 @@ export function FileViewerModal({
       }).catch(() => {});
     }
     if (isOpen && resourceId) fetchViewStats();
-    if (!isOpen) {
-      setHasRecordedView(false);
-    }
-  }, [isOpen, resourceId, title, isPremium, user]);
+  }, [isOpen, resourceId, title, isPremium, user, fetchViewStats]);
 
-  const fetchViewStats = useCallback(async () => {
-    if (!resourceId) return;
-    try {
-      const res = await fetch(`/api/resources/views?resourceId=${resourceId}`);
-      const data = await res.json();
-      setViewStats(data.views || null);
-    } catch (e) { console.error(e); }
-  }, [resourceId]);
-
-  // Lock body scroll
+ // Lock body scroll
   useEffect(() => {
     document.body.style.overflow = isOpen ? "hidden" : "unset";
     return () => { document.body.style.overflow = "unset"; };
@@ -226,8 +214,8 @@ export function FileViewerModal({
   const hasMorePages = totalPages > maxPreviewPages;
   const lockedPages = totalPages - maxPreviewPages;
 
-  const isUserPremium = user?.app_metadata?.is_premium === true || (user as any)?.user_metadata?.is_premium === true;
-  const isUserAdmin = user?.app_metadata?.role === "admin" || (user as any)?.user_metadata?.role === "admin";
+  const isUserPremium = user?.app_metadata?.is_premium === true || user?.user_metadata?.is_premium === true;
+  const isUserAdmin = user?.app_metadata?.role === "admin" || user?.user_metadata?.role === "admin";
   const canDownloadPremium = isUserPremium || isUserAdmin;
 
   return (
@@ -319,7 +307,7 @@ export function FileViewerModal({
                     Trang {idx + 1} / {totalPages}
                   </div>
                   {/* Page image */}
-                  <img
+                  <Image unoptimized width={640} height={480}
                     src={src}
                     alt={`Trang ${idx + 1}`}
                     className="w-full rounded-lg border border-white/10 shadow-xl"
@@ -337,7 +325,7 @@ export function FileViewerModal({
                       {/* Fake blurred content lines */}
                       <div className="absolute inset-0 p-10 opacity-20 blur-sm">
                         {Array.from({ length: 12 }).map((_, i) => (
-                          <div key={i} className="h-3 bg-foreground/30 rounded mb-3" style={{ width: `${60 + Math.random() * 35}%` }} />
+                          <div key={i} className="h-3 bg-foreground/30 rounded mb-3" style={{ width: `${60 + (i * 17) % 35}%` }} />
                         ))}
                       </div>
 
@@ -437,7 +425,7 @@ export function FileViewerModal({
         <LeadCaptureModal
           isOpen={isLeadModalOpen}
           onClose={() => setIsLeadModalOpen(false)}
-          onSuccess={(fullName, email, phone) => {
+          onSuccess={() => {
             setIsLeadModalOpen(false);
             if (resourceId) {
               window.open(`/api/resources/get-signed-url?id=${resourceId}`, "_blank");

@@ -66,7 +66,7 @@ Không xuất bất kỳ ký tự Markdown hay giải thích nào khác ngoài c
       success: true,
       suggestions: parsedData.suggestions || []
     });
-  } catch (error: any) {
+  } catch {
     // Luôn đảm bảo Admin nhận được kịch bản fallback tuyệt đẹp thay vì trang trắng
     return NextResponse.json({
       success: true,

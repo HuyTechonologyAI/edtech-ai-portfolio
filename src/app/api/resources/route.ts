@@ -1,3 +1,5 @@
+
+import { getErrorMessage } from "@/lib/error-message";
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { supabaseAdmin } from "@/lib/supabase-admin";
@@ -5,8 +7,8 @@ import { verifyAdminAuth } from "@/lib/admin-auth";
 
 // Ánh xạ chính xác tuyệt đối các cột Database đã được xác thực qua Schema Cache
 // Bảng "resources": title, description, link, type, is_premium (gạch dưới), folder_id (gạch dưới)
-function mapToDbFields(body: any) {
-  const mapped: any = {};
+function mapToDbFields(body: Record<string, unknown>) {
+  const mapped: Record<string, unknown> = {};
   if (body.title !== undefined) mapped.title = body.title;
   if (body.description !== undefined) mapped.description = body.description;
   if (body.link !== undefined) mapped.link = body.link;
@@ -28,7 +30,7 @@ function mapToDbFields(body: any) {
 }
 
 // Map database → frontend camelCase
-function mapToFrontend(item: any) {
+function mapToFrontend(item: Record<string, unknown>) {
   if (!item) return item;
   return {
     ...item,
@@ -42,8 +44,8 @@ export async function GET() {
     const { data, error } = await supabase.from("resources").select("*").order("created_at", { ascending: false });
     if (error) throw error;
     return NextResponse.json({ resources: (data || []).map(mapToFrontend) });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
   }
 }
 
@@ -56,8 +58,8 @@ export async function POST(req: NextRequest) {
     const { data, error } = await supabaseAdmin.from("resources").insert([dbBody]).select();
     if (error) throw error;
     return NextResponse.json({ success: true, resource: mapToFrontend(data[0]) });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
   }
 }
 
@@ -74,8 +76,8 @@ export async function PUT(req: NextRequest) {
     const { data, error } = await supabaseAdmin.from("resources").update(dbBody).eq("id", id).select();
     if (error) throw error;
     return NextResponse.json({ success: true, resource: mapToFrontend(data[0]) });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
   }
 }
 
@@ -90,7 +92,7 @@ export async function DELETE(req: NextRequest) {
     const { error } = await supabaseAdmin.from("resources").delete().eq("id", id);
     if (error) throw error;
     return NextResponse.json({ success: true });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
   }
 }

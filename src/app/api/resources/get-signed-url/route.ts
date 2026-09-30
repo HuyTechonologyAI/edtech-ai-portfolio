@@ -1,3 +1,5 @@
+
+import { getErrorMessage } from "@/lib/error-message";
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import crypto from "crypto";
@@ -40,7 +42,7 @@ export async function GET(req: Request) {
       expires,
       resourceTitle: resource.title
     });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    return NextResponse.json({ error: getErrorMessage(err) }, { status: 500 });
   }
 }

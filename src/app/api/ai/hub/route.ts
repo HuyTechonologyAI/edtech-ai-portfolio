@@ -1,3 +1,5 @@
+
+import { getErrorMessage } from "@/lib/error-message";
 import { NextRequest, NextResponse } from "next/server";
 import { dispatchAiCompletion, AI_PROVIDERS, GatewayResult } from "@/lib/ai-gateway";
 import { OPEN_SOURCE_AI_TOOLS } from "@/lib/ai-tools-registry";
@@ -121,7 +123,7 @@ Tạo trọn bộ: Slide Marp PPTX + Giáo án CV 5512 + 4 Prompt ảnh ComfyUI 
       });
 
       // Parse JSON response safely
-      let parsedPackage: any = null;
+      let parsedPackage: unknown = null;
       try {
         let cleanJson = result.text.trim();
         if (cleanJson.startsWith("```json")) {
@@ -130,7 +132,7 @@ Tạo trọn bộ: Slide Marp PPTX + Giáo án CV 5512 + 4 Prompt ảnh ComfyUI 
           cleanJson = cleanJson.replace(/^```/, "").replace(/```$/, "").trim();
         }
         parsedPackage = JSON.parse(cleanJson);
-      } catch (e) {
+      } catch {
         // Fallback structured package nếu AI sinh chuỗi Markdown
         parsedPackage = {
           topic,
@@ -189,7 +191,7 @@ Chuyên gia AI: Ngô Quốc Huy
     }
 
     return NextResponse.json({ error: "Invalid action" }, { status: 400, headers: getCorsHeaders(origin) });
-  } catch (err: any) {
-    return NextResponse.json({ error: err?.message || "Internal server error in AI Hub" }, { status: 500, headers: getCorsHeaders(origin) });
+  } catch (err: unknown) {
+    return NextResponse.json({ error: getErrorMessage(err) || "Internal server error in AI Hub" }, { status: 500, headers: getCorsHeaders(origin) });
   }
 }

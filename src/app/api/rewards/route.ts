@@ -11,11 +11,12 @@ export async function GET(req: NextRequest) {
     }
 
     // 1. Fetch current student's points balance ledger
-    let { data: balData, error: balErr } = await supabaseAdmin
+    const { data: initialbalData, error: balErr } = await supabaseAdmin
       .from("student_points_balance")
       .select("*")
       .eq("user_email", userEmail)
       .maybeSingle();
+    let balData = initialbalData;
 
     // Nếu chưa từng có row, khởi tạo ngầm cho học viên
     if (!balData && !balErr) {
@@ -66,7 +67,7 @@ export async function GET(req: NextRequest) {
       tasks: activeTasks,
       completedToday: completedTaskIds
     });
-  } catch (error: any) {
+  } catch {
     // Trả về dữ liệu an toàn để client render đẹp rực rỡ
     return NextResponse.json({
       success: true,
@@ -164,12 +165,13 @@ export async function POST(req: NextRequest) {
       const isCheckinTask = (taskType === "DAILY_CHECKIN");
 
       // Lấy số dư hiện tại của học viên
-      let { data: curBal, error: balFetchErr } = await supabaseAdmin
+      const { data: initialCurBal, error: balFetchErr } = await supabaseAdmin
         .from("student_points_balance")
         .select("*")
         .eq("user_email", userEmail)
         .maybeSingle();
 
+      let curBal = initialCurBal;
       if (!curBal && !balFetchErr) {
         const { data: newBal } = await supabaseAdmin
           .from("student_points_balance")
@@ -284,7 +286,7 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ error: "Unknown action parameter" }, { status: 400 });
-  } catch (error: any) {
+  } catch {
     return NextResponse.json({ success: true, isFallbackSimulation: true });
   }
 }

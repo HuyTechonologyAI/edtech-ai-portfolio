@@ -1,3 +1,5 @@
+
+import { getErrorMessage } from "@/lib/error-message";
 import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 import { NextResponse } from "next/server";
 
@@ -71,7 +73,7 @@ export async function POST(req: Request) {
     const gradingResult = JSON.parse(cleanText);
 
     return NextResponse.json({ success: true, result: gradingResult });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Auto-Grader AI Fallback triggered:", error);
     
     // Phân tích heuristic tĩnh trên chuỗi văn bản nếu API rớt
@@ -103,7 +105,7 @@ export async function POST(req: Request) {
       success: true,
       result: sampleResult,
       isFallback: true,
-      errorMsg: error.message
+      errorMsg: getErrorMessage(error)
     });
   }
 }

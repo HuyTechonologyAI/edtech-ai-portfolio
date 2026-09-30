@@ -1,14 +1,10 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useHydrated } from "@/hooks/use-browser-state";
 
 export function FloatingOrbs() {
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
+  const isMounted = useHydrated();
 
   if (!isMounted) return null;
 

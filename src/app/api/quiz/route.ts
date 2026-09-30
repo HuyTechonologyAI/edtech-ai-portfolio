@@ -71,7 +71,7 @@ export async function POST(req: Request) {
     const questions = JSON.parse(cleanText);
 
     return NextResponse.json({ questions });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Quiz API Error (Server-side log):", error);
     return NextResponse.json({ error: "Hệ thống không thể tạo câu hỏi lúc này. Vui lòng thử lại sau." }, { status: 500 });
   }

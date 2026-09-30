@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Bell, Send, Mail, CheckCircle2, Search, Users, ShieldAlert, Rocket, MessageSquare } from "lucide-react";
+import { Bell, Send, Mail, CheckCircle2, Search, MessageSquare } from "lucide-react";
 
 export default function NotificationCenterTab() {
   const [notificationType, setNotificationType] = useState<"in-app" | "email">("in-app");
@@ -67,7 +67,7 @@ export default function NotificationCenterTab() {
               <label className="block text-sm font-bold mb-3">Đối tượng nhận</label>
               <select
                 value={targetAudience}
-                onChange={(e) => setTargetAudience(e.target.value as any)}
+                onChange={(e) => setTargetAudience(e.target.value as typeof targetAudience)}
                 className="w-full bg-surface border border-white/10 rounded-lg p-3 text-foreground focus:border-secondary/50 focus:outline-none"
               >
                 <option value="all">Tất cả học viên (All Users)</option>

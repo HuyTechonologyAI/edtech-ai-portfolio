@@ -1,11 +1,11 @@
 "use client";
 
+import Image from "next/image";
+
+import { getErrorMessage } from "@/lib/error-message";
+
 import { useState, useEffect, useCallback } from "react";
-import {
-  Users, Search, Shield, Crown, Ban, Trash2, Mail,
-  CheckCircle, XCircle, RefreshCw, ChevronDown, Filter,
-  UserCheck, UserX, Star, Loader2, AlertTriangle, Eye, X
-} from "lucide-react";
+import { Search, Crown, Ban, Trash2, Mail, CheckCircle, XCircle, RefreshCw, UserCheck, Loader2, AlertTriangle, Eye, X } from "lucide-react";
 
 interface UserItem {
   id: string;
@@ -59,7 +59,7 @@ function fmtDateTime(d: string | null) {
 function Avatar({ user }: { user: UserItem }) {
   const initials = (user.fullName || user.email || "?").charAt(0).toUpperCase();
   if (user.avatarUrl) {
-    return <img src={user.avatarUrl} alt={initials} className="w-9 h-9 rounded-full object-cover border border-white/10" />;
+    return <Image unoptimized width={640} height={480} src={user.avatarUrl} alt={initials} className="w-9 h-9 rounded-full object-cover border border-white/10" />;
   }
   return (
     <div className="w-9 h-9 rounded-full bg-secondary/20 border border-secondary/30 flex items-center justify-center text-secondary font-bold text-sm">
@@ -79,11 +79,11 @@ function StatCard({ label, value, sub, color }: { label: string; value: number; 
 }
 
 // Detail modal
-function UserDetailModal({ user, onClose, onAction }: { user: UserItem; onClose: () => void; onAction: (userId: string, action: string, value: any) => Promise<void>; }) {
+function UserDetailModal({ user, onClose, onAction }: { user: UserItem; onClose: () => void; onAction: (userId: string, action: string, value: string | boolean) => Promise<void>; }) {
   const [loading, setLoading] = useState(false);
   const prov = PROVIDER_LABELS[user.provider] || { label: user.provider, color: "text-gray-400 bg-gray-500/10" };
 
-  const doAction = async (action: string, value: any) => {
+  const doAction = async (action: string, value: string | boolean) => {
     setLoading(true);
     await onAction(user.id, action, value);
     setLoading(false);
@@ -198,24 +198,31 @@ export default function UserManagementTab() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   const fetchUsers = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
+    return (async () => {
       const res = await fetch("/api/admin/users");
+      setError(null);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setUsers(data.users);
       setStats(data.stats);
-    } catch (e: any) {
-      setError(e.message);
-    } finally {
-      setLoading(false);
-    }
+    })()
+      .catch((e: unknown) => {
+        setError(getErrorMessage(e));
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
+
+  const refreshUsers = () => {
+    setLoading(true);
+    setError(null);
+    return fetchUsers();
+  };
 
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
-  const handleAction = async (userId: string, action: string, value: any) => {
+  const handleAction = async (userId: string, action: string, value: string | boolean) => {
     setActionLoading(userId);
     try {
       const res = await fetch("/api/admin/users", {
@@ -225,9 +232,9 @@ export default function UserManagementTab() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      await fetchUsers();
-    } catch (e: any) {
-      alert("Lỗi: " + e.message);
+      await refreshUsers();
+    } catch (e: unknown) {
+      alert("Lỗi: " + getErrorMessage(e));
     } finally {
       setActionLoading(null);
     }
@@ -240,9 +247,9 @@ export default function UserManagementTab() {
       const res = await fetch(`/api/admin/users?userId=${userId}`, { method: "DELETE" });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      await fetchUsers();
-    } catch (e: any) {
-      alert("Lỗi: " + e.message);
+      await refreshUsers();
+    } catch (e: unknown) {
+      alert("Lỗi: " + getErrorMessage(e));
     } finally {
       setActionLoading(null);
     }
@@ -279,7 +286,7 @@ export default function UserManagementTab() {
           </p>
         )}
       </div>
-      <button onClick={fetchUsers} className="flex items-center gap-2 px-4 py-2 bg-secondary/10 text-secondary border border-secondary/20 rounded-lg hover:bg-secondary/20 transition-all text-sm font-medium">
+      <button onClick={refreshUsers} className="flex items-center gap-2 px-4 py-2 bg-secondary/10 text-secondary border border-secondary/20 rounded-lg hover:bg-secondary/20 transition-all text-sm font-medium">
         <RefreshCw className="w-4 h-4" /> Thử lại
       </button>
     </div>
@@ -323,7 +330,7 @@ export default function UserManagementTab() {
           <option value="blocked">Bị khóa</option>
           <option value="unconfirmed">Chưa xác thực</option>
         </select>
-        <button onClick={fetchUsers} className="flex items-center gap-2 px-4 py-2.5 bg-surface border border-border rounded-xl text-sm hover:bg-white/5 transition-all">
+        <button onClick={refreshUsers} className="flex items-center gap-2 px-4 py-2.5 bg-surface border border-border rounded-xl text-sm hover:bg-white/5 transition-all">
           <RefreshCw className="w-4 h-4" />
         </button>
       </div>

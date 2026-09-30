@@ -1,3 +1,5 @@
+
+import { getErrorMessage } from "@/lib/error-message";
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
@@ -23,7 +25,7 @@ export async function POST(req: NextRequest) {
     if (error) throw error;
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
+  } catch {
     // Trả về status 200 kèm cờ lỗi để client không báo lỗi đỏ lòm khi chưa tạo bảng
     return NextResponse.json({ success: false, telemetryIgnored: true });
   }
@@ -39,7 +41,7 @@ export async function GET() {
 
     if (error) throw error;
     return NextResponse.json({ metrics: data || [] });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
   }
 }

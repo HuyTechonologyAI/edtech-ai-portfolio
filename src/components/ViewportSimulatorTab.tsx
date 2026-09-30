@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Laptop, Smartphone, Tablet, RefreshCw, ExternalLink, ShieldAlert, Sparkles } from "lucide-react";
+import { Laptop, Smartphone, Tablet, RefreshCw, ExternalLink, ShieldAlert } from "lucide-react";
 
 export function ViewportSimulatorTab() {
   const [device, setDevice] = useState<"desktop" | "mobile" | "tablet">("mobile");

@@ -1,10 +1,10 @@
 "use client";
 
-import { Suspense, useState, useEffect } from "react";
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 import { Printer, CheckCircle2, Award, Sparkles, ShieldCheck } from "lucide-react";
-import Link from "next/link";
+
 
 const LinkedinIcon = () => (
   <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
@@ -26,42 +26,16 @@ function CertificateRenderer() {
   const queryCourse = searchParams.get("course");
   const queryName = searchParams.get("name");
 
-  const [studentName, setStudentName] = useState("Học viên Đang tải...");
-  const [courseTitle, setCourseTitle] = useState("Khóa học Master AI & Automation");
-  const [serialNo, setSerialNo] = useState("ZENTRA-CERT-2026-X");
-
-  useEffect(() => {
-    // Ưu tiên Name từ Query, nếu không lấy từ user_metadata, nếu không fallback
-    if (queryName) {
-      setStudentName(queryName);
-    } else if (user?.user_metadata?.full_name) {
-      setStudentName(user.user_metadata.full_name);
-    } else if (user?.email) {
-      setStudentName(user.email.split("@")[0]);
-    } else {
-      setStudentName("Nguyễn Văn Học Viên");
-    }
-
-    // Tên khóa học
-    if (queryCourse === "prompt") {
-      setCourseTitle("Làm Chủ Prompt Engineering & Agentic AI");
-    } else if (queryCourse === "automation") {
-      setCourseTitle("Tự Động Hóa Doanh Nghiệp Chuyên Sâu (Make/n8n)");
-    } else {
-      setCourseTitle("Master AI & Automation Thực Chiến");
-    }
-
-    // Sinh Serial duy nhất dựa trên tên và ID khóa
-    const hash = Math.abs((studentName + courseTitle).split("").reduce((a, b) => ((a << 5) - a) + b.charCodeAt(0), 0));
-    setSerialNo(`ZENTRA-CERT-${new Date().getFullYear()}-${hash.toString(16).toUpperCase().substring(0, 6)}`);
-  }, [queryCourse, queryName, user, studentName, courseTitle]);
+  const studentName = queryName || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Nguyễn Văn Học Viên";
+  const courseTitle = queryCourse === "prompt" ? "Làm Chủ Prompt Engineering & Agentic AI" : queryCourse === "automation" ? "Tự Động Hóa Doanh Nghiệp Chuyên Sâu (Make/n8n)" : "Master AI & Automation Thực Chiến";
+  const hash = Math.abs((studentName + courseTitle).split("").reduce((a, b) => ((a << 5) - a) + b.charCodeAt(0), 0));
+  const serialNo = `ZENTRA-CERT-${new Date().getFullYear()}-${hash.toString(16).toUpperCase().substring(0, 6)}`;
 
   const handlePrint = () => {
     window.print();
   };
 
   const shareUrl = typeof window !== "undefined" ? window.location.href : "https://huycncdsai.io.vn";
-  const shareText = `🎉 Tôi vừa hoàn thành xuất sắc chương trình đào tạo "${courseTitle}" và nhận Chứng chỉ Tốt nghiệp Động xác thực từ nền tảng chuyên gia AI & Automation! #AIEngineer #BusinessAutomation #ZentraTech`;
 
   const openLinkedInShare = () => {
     const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;

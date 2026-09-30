@@ -1,5 +1,7 @@
 "use client";
 
+import { useHydrated } from "@/hooks/use-browser-state";
+import type { MatrixFeature } from "@/types/content";
 import { useState, useEffect, useCallback } from "react";
 import { Save, RefreshCw, Layers, DollarSign, Award, Clock, Sparkles } from "lucide-react";
 
@@ -19,15 +21,24 @@ interface AffiliateConfig {
 }
 
 export default function SaaSAndAffiliateSettingsTab() {
-  const [saasTiers, setSaasTiers] = useState<SaaSPlan[]>([]);
-  const [affiliateConfig, setAffiliateConfig] = useState<AffiliateConfig>({
+  const hydrated = useHydrated();
+  return hydrated ? <SettingsForm /> : <div role="status">Đang tải cấu hình...</div>;
+}
+
+function readCachedSetting<T>(key: string, fallback: T): T {
+  try { const value = localStorage.getItem(key); return value ? JSON.parse(value) as T : fallback; } catch { return fallback; }
+}
+
+function SettingsForm() {
+  const [saasTiers, setSaasTiers] = useState<SaaSPlan[]>(() => readCachedSetting("custom_saas_tiers", []));
+  const [affiliateConfig, setAffiliateConfig] = useState<AffiliateConfig>(() => readCachedSetting("custom_affiliate_config", {
     commissionPercent: 30,
     bonusPointsPerReferral: 500,
     cookieDurationDays: 30
-  });
+  }));
 
   // State cấu hình bảng đối chiếu So sánh Đặc quyền
-  const [matrixFeatures, setMatrixFeatures] = useState<any[]>([
+  const [matrixFeatures, setMatrixFeatures] = useState<MatrixFeature[]>(() => readCachedSetting("custom_matrix_features", [
     { name: "Xem trước Tài liệu", free: "5 trang đầu", pro: "Không giới hạn", enterprise: "Không giới hạn" },
     { name: "Tải tài nguyên Ebook/Slide Premium", free: false, pro: true, enterprise: true },
     { name: "Truy cập Kho Prompt chuyên sâu", free: false, pro: true, enterprise: true },
@@ -35,30 +46,14 @@ export default function SaaSAndAffiliateSettingsTab() {
     { name: "Tốc độ Tích lũy Point Gamification", free: "Tiêu chuẩn (x1)", pro: "Nhanh (x2)", enterprise: "Siêu tốc (x5)" },
     { name: "Cập nhật bài giảng mới định kỳ", free: "Hạn chế", pro: "Miễn phí liên tục", enterprise: "Miễn phí liên tục" },
     { name: "Hỗ trợ Kỹ thuật & Cố vấn", free: "Cộng đồng", pro: "Kênh riêng", enterprise: "Trực tiếp 1-1" }
-  ]);
+  ]));
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
   const fetchSettings = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      // 1. Nạp nhanh từ LocalStorage trước để phản hồi tức thì
-      const cachedTiers = localStorage.getItem("custom_saas_tiers");
-      const cachedAff = localStorage.getItem("custom_affiliate_config");
-      const cachedMatrix = localStorage.getItem("custom_matrix_features");
-
-      if (cachedTiers) {
-        try { setSaasTiers(JSON.parse(cachedTiers)); } catch {}
-      }
-      if (cachedAff) {
-        try { setAffiliateConfig(JSON.parse(cachedAff)); } catch {}
-      }
-      if (cachedMatrix) {
-        try { setMatrixFeatures(JSON.parse(cachedMatrix)); } catch {}
-      }
-
+    return (async () => {
       // 2. Luôn nạp từ Server API để đồng bộ hóa bản mới nhất từ DB
       const res = await fetch(`/api/admin/settings?t=${Date.now()}`, { cache: "no-store", headers: { "Cache-Control": "no-cache" } });
       const data = await res.json();
@@ -76,18 +71,20 @@ export default function SaaSAndAffiliateSettingsTab() {
           localStorage.setItem("custom_matrix_features", JSON.stringify(data.settings.matrix_features));
         }
       }
-    } catch (err) {
-      console.error("Lỗi nạp cấu hình:", err);
-    } finally {
-      setIsLoading(false);
-    }
+    })()
+      .catch((err) => {
+        console.error("Lỗi nạp cấu hình:", err);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   }, []);
 
   useEffect(() => {
     fetchSettings();
   }, [fetchSettings]);
 
-  const handleUpdateTier = (index: number, key: keyof SaaSPlan, val: any) => {
+  const handleUpdateTier = (index: number, key: keyof SaaSPlan, val: SaaSPlan[keyof SaaSPlan]) => {
     const updated = [...saasTiers];
     updated[index] = { ...updated[index], [key]: val };
     setSaasTiers(updated);
@@ -126,7 +123,7 @@ export default function SaaSAndAffiliateSettingsTab() {
 
       setSaveMessage("🎉 Đã lưu cấu hình Bảng giá, Affiliate & Bảng đối chiếu đặc quyền thành công!");
       setTimeout(() => setSaveMessage(null), 4000);
-    } catch (err) {
+    } catch {
       setSaveMessage("⚠️ Đã lưu cấu hình đệm (Yêu cầu chạy SQL bảng cms_settings để lưu vĩnh viễn)");
     } finally {
       setIsSaving(false);
@@ -352,7 +349,7 @@ export default function SaaSAndAffiliateSettingsTab() {
                       value={strVal}
                       onChange={(e) => {
                         const inVal = e.target.value;
-                        let finalVal: any = inVal;
+                        let finalVal: string | boolean = inVal;
                         if (inVal.toLowerCase() === "true") finalVal = true;
                         if (inVal.toLowerCase() === "false") finalVal = false;
                         

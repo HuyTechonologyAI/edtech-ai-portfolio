@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
@@ -84,7 +86,7 @@ function CheckoutContent() {
         setOrderCode(data.memoCode);
         setDynamicQrUrl(data.qrUrl);
       }
-    } catch (err) {
+    } catch {
       // Nếu lỗi mạng, tự tính chuỗi fallback VietQR
       const fallbackMemo = `ZENTRA${Math.floor(100000 + Math.random() * 900000)}`;
       setOrderCode(fallbackMemo);
@@ -100,14 +102,18 @@ function CheckoutContent() {
     selectedPriceRef.current = selectedPlan.price;
   }, [selectedPlan.price]);
 
-  useEffect(() => {
+  const [previousPlanParam, setPreviousPlanParam] = useState(planParam);
+  if (previousPlanParam !== planParam) {
+    setPreviousPlanParam(planParam);
+
     if (planParam) {
       const matched = PLANS.find(p => p.id === planParam);
       if (matched && matched.id !== selectedPlan.id) {
         setSelectedPlan(matched);
       }
     }
-  }, [planParam, selectedPlan.id]);
+
+  }
 
   useEffect(() => {
     initOrder(selectedPriceRef.current);
@@ -306,7 +312,7 @@ function CheckoutContent() {
                         <span>Đang khởi tạo mã QR...</span>
                       </div>
                     ) : dynamicQrUrl ? (
-                      <img 
+                      <Image unoptimized width={640} height={480}
                         src={dynamicQrUrl} 
                         alt="VietQR Checkout Open Banking"
                         className="w-full h-full object-contain animate-fade-in"
