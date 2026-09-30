@@ -3,7 +3,7 @@ import { supabase } from "@/lib/supabase";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Đọc site URL từ biến môi trường hoặc fallback về domain mặc định
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zentratech.io";
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.huycncdsai.io.vn";
 
   // 1. Danh sách các trang tĩnh cốt lõi
   const staticRoutes = [
