@@ -1,7 +1,11 @@
 "use client";
 
+import Image from "next/image";
+
+import { getErrorMessage } from "@/lib/error-message";
+
 import { useState, useEffect, useCallback } from "react";
-import { Gift, Zap, CheckCircle2, Flame, Trophy, Lock, Unlock, ArrowRight, Loader2, RefreshCw, BookOpen, Video, ExternalLink, Play, Crown } from "lucide-react";
+import { Gift, Zap, CheckCircle2, Flame, Trophy, Unlock, Loader2, RefreshCw, BookOpen, Video, ExternalLink, Play, Crown } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
 import Link from "next/link";
 import { TiltCard } from "@/components/TiltCard";
@@ -65,8 +69,8 @@ export default function RewardsGamificationPage() {
 
   const fetchHubData = useCallback(async () => {
     if (!user) return;
-    setLoading(true);
-    try {
+
+    return (async () => {
       const res = await fetch(`/api/rewards?email=${encodeURIComponent(user.email || "")}`);
       const data = await res.json();
       if (data.success) {
@@ -74,13 +78,20 @@ export default function RewardsGamificationPage() {
         setTasks(data.tasks || []);
         setCompletedToday(data.completedToday || []);
       }
-    } catch {
-      // fallback local demo state
-      setBalance({ points: 20, redeemed_courses: [], streak_count: 0, last_checkin_date: null });
-    } finally {
-      setLoading(false);
-    }
+    })()
+      .catch(() => {
+        // fallback local demo state
+        setBalance({ points: 20, redeemed_courses: [], streak_count: 0, last_checkin_date: null });
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, [user]);
+
+  const refreshHubData = () => {
+    setLoading(true);
+    return fetchHubData();
+  };
 
   useEffect(() => {
     fetchHubData();
@@ -113,15 +124,15 @@ export default function RewardsGamificationPage() {
       window.dispatchEvent(new Event("checkin-completed"));
 
       // Tải lại toàn bộ dữ liệu để cập nhật điểm và streak chính xác từ server
-      await fetchHubData();
+      await refreshHubData();
 
       alert(`🎉 Chúc mừng! Bạn đã tích lũy thành công +${data.pointsAwarded || task.reward_points} Points! ${
         task.target_type === "DAILY_CHECKIN"
           ? `Chuỗi điểm danh hiện tại của bạn: 🔥 ${data.streakCount || 1} ngày.`
           : ""
       }`);
-    } catch (err: any) {
-      alert("Lỗi: " + err.message);
+    } catch (err: unknown) {
+      alert("Lỗi: " + getErrorMessage(err));
     } finally {
       setActionLoading(null);
     }
@@ -164,8 +175,8 @@ export default function RewardsGamificationPage() {
         redeemed_courses: [...prev.redeemed_courses, course.id]
       }));
       alert(`🎁 Đổi thưởng thành công! Bạn đã sở hữu vĩnh viễn quyền truy cập khóa học "${course.title}".`);
-    } catch (err: any) {
-      alert("Lỗi: " + err.message);
+    } catch (err: unknown) {
+      alert("Lỗi: " + getErrorMessage(err));
     } finally {
       setActionLoading(null);
     }
@@ -315,7 +326,7 @@ export default function RewardsGamificationPage() {
               </h2>
               <p className="text-xs text-foreground/40 mt-0.5">Checklist được Admin và Trợ giảng cập nhật liên tục để thử thách học viên</p>
             </div>
-            <button onClick={fetchHubData} className="flex items-center gap-1 text-xs text-foreground/40 hover:text-orange-400 transition-colors">
+            <button onClick={refreshHubData} className="flex items-center gap-1 text-xs text-foreground/40 hover:text-orange-400 transition-colors">
               <RefreshCw className="w-3.5 h-3.5" /> Làm mới
             </button>
           </div>
@@ -422,7 +433,7 @@ export default function RewardsGamificationPage() {
                 <TiltCard key={course.id}>
                   <div className="bg-surface rounded-2xl overflow-hidden border border-white/5 flex flex-col justify-between h-full group shadow-xl">
                     <div className="relative aspect-video w-full bg-surface border-b border-white/5 overflow-hidden">
-                      <img src={course.image} alt={course.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                      <Image unoptimized width={640} height={480} src={course.image} alt={course.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                       <div className="absolute inset-0 bg-gradient-to-t from-surface via-transparent to-transparent" />
                       
                       <span className="absolute top-3 left-3 text-[9px] font-extrabold px-2 py-0.5 bg-black/70 backdrop-blur-md border border-white/10 rounded text-amber-400 uppercase">

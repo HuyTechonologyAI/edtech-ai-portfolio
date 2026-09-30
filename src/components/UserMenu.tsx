@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import Link from "next/link";
@@ -35,8 +37,8 @@ export function UserMenu() {
 
   const isDemotedAssistant = user?.email === "drakengo1707@gmail.com" || user?.email === "marverick2024@gmail.com";
   const isSuperAdminEmail = user?.email === "huytechnologyai2025@gmail.com";
-  const isSuperAdmin = !isDemotedAssistant && (isSuperAdminEmail || user?.app_metadata?.role === "admin" || (user as any)?.user_metadata?.role === "admin");
-  const isAssistant = isDemotedAssistant || (!isSuperAdmin && !!((user as any)?.user_metadata?.can_manage_content || (user as any)?.user_metadata?.can_moderate_comments || (user as any)?.user_metadata?.can_grant_premium));
+  const isSuperAdmin = !isDemotedAssistant && (isSuperAdminEmail || user?.app_metadata?.role === "admin" || user?.user_metadata?.role === "admin");
+  const isAssistant = isDemotedAssistant || (!isSuperAdmin && !!(user?.user_metadata?.can_manage_content || user?.user_metadata?.can_moderate_comments || user?.user_metadata?.can_grant_premium));
   const canAccessAdmin = isSuperAdmin || isAssistant;
 
   return (
@@ -44,7 +46,7 @@ export function UserMenu() {
       <button onClick={() => setOpen(!open)}
         className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface border border-white/10 hover:border-secondary/30 transition-all">
         {avatar ? (
-          <img src={avatar} alt={name} className="w-7 h-7 rounded-full" />
+          <Image unoptimized width={640} height={480} src={avatar} alt={name} className="w-7 h-7 rounded-full" />
         ) : (
           <div className="w-7 h-7 rounded-full bg-secondary/20 flex items-center justify-center text-secondary text-xs font-bold">
             {name[0]?.toUpperCase()}
@@ -59,7 +61,7 @@ export function UserMenu() {
           <div className="px-3 py-2 border-b border-white/5 mb-2">
             <p className="text-sm font-bold truncate flex items-center gap-1.5">
               <span>{name}</span>
-              {(user?.app_metadata?.is_premium || (user as any)?.user_metadata?.is_premium) && (
+              {(user?.app_metadata?.is_premium || user?.user_metadata?.is_premium) && (
                 <span className="text-[9px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-1 py-0.2 rounded font-extrabold uppercase">VIP</span>
               )}
             </p>

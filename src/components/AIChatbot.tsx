@@ -1,11 +1,11 @@
 "use client";
 
+import Image from "next/image";
+
+import type { BrowserSpeechRecognition } from "@/types/browser-speech";
+import { useHydrated } from "@/hooks/use-browser-state";
 import { useState, useRef, useEffect, useCallback } from "react";
-import {
-  MessageSquare, X, Send, Bot, CheckCircle2, Mic, MicOff,
-  ImagePlus, FileText, Sparkles, BookOpen, Wrench, Target,
-  ChevronDown, Loader2, ExternalLink
-} from "lucide-react";
+import { X, Send, Bot, CheckCircle2, Mic, MicOff, ImagePlus, FileText, Sparkles, BookOpen, ChevronDown, Loader2, ExternalLink } from "lucide-react";
 import { submitContact } from "@/actions/contact";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -66,16 +66,15 @@ function renderMarkdown(text: string): string {
 // ═══════════════════════════════════════════
 // SPEECH RECOGNITION HOOK
 // ═══════════════════════════════════════════
-function useSpeechRecognition() {
+function useSpeechRecognition(onTranscript: (text: string) => void) {
   const [isListening, setIsListening] = useState(false);
-  const [transcript, setTranscript] = useState("");
-  const [isSupported, setIsSupported] = useState(false);
-  const recognitionRef = useRef<any>(null);
+  const hydrated = useHydrated();
+  const isSupported = hydrated && !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+  const recognitionRef = useRef<BrowserSpeechRecognition | null>(null);
 
   useEffect(() => {
     const SpeechRecognition =
-      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    setIsSupported(!!SpeechRecognition);
+      window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if (SpeechRecognition) {
       const recognition = new SpeechRecognition();
@@ -84,9 +83,9 @@ function useSpeechRecognition() {
       // Multilingual: Tự động phát hiện ngôn ngữ
       recognition.lang = "";
 
-      recognition.onresult = (event: any) => {
+      recognition.onresult = (event) => {
         const current = event.results[event.results.length - 1];
-        setTranscript(current[0].transcript);
+        onTranscript(current[0].transcript);
       };
 
       recognition.onend = () => {
@@ -98,12 +97,18 @@ function useSpeechRecognition() {
       };
 
       recognitionRef.current = recognition;
+      return () => {
+        recognition.onresult = null;
+        recognition.onend = null;
+        recognition.onerror = null;
+        recognition.abort();
+        recognitionRef.current = null;
+      };
     }
-  }, []);
+  }, [onTranscript]);
 
   const startListening = useCallback(() => {
     if (recognitionRef.current && !isListening) {
-      setTranscript("");
       recognitionRef.current.start();
       setIsListening(true);
     }
@@ -116,7 +121,7 @@ function useSpeechRecognition() {
     }
   }, [isListening]);
 
-  return { isListening, transcript, isSupported, startListening, stopListening };
+  return { isListening, isSupported, startListening, stopListening };
 }
 
 // ═══════════════════════════════════════════
@@ -147,8 +152,8 @@ export function AIChatbot() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { isListening, transcript, isSupported, startListening, stopListening } =
-    useSpeechRecognition();
+  const { isListening, isSupported, startListening, stopListening } =
+    useSpeechRecognition(setInput);
 
   // Auto-scroll when new messages arrive
   useEffect(() => {
@@ -158,11 +163,7 @@ export function AIChatbot() {
   }, [messages, isOpen, showLeadForm, isScrolledUp]);
 
   // Fill transcript into input when voice recognition captures text
-  useEffect(() => {
-    if (transcript) {
-      setInput(transcript);
-    }
-  }, [transcript]);
+
 
   // Track scroll position
   const handleScroll = useCallback(() => {
@@ -205,7 +206,7 @@ export function AIChatbot() {
         .filter((m) => m.id !== "welcome")
         .map((m) => ({ role: m.role, content: m.content }));
 
-      const payload: any = {
+      const payload: { message: string; history: { role: string; content: string }[]; imageBase64?: string } = {
         message: currentInput || "Hãy phân tích ảnh đính kèm này.",
         history,
       };
@@ -373,7 +374,7 @@ export function AIChatbot() {
                       {msg.imagePreview && (
                         <div className="flex justify-end">
                           <div className="relative rounded-xl overflow-hidden border border-white/10 shadow-lg max-w-[200px]">
-                            <img
+                            <Image unoptimized width={640} height={480}
                               src={msg.imagePreview}
                               alt="Uploaded"
                               className="w-full h-auto max-h-[160px] object-cover"
@@ -589,7 +590,7 @@ export function AIChatbot() {
             {pendingImage && (
               <div className="px-3 py-2 bg-background/80 border-t border-white/5 flex items-center gap-2">
                 <div className="relative w-12 h-12 rounded-lg overflow-hidden border border-secondary/30 shrink-0">
-                  <img
+                  <Image unoptimized width={640} height={480}
                     src={pendingImage}
                     alt="Preview"
                     className="w-full h-full object-cover"

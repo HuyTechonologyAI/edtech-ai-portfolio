@@ -1,33 +1,11 @@
 "use client";
 
+import { getErrorMessage } from "@/lib/error-message";
+
+import type { StudioResult, GatewayResult } from "@/types/ai-studio";
 import { useState } from "react";
-import { 
-  Cpu, 
-  Sparkles, 
-  Presentation, 
-  Image as ImageIcon, 
-  Video as VideoIcon, 
-  Mic, 
-  Layers, 
-  ExternalLink, 
-  Copy, 
-  Check, 
-  RefreshCw, 
-  Zap, 
-  ShieldCheck, 
-  Server, 
-  Code2, 
-  Download, 
-  Play, 
-  AlertTriangle, 
-  Globe2, 
-  CheckCircle2, 
-  Terminal, 
-  Bot,
-  Flame,
-  ArrowRight
-} from "lucide-react";
-import { OPEN_SOURCE_AI_TOOLS, OpenSourceAITool } from "@/lib/ai-tools-registry";
+import { Cpu, Sparkles, Presentation, Image as ImageIcon, Video as VideoIcon, Mic, Layers, ExternalLink, Copy, Check, RefreshCw, Zap, ShieldCheck, Server, Code2, Download, Globe2, CheckCircle2, Bot, Flame, ArrowRight } from "lucide-react";
+import { OPEN_SOURCE_AI_TOOLS } from "@/lib/ai-tools-registry";
 
 export default function CentralAiHubTab() {
   const [activeSubTab, setActiveSubTab] = useState<"studio" | "tools" | "quota" | "ecosystem">("studio");
@@ -39,13 +17,13 @@ export default function CentralAiHubTab() {
   const [targetAudience, setTargetAudience] = useState("Học sinh THPT & Giáo viên");
   
   const [isGenerating, setIsGenerating] = useState(false);
-  const [studioResult, setStudioResult] = useState<any | null>(null);
+  const [studioResult, setStudioResult] = useState<StudioResult | null>(null);
   const [activeResultTab, setActiveResultTab] = useState<"slide" | "lesson" | "image" | "voice" | "video" | "avatar">("slide");
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   // Quota & Gateway Test State
   const [isTestingGateway, setIsTestingGateway] = useState(false);
-  const [testLog, setTestLog] = useState<any | null>(null);
+  const [testLog, setTestLog] = useState<GatewayResult | null>(null);
 
   const handleCopy = (text: string, key: string) => {
     navigator.clipboard.writeText(text);
@@ -103,8 +81,8 @@ export default function CentralAiHubTab() {
       });
       const data = await res.json();
       setTestLog(data);
-    } catch (e: any) {
-      setTestLog({ error: e?.message });
+    } catch (e: unknown) {
+      setTestLog({ error: getErrorMessage(e) });
     } finally {
       setIsTestingGateway(false);
     }
@@ -482,13 +460,13 @@ export default function CentralAiHubTab() {
                         Cấu trúc JSON Storyboard cho <strong>MoneyPrinterTurbo</strong> tự động render video HD
                       </div>
                       <div className="space-y-2 overflow-auto max-h-[380px]">
-                        {studioResult.package?.moneyPrinterTurboStoryboard?.map((scene: any, idx: number) => (
+                        {studioResult.package?.moneyPrinterTurboStoryboard?.map((scene, idx) => (
                           <div key={idx} className="bg-black/50 p-3 rounded-xl border border-white/5 text-xs flex items-start justify-between gap-4">
                             <div className="space-y-1 flex-1">
                               <div className="flex items-center gap-2">
                                 <span className="px-2 py-0.5 rounded bg-secondary/15 text-secondary text-[10px] font-bold">Scene {scene.scene || idx + 1}</span>
                                 <span className="text-[11px] text-foreground/40">Thời lượng: {scene.durationSec || 5}s</span>
-                                <span className="text-[11px] text-cyan-400">Từ khóa video: "{scene.visualKeyword}"</span>
+                                <span className="text-[11px] text-cyan-400">Từ khóa video: &quot;{scene.visualKeyword}&quot;</span>
                               </div>
                               <p className="text-foreground/90">{scene.script}</p>
                             </div>
@@ -527,7 +505,7 @@ export default function CentralAiHubTab() {
                   <div>
                     <h4 className="text-base font-bold text-foreground">Chưa có dữ liệu học liệu số</h4>
                     <p className="text-xs text-foreground/50 max-w-sm mt-1">
-                      Nhập đề bài hoặc chọn bài học mẫu bên trái rồi bấm nút <strong>"Khởi Tạo Studio 1-Chạm"</strong> để AI tự động xuất Slide, Giáo án, Ảnh và Video cùng lúc.
+                      Nhập đề bài hoặc chọn bài học mẫu bên trái rồi bấm nút <strong>&quot;Khởi Tạo Studio 1-Chạm&quot;</strong> để AI tự động xuất Slide, Giáo án, Ảnh và Video cùng lúc.
                     </p>
                   </div>
                 </div>

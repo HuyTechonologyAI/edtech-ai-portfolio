@@ -1,5 +1,7 @@
 "use client";
 
+import { getErrorMessage } from "@/lib/error-message";
+
 import { useState, useEffect, useCallback } from "react";
 import { Folder, FolderOpen, FolderPlus, Plus, Trash2, ChevronRight, ChevronDown, Loader2, CornerDownRight } from "lucide-react";
 
@@ -25,8 +27,7 @@ export default function FolderTreeManager({ folderType, selectedFolderId, onSele
   const [expandedNodes, setExpandedNodes] = useState<Record<number, boolean>>({});
 
   const fetchFolders = useCallback(async () => {
-    setLoading(true);
-    try {
+    return (async () => {
       const res = await fetch(`/api/admin/folders?type=${folderType}`);
       const data = await res.json();
       if (data.success) {
@@ -38,11 +39,13 @@ export default function FolderTreeManager({ folderType, selectedFolderId, onSele
         });
         setExpandedNodes(expands);
       }
-    } catch (err) {
-      console.error("Failed to fetch folder taxonomy", err);
-    } finally {
-      setLoading(false);
-    }
+    })()
+      .catch((err) => {
+        console.error("Failed to fetch folder taxonomy", err);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, [folderType]);
 
   useEffect(() => {
@@ -79,8 +82,8 @@ export default function FolderTreeManager({ folderType, selectedFolderId, onSele
 
       setNewFolderName("");
       setCreatingParentId(null);
-    } catch (err: any) {
-      alert("Lỗi: " + err.message);
+    } catch (err: unknown) {
+      alert("Lỗi: " + getErrorMessage(err));
     }
   };
 
@@ -98,8 +101,8 @@ export default function FolderTreeManager({ folderType, selectedFolderId, onSele
         setFolders(prev => prev.filter(f => f.id !== id));
         onFolderTaxonomyChanged?.();
       }
-    } catch (err: any) {
-      alert("Lỗi xóa thư mục: " + err.message);
+    } catch (err: unknown) {
+      alert("Lỗi xóa thư mục: " + getErrorMessage(err));
     }
   };
 

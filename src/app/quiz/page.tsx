@@ -1,5 +1,7 @@
 "use client";
 
+import { getErrorMessage } from "@/lib/error-message";
+
 import { Brain, Trophy, ArrowRight, Zap, CheckCircle2, XCircle } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -46,10 +48,10 @@ export default function QuizPage() {
         setGameState("idle");
         alert("Lỗi từ AI: " + (data.error || "Vui lòng thử lại."));
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error);
       setGameState("idle");
-      alert("Lỗi kết nối Server: " + error.message);
+      alert("Lỗi kết nối Server: " + getErrorMessage(error));
     }
   };
 
@@ -99,7 +101,7 @@ export default function QuizPage() {
                 </div>
                 <h2 className="text-3xl font-bold mb-4">Sẵn sàng thử thách?</h2>
                 <p className="text-foreground/70 max-w-md mb-8">
-                  Nhập chủ đề bạn muốn kiểm tra, AI sẽ đọc tài liệu và tự động "chế" ra 5 câu hỏi để đánh giá trình độ của bạn.
+                  Nhập chủ đề bạn muốn kiểm tra, AI sẽ đọc tài liệu và tự động &quot;chế&quot; ra 5 câu hỏi để đánh giá trình độ của bạn.
                 </p>
                 
                 <div className="w-full max-w-md mb-8 relative group">

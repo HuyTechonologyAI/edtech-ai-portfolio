@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
       const totalDuration = Number(duration);
 
       // Tìm kiếm bản ghi tiến độ hiện tại
-      let { data: curProg, error } = await supabase
+      const { data: curProg, error } = await supabase
         .from("user_video_progress")
         .select("*")
         .eq("user_email", userEmail)
@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
       const currentScroll = Number(maxScrollPercent) || 0;
 
       // Tìm kiếm bản ghi tiến độ đọc hiện tại
-      let { data: curProg, error } = await supabase
+      const { data: curProg, error } = await supabase
         .from("user_document_progress")
         .select("*")
         .eq("user_email", userEmail)
@@ -151,7 +151,7 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ error: "Unknown type parameter" }, { status: 400 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Learning Progress API Error:", error);
     // Trả về mock thành công nếu có lỗi DB (tránh lỗi ngắt mạch trải nghiệm)
     return NextResponse.json({

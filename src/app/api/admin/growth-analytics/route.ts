@@ -1,3 +1,5 @@
+
+import { getErrorMessage } from "@/lib/error-message";
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { verifyAdminAuth } from "@/lib/admin-auth";
@@ -86,7 +88,7 @@ Xuất ra kết quả dưới dạng chuỗi JSON thuần túy (không bọc tro
     const strategyReport = JSON.parse(cleanedText);
 
     return NextResponse.json({ success: true, strategy: strategyReport });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Growth Analytics AI fallback triggered:", error);
     
     // Trả về dữ liệu chiến lược mẫu cao cấp nếu chưa cấu hình API Key
@@ -131,7 +133,7 @@ Xuất ra kết quả dưới dạng chuỗi JSON thuần túy (không bọc tro
       success: true,
       strategy: fallbackStrategy,
       isFallback: true,
-      errorMsg: error.message
+      errorMsg: getErrorMessage(error)
     });
   }
 }

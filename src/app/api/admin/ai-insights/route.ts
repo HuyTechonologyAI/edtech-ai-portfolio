@@ -1,3 +1,5 @@
+
+import { getErrorMessage } from "@/lib/error-message";
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { supabase } from "@/lib/supabase";
@@ -79,7 +81,7 @@ Nhiệm vụ của bạn: Hãy phân tích tương quan dữ liệu trên và xu
     const insights = JSON.parse(cleanedText);
 
     return NextResponse.json({ success: true, insights });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Gemini AI Insights fallback triggered:", error);
     // Trả về dữ liệu mẫu chất lượng cao (fallback) nếu có lỗi parse hoặc chưa set API key
     const fallbackData = {
@@ -105,6 +107,6 @@ Nhiệm vụ của bạn: Hãy phân tích tương quan dữ liệu trên và xu
         }
       ]
     };
-    return NextResponse.json({ success: true, insights: fallbackData, isFallback: true, errorMsg: error.message });
+    return NextResponse.json({ success: true, insights: fallbackData, isFallback: true, errorMsg: getErrorMessage(error) });
   }
 }

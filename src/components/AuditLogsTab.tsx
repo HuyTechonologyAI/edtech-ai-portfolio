@@ -1,7 +1,9 @@
 "use client";
 
+import { getErrorMessage } from "@/lib/error-message";
+
 import { useState, useEffect, useCallback } from "react";
-import { ClipboardList, Search, RefreshCw, Loader2, AlertTriangle, User, Calendar, FileText, Video, MessageSquare, Shield, Crown, Plus, Trash2, Pencil, CheckCircle, XCircle } from "lucide-react";
+import { ClipboardList, Search, RefreshCw, Loader2, AlertTriangle, User, Calendar, FileText, Shield, Crown, Plus, Trash2, Pencil, CheckCircle, XCircle } from "lucide-react";
 
 interface AuditLogItem {
   id: string | number;
@@ -10,11 +12,11 @@ interface AuditLogItem {
   user_name: string | null;
   action_type: string;
   target_resource: string;
-  details: Record<string, any>;
+  details: Record<string, unknown>;
   created_at: string;
 }
 
-const ACTION_CONFIGS: Record<string, { label: string; color: string; icon: any }> = {
+const ACTION_CONFIGS: Record<string, { label: string; color: string; icon: typeof ClipboardList }> = {
   // Video actions
   CREATE_VIDEO: { label: "Đăng Video mới", color: "text-green-400 bg-green-500/10 border-green-500/20", icon: Plus },
   UPDATE_VIDEO: { label: "Cập nhật Video", color: "text-amber-400 bg-amber-500/10 border-amber-500/20", icon: Pencil },
@@ -44,22 +46,29 @@ export default function AuditLogsTab() {
   // Filter variables
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedAction, setSelectedAction] = useState("all");
-  const [limit, setLimit] = useState(100);
+  const limit = 100;
 
   const fetchLogs = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
+    return (async () => {
       const res = await fetch(`/api/admin/audit-logs?limit=${limit}&actionType=${selectedAction}`);
+      setError(null);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Không thể tải nhật ký thao tác");
       setLogs(data.logs || []);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+    })()
+      .catch((err: unknown) => {
+        setError(getErrorMessage(err));
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, [limit, selectedAction]);
+
+  const refreshLogs = () => {
+    setLoading(true);
+    setError(null);
+    return fetchLogs();
+  };
 
   useEffect(() => {
     fetchLogs();
@@ -130,7 +139,7 @@ export default function AuditLogsTab() {
 
           {/* Refresh Action Hook */}
           <button
-            onClick={fetchLogs}
+            onClick={refreshLogs}
             disabled={loading}
             className="p-2 bg-surface border border-border rounded-xl hover:bg-white/5 transition-all text-foreground/70 hover:text-foreground disabled:opacity-50"
             title="Làm mới danh sách"

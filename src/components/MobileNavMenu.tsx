@@ -10,16 +10,18 @@ export function MobileNavMenu() {
   const { user, signOut } = useAuth();
   const isDemotedAssistant = user?.email === "drakengo1707@gmail.com" || user?.email === "marverick2024@gmail.com";
   const isSuperAdminEmail = user?.email === "huytechnologyai2025@gmail.com";
-  const isSuperAdmin = !isDemotedAssistant && (isSuperAdminEmail || user?.app_metadata?.role === "admin" || (user as any)?.user_metadata?.role === "admin");
-  const isAssistant = isDemotedAssistant || (!isSuperAdmin && !!((user as any)?.user_metadata?.can_manage_content || (user as any)?.user_metadata?.can_moderate_comments || (user as any)?.user_metadata?.can_grant_premium));
+  const isSuperAdmin = !isDemotedAssistant && (isSuperAdminEmail || user?.app_metadata?.role === "admin" || user?.user_metadata?.role === "admin");
+  const isAssistant = isDemotedAssistant || (!isSuperAdmin && !!(user?.user_metadata?.can_manage_content || user?.user_metadata?.can_moderate_comments || user?.user_metadata?.can_grant_premium));
   const canAccessAdmin = isSuperAdmin || isAssistant;
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
 
   // Tự động đóng menu trượt khi chuyển trang
-  useEffect(() => {
+  const [previousPathname, setPreviousPathname] = useState(pathname);
+  if (previousPathname !== pathname) {
+    setPreviousPathname(pathname);
     setIsOpen(false);
-  }, [pathname]);
+  }
 
   // Khóa cuộn trang khi mở overlay toàn màn hình
   useEffect(() => {

@@ -1,5 +1,7 @@
 "use client";
 
+import { getErrorMessage } from "@/lib/error-message";
+
 import { useState } from "react";
 import { Sparkles, Upload, FileJson, CheckCircle2, AlertTriangle, Zap, Loader2, Award, ChevronRight } from "lucide-react";
 
@@ -73,8 +75,8 @@ export function WorkflowAutoGrader() {
       if (data.isFallback) {
         setIsFallback(true);
       }
-    } catch (err: any) {
-      setError(err.message || "Lỗi đường truyền kết nối AI Grader.");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err) || "Lỗi đường truyền kết nối AI Grader.");
     } finally {
       setAnalyzing(false);
     }

@@ -1,5 +1,7 @@
 "use client";
 
+import { getErrorMessage } from "@/lib/error-message";
+
 import { useState, useEffect, useCallback } from "react";
 import { TrendingUp, DollarSign, Users, Sparkles, Loader2, BarChart3, AlertTriangle, Zap, CheckCircle2, Target, ArrowUpRight, Layers, ArrowDownRight } from "lucide-react";
 
@@ -62,18 +64,19 @@ export function GrowthAnalyticsTab() {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   const fetchMetrics = useCallback(async () => {
-    setLoadingMetrics(true);
-    try {
+    return (async () => {
       const res = await fetch("/api/admin/growth-analytics");
       const data = await res.json();
       if (data.success) {
         setMetrics(data.metrics);
       }
-    } catch (err) {
-      console.error("Lỗi nạp dữ liệu thống kê tăng trưởng", err);
-    } finally {
-      setLoadingMetrics(false);
-    }
+    })()
+      .catch((err) => {
+        console.error("Lỗi nạp dữ liệu thống kê tăng trưởng", err);
+      })
+      .finally(() => {
+        setLoadingMetrics(false);
+      });
   }, []);
 
   useEffect(() => {
@@ -95,8 +98,8 @@ export function GrowthAnalyticsTab() {
       if (data.isFallback) {
         setIsFallbackUsed(true);
       }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err));
     } finally {
       setAnalyzing(false);
     }

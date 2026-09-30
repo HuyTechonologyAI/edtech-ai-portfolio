@@ -35,7 +35,8 @@ export default function AdminLogin() {
       });
 
       if (res.ok) {
-        window.location.href = "/admin";
+        router.replace("/admin");
+        router.refresh();
       } else {
         const data = await res.json();
         setError(data.error || "Đăng nhập mật khẩu thất bại");
@@ -62,7 +63,8 @@ export default function AdminLogin() {
       }
 
       // Check user permissions via api or page reload
-      window.location.href = "/admin";
+      router.replace("/admin");
+        router.refresh();
     } catch {
       setError("Lỗi đăng nhập tài khoản trợ lý");
     } finally {

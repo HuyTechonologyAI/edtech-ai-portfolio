@@ -66,7 +66,7 @@ export async function GET(req: Request) {
   let parsedUrl: URL;
   try {
     parsedUrl = new URL(url);
-  } catch (e) {
+  } catch {
     return NextResponse.json({ error: "Invalid target URL format" }, { status: 400 });
   }
 

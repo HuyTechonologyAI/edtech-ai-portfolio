@@ -1,7 +1,7 @@
 "use client";
 
 import { GraduationCap, Calculator, Cpu, ArrowRight, ExternalLink, Sparkles, CheckCircle2, ShieldCheck, Zap } from "lucide-react";
-import { TiltCard } from "@/components/TiltCard";
+
 
 export function EcosystemSection() {
   const pillars = [

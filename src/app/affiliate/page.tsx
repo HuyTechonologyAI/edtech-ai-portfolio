@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/components/AuthProvider";
+import { useHydrated } from "@/hooks/use-browser-state";
 import { Copy, Check, TrendingUp, Users, DollarSign, Award, Trophy, Sparkles, ExternalLink, RefreshCw, HelpCircle } from "lucide-react";
 import Link from "next/link";
 
@@ -14,6 +15,7 @@ interface LeaderboardItem {
 }
 
 export default function AffiliatePage() {
+  const hydrated = useHydrated();
   const { user } = useAuth();
   const [customCode, setCustomCode] = useState("");
   const [activeCode, setActiveCode] = useState("");
@@ -58,9 +60,12 @@ export default function AffiliatePage() {
   ];
 
   // Initialize distinct partner referral code reactive to auth metadata
-  useEffect(() => {
+  const [previousUser, setPreviousUser] = useState<typeof user | undefined>(undefined);
+  if (previousUser !== user) {
+    setPreviousUser(user);
+
     if (user) {
-      const metadataRef = (user as any).user_metadata?.custom_ref_code || user.app_metadata?.custom_ref_code;
+      const metadataRef = user.user_metadata?.custom_ref_code || user.app_metadata?.custom_ref_code;
       if (metadataRef) {
         setActiveCode(metadataRef);
         setCustomCode(metadataRef);
@@ -75,10 +80,11 @@ export default function AffiliatePage() {
       setActiveCode("HUYAI_EXPERT");
       setCustomCode("HUYAI_EXPERT");
     }
-  }, [user]);
+
+  }
 
   // Trình tạo đường dẫn Affiliate hoàn chỉnh
-  const baseUrl = typeof window !== "undefined" ? window.location.origin : "https://ai-autoexpert.io";
+  const baseUrl = hydrated ? window.location.origin : "https://ai-autoexpert.io";
   const referralUrl = `${baseUrl}/?ref=${activeCode}`;
 
   const handleCopyLink = () => {
@@ -147,7 +153,7 @@ export default function AffiliatePage() {
             <div>
               <div className="text-xs text-foreground/50">Trạng thái đối tác</div>
               <div className="text-sm font-bold text-foreground">
-                {user ? (user as any).user_metadata?.full_name || user.email : "Tài khoản Trải nghiệm"}
+                {user ? user.user_metadata?.full_name || user.email : "Tài khoản Trải nghiệm"}
               </div>
               <div className="text-[10px] text-secondary font-mono flex items-center gap-1 mt-0.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse" />
@@ -311,7 +317,7 @@ export default function AffiliatePage() {
               </p>
 
               <div className="space-y-3 pt-2">
-                {topEarners.map((item: any) => (
+                {topEarners.map((item) => (
                   <div
                     key={item.rank}
                     className={`p-3 rounded-xl flex items-center justify-between gap-3 transition-all ${

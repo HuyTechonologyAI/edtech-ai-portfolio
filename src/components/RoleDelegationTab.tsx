@@ -1,7 +1,11 @@
 "use client";
 
+import Image from "next/image";
+
+import { getErrorMessage } from "@/lib/error-message";
+
 import { useState, useEffect, useCallback } from "react";
-import { Shield, Search, UserCheck, UserX, Plus, RefreshCw, Loader2, CheckCircle2, AlertTriangle, Eye, X, Crown, FileText, Video, MessageSquare, Trash2, Pencil, Sliders } from "lucide-react";
+import { Shield, Search, UserCheck, Plus, Loader2, AlertTriangle, X, Crown, Video, MessageSquare, Trash2, Sliders } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
 
 interface UserItem {
@@ -44,12 +48,12 @@ export default function RoleDelegationTab() {
       headers["Authorization"] = `Bearer ${session.access_token}`;
     }
     return headers;
-  }, [session?.access_token]);
+  }, [session]);
 
-  const logAudit = async (actionType: string, targetResource: string, details: any = {}) => {
+  const logAudit = async (actionType: string, targetResource: string, details: Record<string, unknown> = {}) => {
     if (!user) return;
     try {
-      const uMeta = (user as any).user_metadata || {};
+      const uMeta = user.user_metadata || {};
       await fetch("/api/admin/audit-logs", {
         method: "POST",
         headers: getHeaders(),
@@ -68,26 +72,33 @@ export default function RoleDelegationTab() {
   };
 
   const fetchUsers = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
+    return (async () => {
       const res = await fetch("/api/admin/users", { headers: getHeaders() });
+      setError(null);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setUsers(data.users || []);
-    } catch (e: any) {
-      setError(e.message);
-    } finally {
-      setLoading(false);
-    }
+    })()
+      .catch((e: unknown) => {
+        setError(getErrorMessage(e));
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, [getHeaders]);
+
+  const refreshUsers = () => {
+    setLoading(true);
+    setError(null);
+    return fetchUsers();
+  };
 
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
 
   // Handle single action patch execution
-  const patchUserProperty = async (userId: string, action: string, value: any) => {
+  const patchUserProperty = async (userId: string, action: string, value: string | boolean | { canManageContent: boolean; canModerateComments: boolean; canGrantPremium: boolean }) => {
     const res = await fetch("/api/admin/users", {
       method: "PATCH",
       headers: getHeaders(),
@@ -131,9 +142,9 @@ export default function RoleDelegationTab() {
 
       setIsModalOpen(false);
       setSelectedCandidate(null);
-      await fetchUsers();
-    } catch (err: any) {
-      alert("Lỗi khi bổ nhiệm: " + err.message);
+      await refreshUsers();
+    } catch (err: unknown) {
+      alert("Lỗi khi bổ nhiệm: " + getErrorMessage(err));
     } finally {
       setActionLoading(null);
     }
@@ -164,9 +175,9 @@ export default function RoleDelegationTab() {
         { targetUserId: targetUser.id }
       );
 
-      await fetchUsers();
-    } catch (err: any) {
-      alert("Lỗi khi gỡ quyền: " + err.message);
+      await refreshUsers();
+    } catch (err: unknown) {
+      alert("Lỗi khi gỡ quyền: " + getErrorMessage(err));
     } finally {
       setActionLoading(null);
     }
@@ -208,7 +219,7 @@ export default function RoleDelegationTab() {
       <div className="text-center py-20 space-y-4">
         <AlertTriangle className="w-12 h-12 text-red-400 mx-auto" />
         <p className="font-bold text-red-400 max-w-md mx-auto">{error}</p>
-        <button onClick={fetchUsers} className="px-4 py-2 bg-secondary/10 text-secondary rounded-lg text-sm">
+        <button onClick={refreshUsers} className="px-4 py-2 bg-secondary/10 text-secondary rounded-lg text-sm">
           Thử lại
         </button>
       </div>
@@ -263,7 +274,7 @@ export default function RoleDelegationTab() {
               </tr>
             </thead>
             <tbody>
-              {delegatedStaff.map((user) => {
+              {delegatedStaff.map(user => {
                 const isActing = actionLoading === user.id;
                 const initials = (user.fullName || user.email).charAt(0).toUpperCase();
 
@@ -272,7 +283,7 @@ export default function RoleDelegationTab() {
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-3">
                         {user.avatarUrl ? (
-                          <img src={user.avatarUrl} alt="" className="w-8 h-8 rounded-full object-cover border border-white/10" />
+                          <Image unoptimized width={640} height={480} src={user.avatarUrl} alt="" className="w-8 h-8 rounded-full object-cover border border-white/10" />
                         ) : (
                           <div className="w-8 h-8 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 flex items-center justify-center font-bold">
                             {initials}

@@ -1,3 +1,5 @@
+
+import { getErrorMessage } from "@/lib/error-message";
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { supabaseAdmin } from "@/lib/supabase-admin";
@@ -12,8 +14,8 @@ export async function GET() {
 
     if (error) throw error;
     return NextResponse.json({ premium: data || [] });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
   }
 }
 
@@ -37,8 +39,8 @@ export async function POST(req: NextRequest) {
 
     if (error) throw error;
     return NextResponse.json({ success: true, premium: data[0] });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
   }
 }
 
@@ -55,7 +57,7 @@ export async function PUT(req: NextRequest) {
     const body = await req.json();
     const { title, description, category, link } = body;
 
-    const payload: any = {};
+    const payload: Record<string, unknown> = {};
     if (title !== undefined) payload.title = title;
     if (description !== undefined) payload.description = description;
     if (category !== undefined) payload.category = category;
@@ -69,8 +71,8 @@ export async function PUT(req: NextRequest) {
 
     if (error) throw error;
     return NextResponse.json({ success: true, premium: data[0] });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
   }
 }
 
@@ -87,7 +89,7 @@ export async function DELETE(req: NextRequest) {
     const { error } = await supabaseAdmin.from("premium_contents").delete().eq("id", id);
     if (error) throw error;
     return NextResponse.json({ success: true });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
   }
 }

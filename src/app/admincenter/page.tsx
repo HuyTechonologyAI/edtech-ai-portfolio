@@ -34,7 +34,12 @@ import {
   Share2,
   Send,
   StopCircle,
+  Network,
+  ChevronRight,
+  Check,
+  CornerDownRight,
 } from "lucide-react";
+
 import {
   CANONICAL_59_AGENTS,
   AgentCard,
@@ -160,13 +165,43 @@ export default function AdminCenterPage() {
   const [passwordChangeSuccess, setPasswordChangeSuccess] = useState<string>("");
   const [isChangingPassword, setIsChangingPassword] = useState<boolean>(false);
 
-  // Dashboard Tabs: Default to "swarm" for instant real-time multi-agent command!
-  const [activeTab, setActiveTab] = useState<"swarm" | "agents" | "quotas" | "hierarchy" | "node01" | "audit">("swarm");
+  // Dashboard Tabs
+  const [activeTab, setActiveTab] = useState<"swarm" | "agents" | "quotas" | "hierarchy" | "node01" | "audit" | "a2a" | "supervisor">("swarm");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedBU, setSelectedBU] = useState<string>("ALL");
   const [selectedTier, setSelectedTier] = useState<string>("ALL");
   const [selectedState, setSelectedState] = useState<string>("ALL");
   const [swarmFilter, setSwarmFilter] = useState<"ALL" | "ACTIVE" | "COLLAB" | "STANDBY">("ALL");
+
+  // A2A Queue & Ollama State
+  const [a2aQueue, setA2aQueue] = useState<{
+    queueDepth: number; inProgress: number; completed: number; failed: number; totalTasks: number;
+    tasks: Array<{ taskId: string; fromAgent: string; toAgent: string; capability: string; priority: string; state: string; backend: string; createdAt: string; startedAt?: string; completedAt?: string; error?: string }>;
+  } | null>(null);
+  const [ollamaHealth, setOllamaHealth] = useState<{ connected: boolean; availableModels?: string[]; error?: string } | null>(null);
+  const [a2aExecuting, setA2aExecuting] = useState<boolean>(false);
+  const [ollamaChecking, setOllamaChecking] = useState<boolean>(false);
+
+  // Supervisor State (V1.1 Autonomous)
+  const [supervisorStatus, setSupervisorStatus] = useState<{
+    supervisorId: string;
+    startedAt: string;
+    lastActivity: string;
+    totalTasks: number;
+    tasksByStatus: Record<string, number>;
+    readyToDispatch: number;
+    humanGates: number;
+    openHumanGates: number;
+    completedTasks: number;
+    tasks: Array<{
+      taskId: string; priority: string; riskLevel: string; status: string;
+      lifecycle: string; checkpoint: string; retryCount: number; retryLimit: number;
+      workerId: string; dependencies: string[]; startedAt?: string; completedAt?: string;
+      error?: string; humanGateReason?: string;
+    }>;
+    humanGateLog: Array<{ hgId: string; taskId: string; reason: string; timestamp: string; resolved: boolean }>;
+  } | null>(null);
+  const [supervisorLoading, setSupervisorLoading] = useState<boolean>(false);
 
   // Modals & Selected Agent
   const [selectedAgent, setSelectedAgent] = useState<AgentLiveTelemetry | AgentCard | null>(null);
@@ -256,12 +291,108 @@ export default function AdminCenterPage() {
     }
   };
 
+  // Fetch A2A Queue Status
+  const fetchA2aQueue = async () => {
+    try {
+      const res = await fetch("/api/admincenter/a2a");
+      if (res.ok) {
+        const data = await res.json();
+        setA2aQueue(data);
+      }
+    } catch (err) {
+      console.error("Fetch A2A queue error:", err);
+    }
+  };
+
+  // Fetch Supervisor Status (V1.1)
+  const fetchSupervisorStatus = async () => {
+    setSupervisorLoading(true);
+    try {
+      const res = await fetch("/api/admincenter/supervisor");
+      if (res.ok) {
+        const data = await res.json();
+        setSupervisorStatus(data);
+      }
+    } catch (err) {
+      console.error("Fetch supervisor error:", err);
+    } finally {
+      setSupervisorLoading(false);
+    }
+  };
+
+  // Resolve Human Gate
+  const handleResolveHumanGate = async (hgId: string, resolution: string) => {
+    try {
+      const res = await fetch("/api/admincenter/supervisor", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "resolve_human_gate", hgId, resolution }),
+      });
+      if (res.ok) {
+        addToast("Human Gate", `[${hgId}] Đã phê duyệt và reset task vào QUEUED`, "success");
+        fetchSupervisorStatus();
+        fetchTelemetry();
+      }
+    } catch (err) {
+      addToast("Lỗi", getErrorMessage(err), "error");
+    }
+  };
+
+
+
+  // Check Ollama Health on Node-01
+  const checkOllamaHealth = async () => {
+    setOllamaChecking(true);
+    try {
+      const res = await fetch("/api/admincenter/ollama");
+      const data = await res.json();
+      setOllamaHealth(data);
+      if (data.connected) {
+        addToast("Ollama Node-01", `Kết nối thành công | ${data.availableModels?.length || 0} model sẵn sàng`, "success");
+      } else {
+        addToast("Ollama Node-01", `Không kết nối được: ${data.error}`, "error");
+      }
+    } catch (err) {
+      setOllamaHealth({ connected: false, error: getErrorMessage(err) });
+      addToast("Ollama Node-01", "Lỗi kết nối tới cổng gateway", "error");
+    } finally {
+      setOllamaChecking(false);
+    }
+  };
+
+  // Execute Next A2A Task via Ollama
+  const handleA2aExecuteNext = async () => {
+    setA2aExecuting(true);
+    try {
+      const res = await fetch("/api/admincenter/a2a", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "execute_next" }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        addToast("A2A Execution", data.message || "Đã kích hoạt tác vụ tiếp theo trên Ollama Node-01", "success");
+        setTimeout(() => { fetchA2aQueue(); fetchTelemetry(); }, 2000);
+      } else {
+        addToast("A2A Execution", data.error || data.message || "Không có tác vụ cần thực thi", "info");
+      }
+    } catch (err) {
+      addToast("A2A Error", getErrorMessage(err), "error");
+    } finally {
+      setA2aExecuting(false);
+    }
+  };
+
+
+
   // Initial load
   useEffect(() => {
     const initialLoad = setTimeout(() => {
       void checkSession();
       void fetchTelemetry();
       void fetchSystemStatus();
+      void fetchA2aQueue();
+      void fetchSupervisorStatus();
     }, 0);
     return () => clearTimeout(initialLoad);
   }, []);
@@ -275,8 +406,20 @@ export default function AdminCenterPage() {
       fetchSystemStatus();
     }, pollingRate);
 
-    return () => clearInterval(interval);
+    // Slower A2A queue poll (every 5s)
+    const a2aInterval = setInterval(() => {
+      fetchA2aQueue();
+    }, 5000);
+
+    // Supervisor status poll (every 10s)
+    const supervisorInterval = setInterval(() => {
+      fetchSupervisorStatus();
+    }, 10000);
+
+    return () => { clearInterval(interval); clearInterval(a2aInterval); clearInterval(supervisorInterval); };
   }, [isAuthenticated, liveStreamEnabled, pollingRate]);
+
+
 
   // Auto-scroll logs
   useEffect(() => {
@@ -1253,7 +1396,42 @@ export default function AdminCenterPage() {
           <Shield className="w-4 h-4" />
           <span>Nhật Ký Kiểm Toán Thực Tế</span>
         </button>
+
+        <button
+          onClick={() => { setActiveTab("a2a"); fetchA2aQueue(); }}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 ${
+            activeTab === "a2a"
+              ? "bg-violet-500 text-white shadow-lg shadow-violet-500/30"
+              : "text-slate-300 hover:text-white hover:bg-white/5"
+          }`}
+        >
+          <Network className="w-4 h-4" />
+          <span>A2A & Ollama Local</span>
+          {a2aQueue && a2aQueue.queueDepth > 0 && (
+            <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-violet-500/30 border border-violet-500/50 text-violet-300 font-mono">
+              {a2aQueue.queueDepth}
+            </span>
+          )}
+        </button>
+
+        <button
+          onClick={() => { setActiveTab("supervisor"); fetchSupervisorStatus(); }}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 ${
+            activeTab === "supervisor"
+              ? "bg-rose-500 text-white shadow-lg shadow-rose-500/30"
+              : "text-slate-300 hover:text-white hover:bg-white/5"
+          }`}
+        >
+          <Layers className="w-4 h-4" />
+          <span>Supervisor V1.1</span>
+          {supervisorStatus && supervisorStatus.openHumanGates > 0 && (
+            <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-rose-500/80 text-white font-mono animate-pulse">
+              🚨 {supervisorStatus.openHumanGates}
+            </span>
+          )}
+        </button>
       </nav>
+
 
       {/* CONTENT AREA */}
       <main className="flex-1 p-4 lg:p-8">
@@ -2441,7 +2619,454 @@ export default function AdminCenterPage() {
         </div>
       )}
 
+      {/* ============================================================ */}
+      {/* TAB 7: A2A PROTOCOL & OLLAMA LOCAL AI                        */}
+      {/* ============================================================ */}
+      {activeTab === "a2a" && (
+        <div className="space-y-6">
+          {/* ── Header ── */}
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-2">
+            <div>
+              <h2 className="text-lg font-extrabold text-violet-300 flex items-center gap-2">
+                <Network className="w-5 h-5" />
+                A2A Protocol Bus & Ollama Local AI
+              </h2>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Hệ thống đa tác tử — Ollama Node-01 (100.79.240.108:11434) là trung tâm xử lý
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={checkOllamaHealth}
+                disabled={ollamaChecking}
+                className="px-4 py-2 rounded-xl bg-violet-500/20 hover:bg-violet-500/30 active:scale-95 border border-violet-500/40 text-violet-300 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                {ollamaChecking ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Server className="w-3.5 h-3.5" />}
+                Kiểm tra Ollama
+              </button>
+              <button
+                onClick={handleA2aExecuteNext}
+                disabled={a2aExecuting}
+                className="px-4 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 active:scale-95 border border-emerald-500/40 text-emerald-300 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                {a2aExecuting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
+                Thực Thi Tác Vụ Tiếp Theo
+              </button>
+            </div>
+          </div>
+
+          {/* ── Ollama Health Card ── */}
+          <div className={`rounded-2xl border p-4 flex items-start gap-4 ${
+            ollamaHealth === null
+              ? "bg-[#0F172A]/80 border-slate-700/50"
+              : ollamaHealth.connected
+              ? "bg-emerald-900/20 border-emerald-500/40"
+              : "bg-rose-900/20 border-rose-500/40"
+          }`}>
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+              ollamaHealth?.connected ? "bg-emerald-500/20" : "bg-slate-700/50"
+            }`}>
+              <Cpu className={`w-5 h-5 ${ollamaHealth?.connected ? "text-emerald-400" : "text-slate-500"}`} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-sm font-bold text-white">Ollama Node-01 Gateway</span>
+                <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                  ollamaHealth === null ? "bg-slate-700/50 text-slate-400 border border-slate-600/50"
+                  : ollamaHealth.connected ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                  : "bg-rose-500/20 text-rose-300 border border-rose-500/30"
+                }`}>
+                  {ollamaHealth === null ? "CHƯA KIỂM TRA" : ollamaHealth.connected ? "● CONNECTED" : "✗ OFFLINE"}
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 font-mono">http://100.79.240.108:11434</p>
+              {ollamaHealth?.availableModels && ollamaHealth.availableModels.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {ollamaHealth.availableModels.map((m) => (
+                    <span key={m} className="px-2 py-0.5 rounded-lg bg-violet-500/20 border border-violet-500/30 text-violet-300 text-[10px] font-mono">{m}</span>
+                  ))}
+                </div>
+              )}
+              {ollamaHealth?.error && (
+                <p className="text-xs text-rose-400 mt-1 font-mono">{ollamaHealth.error}</p>
+              )}
+              {ollamaHealth === null && (
+                <p className="text-xs text-slate-500 mt-1">Nhấn &quot;Kiểm tra Ollama&quot; để xác minh kết nối tới Node-01</p>
+              )}
+            </div>
+          </div>
+
+          {/* ── A2A Queue Summary KPIs ── */}
+          {a2aQueue && (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {[
+                { label: "Chờ Thực Thi", value: a2aQueue.queueDepth, color: "amber" },
+                { label: "Đang Chạy", value: a2aQueue.inProgress, color: "cyan" },
+                { label: "Hoàn Thành", value: a2aQueue.completed, color: "emerald" },
+                { label: "Thất Bại", value: a2aQueue.failed, color: "rose" },
+              ].map((kpi) => (
+                <div key={kpi.label} className={`bg-[#0F172A]/80 border border-${kpi.color}-500/30 rounded-xl p-3`}>
+                  <div className={`text-2xl font-black text-${kpi.color}-400 font-mono`}>{kpi.value}</div>
+                  <div className="text-[11px] text-slate-400 mt-0.5">{kpi.label}</div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* ── A2A Task Queue ── */}
+          <div className="bg-[#0F172A]/80 border border-violet-500/20 rounded-2xl overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
+              <h3 className="text-sm font-bold text-violet-300 flex items-center gap-2">
+                <CornerDownRight className="w-4 h-4" />
+                Hàng Đợi Tác Vụ A2A — V1.1 Architecture Plan
+              </h3>
+              <button
+                onClick={fetchA2aQueue}
+                className="text-slate-400 hover:text-white p-1 rounded-lg transition-colors"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+              </button>
+            </div>
+            <div className="divide-y divide-white/5">
+              {!a2aQueue ? (
+                <div className="p-6 text-center text-slate-500 text-sm">Đang tải hàng đợi...</div>
+              ) : a2aQueue.tasks.length === 0 ? (
+                <div className="p-6 text-center text-slate-500 text-sm">Hàng đợi trống</div>
+              ) : (
+                a2aQueue.tasks.map((task) => (
+                  <div key={task.taskId} className="px-4 py-3 hover:bg-white/2 transition-colors">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          <span className="text-xs font-bold text-white font-mono">{task.taskId}</span>
+                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                            task.state === "QUEUED" ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                            : task.state === "IN_PROGRESS" ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
+                            : task.state === "COMPLETED" ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                            : "bg-rose-500/20 text-rose-300 border border-rose-500/30"
+                          }`}>
+                            {task.state === "QUEUED" ? "⏳ QUEUED"
+                              : task.state === "IN_PROGRESS" ? "⚡ RUNNING"
+                              : task.state === "COMPLETED" ? "✓ DONE"
+                              : "✗ FAILED"}
+                          </span>
+                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold ${
+                            task.priority === "P0" ? "bg-rose-500/20 text-rose-300"
+                            : task.priority === "P1" ? "bg-amber-500/20 text-amber-300"
+                            : "bg-slate-700/50 text-slate-400"
+                          }`}>{task.priority}</span>
+                          <span className="px-1.5 py-0.5 rounded text-[10px] bg-violet-500/10 border border-violet-500/20 text-violet-400">{task.capability}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-[11px] text-slate-400 font-mono">
+                          <span className="text-slate-500">{task.fromAgent}</span>
+                          <ArrowRight className="w-3 h-3 text-violet-500" />
+                          <span className="text-violet-300">{task.toAgent}</span>
+                        </div>
+                        <div className="text-[11px] text-slate-500 mt-0.5 flex items-center gap-2">
+                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono ${
+                            task.backend === "OLLAMA_LOCAL" ? "bg-emerald-500/10 text-emerald-400" : "bg-slate-700/30 text-slate-500"
+                          }`}>{task.backend}</span>
+                          {task.startedAt && <span>Bắt đầu: {new Date(task.startedAt).toLocaleTimeString("vi-VN")}</span>}
+                          {task.completedAt && <span>Xong: {new Date(task.completedAt).toLocaleTimeString("vi-VN")}</span>}
+                        </div>
+                        {task.error && (
+                          <p className="text-[11px] text-rose-400 mt-1 font-mono">{task.error}</p>
+                        )}
+                      </div>
+                      {task.state === "QUEUED" && (
+                        <button
+                          onClick={handleA2aExecuteNext}
+                          disabled={a2aExecuting}
+                          className="px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 active:scale-95 border border-emerald-500/40 text-emerald-300 text-[11px] font-bold transition-all cursor-pointer disabled:opacity-50 shrink-0"
+                        >
+                          <Play className="w-3 h-3 inline mr-1" />Chạy
+                        </button>
+                      )}
+                      {task.state === "COMPLETED" && (
+                        <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-1" />
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* ── A2A Architecture Diagram ── */}
+          <div className="bg-[#0F172A]/80 border border-white/10 rounded-2xl p-5">
+            <h3 className="text-sm font-bold text-slate-300 mb-4 flex items-center gap-2">
+              <Share2 className="w-4 h-4 text-violet-400" />
+              Kiến Trúc A2A — Luồng Xử Lý Đa Tác Tử
+            </h3>
+            <div className="flex flex-col items-center gap-2 text-xs font-mono">
+              {/* L0 */}
+              <div className="flex gap-3">
+                <div className="px-4 py-2 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 font-bold text-center min-w-[180px]">
+                  👤 SuperAdmin (L0)<br /><span className="text-[10px] text-amber-200/70">Root of Trust — Human Gate</span>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-slate-600 rotate-90" />
+              {/* A2A Bus */}
+              <div className="px-4 py-2 rounded-xl bg-violet-500/20 border border-violet-500/40 text-violet-300 font-bold text-center min-w-[220px]">
+                🔗 A2A Protocol Bus<br />
+                <span className="text-[10px] text-violet-200/70">/api/admincenter/a2a — Capability Router</span>
+              </div>
+              <ChevronRight className="w-4 h-4 text-slate-600 rotate-90" />
+              {/* Ollama Gateway */}
+              <div className="px-4 py-2 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-bold text-center min-w-[220px]">
+                🤖 Ollama Gateway<br />
+                <span className="text-[10px] text-emerald-200/70">/api/admincenter/ollama — Node-01 Proxy</span>
+              </div>
+              <ChevronRight className="w-4 h-4 text-slate-600 rotate-90" />
+              {/* Node-01 */}
+              <div className="px-4 py-2 rounded-xl bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 font-bold text-center min-w-[220px]">
+                🖥️ Node-01 Dell M4800<br />
+                <span className="text-[10px] text-cyan-200/70">100.79.240.108:11434 — Qwen 2.5 Coder 32B</span>
+              </div>
+              <ChevronRight className="w-4 h-4 text-slate-600 rotate-90" />
+              {/* Telemetry + Dashboard */}
+              <div className="px-4 py-2 rounded-xl bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 font-bold text-center min-w-[220px]">
+                📡 SwarmState Telemetry Bus<br />
+                <span className="text-[10px] text-indigo-200/70">SSE /api/admincenter/stream → Dashboard Live</span>
+              </div>
+            </div>
+          </div>
+
+          {/* ── How to Activate Ollama on Node-01 ── */}
+          <div className="bg-[#0A0F1E] border border-cyan-500/20 rounded-2xl p-5">
+            <h3 className="text-sm font-bold text-cyan-300 mb-3 flex items-center gap-2">
+              <Terminal className="w-4 h-4" />
+              Hướng Dẫn Kích Hoạt Ollama — Node-01 (100.79.240.108)
+            </h3>
+            <div className="space-y-2 text-xs font-mono text-slate-300">
+              <div className="bg-black/40 rounded-xl p-3 border border-white/5">
+                <span className="text-emerald-400"># 1. Kết nối Node-01 qua Tailscale</span><br />
+                <span className="text-cyan-400">ssh</span> <span className="text-white">huy@100.79.240.108</span>
+              </div>
+              <div className="bg-black/40 rounded-xl p-3 border border-white/5">
+                <span className="text-emerald-400"># 2. Đảm bảo Ollama đang chạy</span><br />
+                <span className="text-cyan-400">ollama serve</span> <span className="text-slate-400">&amp;</span><br />
+                <span className="text-cyan-400">ollama list</span>
+              </div>
+              <div className="bg-black/40 rounded-xl p-3 border border-white/5">
+                <span className="text-emerald-400"># 3. Expose Ollama API (nếu cần firewall mở)</span><br />
+                <span className="text-cyan-400">OLLAMA_HOST=0.0.0.0:11434 ollama serve</span>
+              </div>
+              <div className="bg-black/40 rounded-xl p-3 border border-white/5">
+                <span className="text-emerald-400"># 4. Load model Qwen 2.5 Coder 32B</span><br />
+                <span className="text-cyan-400">ollama pull</span> <span className="text-violet-300">qwen2.5-coder:32b</span>
+              </div>
+              <div className="bg-black/40 rounded-xl p-3 border border-white/5">
+                <span className="text-emerald-400"># 5. Thêm env var vào .env.local của project</span><br />
+                <span className="text-amber-300">OLLAMA_BASE_URL=http://100.79.240.108:11434</span><br />
+                <span className="text-amber-300">OLLAMA_MODEL=qwen2.5-coder:32b</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================ */}
+      {/* TAB 8: SUPERVISOR V1.1 — AUTONOMOUS ORCHESTRATOR             */}
+      {/* ============================================================ */}
+      {activeTab === "supervisor" && (
+        <div className="space-y-6">
+          {/* Header */}
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-extrabold text-rose-300 flex items-center gap-2">
+                <Layers className="w-5 h-5" />
+                Autonomous Supervisor V1.1
+              </h2>
+              <p className="text-xs text-slate-400 mt-0.5">
+                HUMAN-ON-EXCEPTION · START ONCE → AUTO PLAN → AUTO TEST → AUTO REPAIR → AUTO DEPLOY
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={fetchSupervisorStatus}
+                disabled={supervisorLoading}
+                className="px-4 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 active:scale-95 border border-rose-500/40 text-rose-300 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${supervisorLoading ? "animate-spin" : ""}`} />
+                Làm mới
+              </button>
+            </div>
+          </div>
+
+          {/* Supervisor status banner */}
+          {supervisorStatus ? (
+            <>
+              {/* KPI Row */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
+                {[
+                  { label: "Tổng tác vụ", value: supervisorStatus.totalTasks, color: "slate" },
+                  { label: "Sẵn sàng", value: supervisorStatus.readyToDispatch, color: "cyan" },
+                  { label: "Hoàn thành", value: supervisorStatus.completedTasks, color: "emerald" },
+                  { label: "QUEUED", value: supervisorStatus.tasksByStatus["QUEUED"] || 0, color: "amber" },
+                  { label: "Đang chạy", value: (supervisorStatus.tasksByStatus["DISPATCHED"] || 0) + (supervisorStatus.tasksByStatus["IN_PROGRESS"] || 0), color: "violet" },
+                  { label: "🚨 Human Gate", value: supervisorStatus.openHumanGates, color: supervisorStatus.openHumanGates > 0 ? "rose" : "slate" },
+                ].map(kpi => (
+                  <div key={kpi.label} className={`bg-[#0F172A]/80 border border-${kpi.color}-500/30 rounded-xl p-3`}>
+                    <div className={`text-2xl font-black text-${kpi.color}-400 font-mono`}>{kpi.value}</div>
+                    <div className="text-[11px] text-slate-400 mt-0.5">{kpi.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Human Gate Alerts */}
+              {supervisorStatus.humanGateLog.filter(h => !h.resolved).length > 0 && (
+                <div className="bg-rose-900/20 border border-rose-500/40 rounded-2xl p-4">
+                  <h3 className="text-sm font-bold text-rose-300 mb-3 flex items-center gap-2">
+                    🚨 Human Gate — Cần Chỉ Thị SuperAdmin
+                  </h3>
+                  {supervisorStatus.humanGateLog.filter(h => !h.resolved).map(hg => (
+                    <div key={hg.hgId} className="mb-3 p-3 rounded-xl bg-rose-950/40 border border-rose-500/30">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <span className="text-xs font-bold text-rose-300 font-mono">[{hg.hgId}]</span>
+                          <span className="text-xs text-white ml-2">Task: {hg.taskId}</span>
+                          <p className="text-[11px] text-rose-200/80 mt-1">{hg.reason}</p>
+                          <p className="text-[10px] text-slate-500 mt-0.5">{new Date(hg.timestamp).toLocaleString("vi-VN")}</p>
+                        </div>
+                        <button
+                          onClick={() => handleResolveHumanGate(hg.hgId, "SuperAdmin approved — reset and retry")}
+                          className="px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 active:scale-95 border border-emerald-500/40 text-emerald-300 text-[11px] font-bold transition-all cursor-pointer shrink-0"
+                        >
+                          ✓ Phê duyệt & Reset
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Task DAG Table */}
+              <div className="bg-[#0F172A]/80 border border-white/10 rounded-2xl overflow-hidden">
+                <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2">
+                    <CornerDownRight className="w-4 h-4 text-rose-400" />
+                    Task DAG — V1.1 Autonomous Execution Plan
+                  </h3>
+                  <span className="text-[11px] text-slate-500 font-mono">
+                    Supervisor: {supervisorStatus.supervisorId}
+                  </span>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b border-white/5 text-slate-400 text-[11px]">
+                        <th className="px-4 py-2 text-left font-semibold">Task ID</th>
+                        <th className="px-3 py-2 text-left font-semibold">Priority</th>
+                        <th className="px-3 py-2 text-left font-semibold">Status</th>
+                        <th className="px-3 py-2 text-left font-semibold">Lifecycle Phase</th>
+                        <th className="px-3 py-2 text-left font-semibold">Checkpoint</th>
+                        <th className="px-3 py-2 text-left font-semibold">Retry</th>
+                        <th className="px-3 py-2 text-left font-semibold">Worker</th>
+                        <th className="px-3 py-2 text-left font-semibold">Dependencies</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {supervisorStatus.tasks.map(task => (
+                        <tr key={task.taskId} className="hover:bg-white/2 transition-colors">
+                          <td className="px-4 py-2.5 font-mono text-white font-bold">{task.taskId}</td>
+                          <td className="px-3 py-2.5">
+                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                              task.priority === "P0" ? "bg-rose-500/20 text-rose-300"
+                              : task.priority === "P1" ? "bg-amber-500/20 text-amber-300"
+                              : "bg-slate-700/50 text-slate-400"
+                            }`}>{task.priority}</span>
+                          </td>
+                          <td className="px-3 py-2.5">
+                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                              task.status === "VERIFIED_PASS" ? "bg-emerald-500/20 text-emerald-300"
+                              : task.status === "IN_PROGRESS" || task.status === "DISPATCHED" ? "bg-cyan-500/20 text-cyan-300"
+                              : task.status === "HUMAN_GATE" ? "bg-rose-500/20 text-rose-300"
+                              : task.status === "RETRYING" ? "bg-amber-500/20 text-amber-300"
+                              : "bg-slate-700/40 text-slate-400"
+                            }`}>{task.status}</span>
+                          </td>
+                          <td className="px-3 py-2.5 font-mono text-[11px] text-violet-300">{task.lifecycle}</td>
+                          <td className="px-3 py-2.5 font-mono text-[11px] text-slate-400">{task.checkpoint}</td>
+                          <td className="px-3 py-2.5 font-mono text-[11px]">
+                            <span className={task.retryCount >= task.retryLimit - 1 ? "text-rose-400" : "text-slate-400"}>
+                              {task.retryCount}/{task.retryLimit}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2.5 text-[11px] text-slate-400 font-mono">{task.workerId || "—"}</td>
+                          <td className="px-3 py-2.5 text-[11px] text-slate-500">
+                            {task.dependencies.length === 0 ? "—" : task.dependencies.join(", ")}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* V1.1 Lifecycle Visual */}
+              <div className="bg-[#0F172A]/60 border border-white/10 rounded-2xl p-5">
+                <h3 className="text-sm font-bold text-slate-300 mb-4 flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-rose-400" />
+                  V1.1 Canonical Lifecycle
+                </h3>
+                <div className="flex flex-wrap gap-1.5 items-center text-[11px] font-mono">
+                  {["PREDICT","TEST FIRST","RED","IMPLEMENT","EXECUTE","DIAGNOSE","AUTO REPAIR","RETEST","GREEN","TYPECHECK","BUILD","INTEGRATION","SECURITY","VERIFIED PASS","INTEGRATION QUEUE","RELEASED"].map((phase, i) => (
+                    <React.Fragment key={phase}>
+                      <span className={`px-2 py-1 rounded-lg font-bold ${
+                        phase === "GREEN" ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                        : phase === "RED" ? "bg-rose-500/20 text-rose-300 border border-rose-500/30"
+                        : phase === "VERIFIED PASS" || phase === "RELEASED" ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
+                        : phase === "AUTO REPAIR" || phase === "DIAGNOSE" ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                        : "bg-slate-700/40 text-slate-300 border border-slate-600/40"
+                      }`}>{phase}</span>
+                      {i < 15 && <ArrowRight className="w-3 h-3 text-slate-600 shrink-0" />}
+                    </React.Fragment>
+                  ))}
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="bg-[#0F172A]/80 border border-white/10 rounded-2xl p-8 text-center">
+              <Layers className="w-8 h-8 text-slate-600 mx-auto mb-3" />
+              <p className="text-slate-400 text-sm mb-4">Supervisor chưa được tải. Nhấn &quot;Làm mới&quot; để kết nối.</p>
+              <button
+                onClick={fetchSupervisorStatus}
+                className="px-4 py-2 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-300 text-xs font-bold"
+              >
+                Kết nối Supervisor
+              </button>
+            </div>
+          )}
+
+          {/* Node-01 Activation for Worker */}
+          <div className="bg-[#0A0F1E] border border-rose-500/20 rounded-2xl p-5">
+            <h3 className="text-sm font-bold text-rose-300 mb-3 flex items-center gap-2">
+              <Terminal className="w-4 h-4" />
+              Kích hoạt Node-01 Worker V1.1
+            </h3>
+            <div className="space-y-2 text-xs font-mono">
+              <div className="bg-black/40 rounded-xl p-3 border border-white/5 text-slate-300">
+                <span className="text-emerald-400"># SSH vào Node-01 và chạy worker</span><br />
+                <span className="text-cyan-400">ssh</span> <span className="text-white">huy@100.79.240.108</span><br />
+                <span className="text-cyan-400">OLLAMA_HOST=0.0.0.0:11434 ollama serve &</span><br />
+                <span className="text-cyan-400">ollama pull qwen2.5-coder:32b</span><br /><br />
+                <span className="text-amber-300">SUPERVISOR_URL=https://www.huycncdsai.io.vn \</span><br />
+                <span className="text-amber-300">WORKER_ID=NODE01-QWEN32B \</span><br />
+                <span className="text-amber-300">OLLAMA_MODEL=qwen2.5-coder:32b \</span><br />
+                <span className="text-amber-300">nohup bash scripts/node01-worker-v1.1.sh &gt; /mnt/data1/HUY-AI/worker.log 2&gt;&amp;1 &</span>
+              </div>
+              <p className="text-[11px] text-slate-500 px-1">
+                Worker tự động: pull task → Ollama → báo cáo checkpoint → VERIFIED PASS → Integration Queue
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* FLOATING TOAST NOTIFICATION CONTAINER (FEEDBACK TỨC THỜI <10MS) */}
+
+
       <div className="fixed bottom-5 right-5 z-[100] flex flex-col gap-2 max-w-sm w-full pointer-events-none">
         {toasts.map((toast) => (
           <div

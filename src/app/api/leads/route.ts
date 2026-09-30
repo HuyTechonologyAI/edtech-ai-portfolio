@@ -1,3 +1,5 @@
+
+import { getErrorMessage } from "@/lib/error-message";
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { verifyAdminAuth } from "@/lib/admin-auth";
@@ -20,9 +22,9 @@ export async function GET(req: NextRequest) {
     if (error) throw error;
 
     return NextResponse.json({ success: true, leads: data || [] });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("GET leads error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
   }
 }
 
@@ -69,8 +71,8 @@ export async function POST(req: NextRequest) {
     // TODO tương lai: Có thể gửi Webhook bắn thông báo Telegram/Discord tại đây để Admin chăm sóc tức thì
 
     return NextResponse.json({ success: true, lead: newLead });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("POST lead error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
   }
 }

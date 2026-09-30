@@ -3,14 +3,14 @@ import { Suspense } from "react";
 import { Plus_Jakarta_Sans, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import { ThemeToggle } from "@/components/ThemeToggle";
-import { AIChatbot } from "@/components/AIChatbot";
+
+
 import { CustomCursor } from "@/components/CustomCursor";
 import { FloatingOrbs } from "@/components/FloatingOrbs";
 import { AuthProvider } from "@/components/AuthProvider";
-import { UserMenu } from "@/components/UserMenu";
-import { LanguageSwitcher } from "@/components/LanguageSwitcher";
-import { StreakWidget } from "@/components/StreakWidget";
+
+
+
 import { ReferralTracker } from "@/components/ReferralTracker";
 import { LegacyShellWrapper } from "@/components/LegacyShellWrapper";
 import { GoogleTagManager } from "@next/third-parties/google";

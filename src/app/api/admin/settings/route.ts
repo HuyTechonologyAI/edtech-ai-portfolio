@@ -7,7 +7,7 @@ export const revalidate = 0;
 
 // Bộ đệm In-Memory cấp Node.js duy trì trạng thái cấu hình liên thiết bị/trình duyệt
 // Hoạt động hoàn hảo trên các serverless functions ấm (warm instances) trên Vercel
-const globalMemorySettings: Record<string, any> = {};
+const globalMemorySettings: Record<string, unknown> = {};
 
 // Khởi tạo dữ liệu mẫu gốc chuẩn SaaS và MMO
 const DEFAULT_SETTINGS = {
@@ -52,7 +52,7 @@ export async function GET() {
     const { data, error } = await supabaseAdmin.from("cms_settings").select("*");
 
     // Gộp dữ liệu mẫu với dữ liệu đã lưu trong bộ đệm Node.js toàn cục
-    const settingsMap: Record<string, any> = { 
+    const settingsMap: Record<string, unknown> = {
       ...DEFAULT_SETTINGS,
       ...globalMemorySettings 
     };
@@ -64,7 +64,7 @@ export async function GET() {
     }
 
     return NextResponse.json({ success: true, settings: settingsMap });
-  } catch (error: any) {
+  } catch {
     // Nếu rớt kết nối DB, vẫn trả về dữ liệu thành công gộp đệm bộ nhớ toàn cục
     return NextResponse.json({ 
       success: true, 
@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  let payload: any = {};
+  let payload: { key_name?: string; setting_value?: unknown } = {};
   try {
     payload = await req.json();
     const { key_name, setting_value } = payload;
@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
     if (error) throw error;
 
     return NextResponse.json({ success: true, updatedKey: key_name });
-  } catch (error: any) {
+  } catch {
     // Trả về thành công để client nạp liền mạch từ đệm Node.js
     return NextResponse.json({ 
       success: true, 

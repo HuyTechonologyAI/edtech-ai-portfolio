@@ -1,5 +1,6 @@
 "use client";
 
+import type { ContentItem } from "@/types/content";
 import { useState, useEffect } from "react";
 import { PlayCircle, Loader2, Folder } from "lucide-react";
 import { VideoPlayer } from "@/components/VideoPlayer";
@@ -12,7 +13,7 @@ interface FolderItem {
 }
 
 export default function VideosPage() {
-  const [videos, setVideos] = useState<any[]>([]);
+  const [videos, setVideos] = useState<ContentItem[]>([]);
   const [folders, setFolders] = useState<FolderItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedFolderId, setSelectedFolderId] = useState<number | null>(null);

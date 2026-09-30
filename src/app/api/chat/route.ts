@@ -58,7 +58,7 @@ async function retrieveContext(query: string): Promise<Array<{
       return [];
     }
 
-    return (data || []).map((item: any) => ({
+    return (data || []).map((item: { content: string; source_title: string; source_type: string; source_id: string | null; similarity: number }) => ({
       content: item.content,
       source_title: item.source_title,
       source_type: item.source_type,

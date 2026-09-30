@@ -1,10 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { 
-  Sparkles, CheckCircle2, Circle, ArrowRight, Zap, Trophy, 
-  Clock, Award, Layers, Bot, Cpu, GitBranch, ChevronRight, X, Play, RefreshCw, BarChart2
-} from "lucide-react";
+import { useLocalStorageState } from "@/hooks/use-browser-state";
+import { useState } from "react";
+import { Sparkles, CheckCircle2, Circle, ArrowRight, Zap, Trophy, Clock, Award, Layers, Bot, Cpu, GitBranch, ChevronRight, X, Play, BarChart2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { TiltCard } from "@/components/TiltCard";
@@ -160,30 +158,21 @@ const STAGES: RoadmapStage[] = [
   }
 ];
 
+const DEFAULT_STATUSES = Object.fromEntries(STAGES.map(stage => [stage.id, stage.defaultStatus]));
+
 export default function RoadmapPage() {
   const [activeTab, setActiveTab] = useState<string>("all");
-  const [userStatuses, setUserStatuses] = useState<Record<string, "completed" | "current" | "upcoming">>({});
+  const [userStatuses, setUserStatuses] = useLocalStorageState<Record<string, "completed" | "current" | "upcoming">>("custom_roadmap_progress", DEFAULT_STATUSES);
   const [selectedStage, setSelectedStage] = useState<RoadmapStage | null>(null);
 
   // Nạp tiến độ học tập từ LocalStorage
-  useEffect(() => {
-    const cached = localStorage.getItem("custom_roadmap_progress");
-    if (cached) {
-      try {
-        setUserStatuses(JSON.parse(cached));
-      } catch {}
-    } else {
-      const initial: Record<string, "completed" | "current" | "upcoming"> = {};
-      STAGES.forEach(s => { initial[s.id] = s.defaultStatus; });
-      setUserStatuses(initial);
-    }
-  }, []);
+
 
   // Cập nhật trạng thái tiến độ
   const updateStageStatus = (stageId: string, status: "completed" | "current" | "upcoming") => {
     const updated = { ...userStatuses, [stageId]: status };
     setUserStatuses(updated);
-    localStorage.setItem("custom_roadmap_progress", JSON.stringify(updated));
+
     if (selectedStage && selectedStage.id === stageId) {
       setSelectedStage({ ...selectedStage, defaultStatus: status });
     }

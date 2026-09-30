@@ -1,5 +1,7 @@
 "use server";
 
+import { getErrorMessage } from "@/lib/error-message";
+
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { supabase } from "@/lib/supabase";
 
@@ -48,8 +50,8 @@ export async function submitContact(formData: FormData) {
     }
 
     return { success: true };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Lỗi khi gửi liên hệ:', err);
-    return { success: false, error: err.message || 'Lỗi hệ thống khi gửi thông tin liên hệ.' };
+    return { success: false, error: getErrorMessage(err) || 'Lỗi hệ thống khi gửi thông tin liên hệ.' };
   }
 }

@@ -50,6 +50,9 @@ jobs:
       - name: Type check
         run: npm run typecheck
 
+      - name: Run regression tests
+        run: npm test
+
       - name: Production build
         run: npm run build
         env:

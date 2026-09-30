@@ -9,13 +9,11 @@ export function StreakWidget() {
   const { user, loading } = useAuth();
   const [streakCount, setStreakCount] = useState<number>(0);
   const [hasCheckedInToday, setHasCheckedInToday] = useState<boolean>(false);
-  const [fetching, setFetching] = useState<boolean>(false);
 
   const fetchStreak = useCallback(async () => {
     if (!user?.email) return;
-    setFetching(true);
-    try {
-      const res = await fetch(`/api/rewards?email=${encodeURIComponent(user.email)}`);
+    return (async () => {
+      const res = await fetch(`/api/rewards?email=${encodeURIComponent(user.email || "")}`);
       const data = await res.json();
       if (data.success && data.balance) {
         setStreakCount(data.balance.streak_count || 0);
@@ -26,12 +24,11 @@ export function StreakWidget() {
         const todayStr = new Date(new Date().getTime() + tzOffset).toISOString().split("T")[0];
         setHasCheckedInToday(lastCheckin === todayStr);
       }
-    } catch (err) {
-      console.error("Lỗi khi tải streak count:", err);
-    } finally {
-      setFetching(false);
-    }
-  }, [user?.email]);
+    })()
+      .catch((err) => {
+        console.error("Lỗi khi tải streak count:", err);
+      });
+  }, [user]);
 
   useEffect(() => {
     fetchStreak();

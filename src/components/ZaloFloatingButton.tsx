@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { MessageCircle, Users, X, Phone } from "lucide-react";
+import { X, Phone } from "lucide-react";
 
 // Icon Zalo SVG thuần — không cần thư viện ngoài
 function ZaloIcon({ className }: { className?: string }) {

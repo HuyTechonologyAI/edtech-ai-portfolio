@@ -613,7 +613,7 @@ it('fails closed for A2A evidence from unsigned or stale heartbeat data', () => 
 
 
 it('AdminCenter visibly separates live runtime agents from A2A flow', () => {
-  const source = readFileSync(new URL('../app/admincenter/page.tsx', import.meta.url), 'utf8');
+  const source = readFileSync('src/app/admincenter/page.tsx', 'utf8');
   assert.match(source, /Runtime Active Agents/i);
   assert.match(source, /A2A Flow/i);
   assert.match(source, /runtimeAgents/);

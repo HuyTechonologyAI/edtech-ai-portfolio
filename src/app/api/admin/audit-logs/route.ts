@@ -1,3 +1,5 @@
+
+import { getErrorMessage } from "@/lib/error-message";
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { verifyAdminAuth } from "@/lib/admin-auth";
@@ -26,9 +28,9 @@ export async function GET(req: NextRequest) {
     if (error) throw error;
 
     return NextResponse.json({ logs: data || [] });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("GET /api/admin/audit-logs error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
   }
 }
 
@@ -60,8 +62,8 @@ export async function POST(req: NextRequest) {
     if (error) throw error;
 
     return NextResponse.json({ success: true, log: data?.[0] });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("POST /api/admin/audit-logs error:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: getErrorMessage(error) }, { status: 500 });
   }
 }

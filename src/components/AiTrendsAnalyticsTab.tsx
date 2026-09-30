@@ -1,7 +1,9 @@
 "use client";
 
+import { getErrorMessage } from "@/lib/error-message";
+
 import { useState, useEffect, useCallback } from "react";
-import { Sparkles, TrendingUp, AlertTriangle, Lightbulb, Copy, RefreshCw, Loader2, Search, FileText, Video, CheckCircle2, ChevronRight, BarChart3, Clock } from "lucide-react";
+import { Sparkles, TrendingUp, AlertTriangle, Lightbulb, Copy, RefreshCw, Loader2, Search, CheckCircle2, BarChart3, Clock } from "lucide-react";
 
 interface TelemetryMetric {
   id: number;
@@ -46,19 +48,25 @@ export default function AiTrendsAnalyticsTab() {
   const [isFallbackUsed, setIsFallbackUsed] = useState(false);
 
   const fetchMetrics = useCallback(async () => {
-    setLoadingMetrics(true);
-    try {
+    return (async () => {
       const res = await fetch("/api/metrics");
       const data = await res.json();
       if (res.ok) {
         setMetrics(data.metrics || []);
       }
-    } catch {
-      // ignore silently
-    } finally {
-      setLoadingMetrics(false);
-    }
+    })()
+      .catch(() => {
+        // ignore silently
+      })
+      .finally(() => {
+        setLoadingMetrics(false);
+      });
   }, []);
+
+  const refreshMetrics = () => {
+    setLoadingMetrics(true);
+    return fetchMetrics();
+  };
 
   useEffect(() => {
     fetchMetrics();
@@ -80,8 +88,8 @@ export default function AiTrendsAnalyticsTab() {
       if (data.isFallback) {
         setIsFallbackUsed(true);
       }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err));
     } finally {
       setAnalyzing(false);
     }
@@ -146,7 +154,7 @@ export default function AiTrendsAnalyticsTab() {
             <span className="font-bold text-secondary flex items-center gap-1.5">
               <Search className="w-3.5 h-3.5" /> Từ khóa Tìm kiếm Gần đây
             </span>
-            <button onClick={fetchMetrics} className="text-foreground/40 hover:text-foreground"><RefreshCw className="w-3 h-3" /></button>
+            <button onClick={refreshMetrics} className="text-foreground/40 hover:text-foreground"><RefreshCw className="w-3 h-3" /></button>
           </div>
 
           <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto pr-1">

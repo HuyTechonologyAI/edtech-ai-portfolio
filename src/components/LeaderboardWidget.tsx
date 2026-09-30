@@ -28,8 +28,7 @@ export default function LeaderboardWidget() {
   const [loading, setLoading] = useState(true);
 
   const fetchLeaderboard = useCallback(async () => {
-    setLoading(true);
-    try {
+    return (async () => {
       const emailParam = user?.email
         ? `&email=${encodeURIComponent(user.email)}`
         : "";
@@ -38,12 +37,19 @@ export default function LeaderboardWidget() {
       });
       const json = await res.json();
       if (json.success) setData(json);
-    } catch {
-      // silently fail, fallback data comes from API
-    } finally {
-      setLoading(false);
-    }
+    })()
+      .catch(() => {
+        // silently fail, fallback data comes from API
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, [user]);
+
+  const refreshLeaderboard = () => {
+    setLoading(true);
+    return fetchLeaderboard();
+  };
 
   useEffect(() => {
     fetchLeaderboard();
@@ -105,7 +111,7 @@ export default function LeaderboardWidget() {
           </div>
         </div>
         <button
-          onClick={fetchLeaderboard}
+          onClick={refreshLeaderboard}
           className="p-2 rounded-xl text-foreground/40 hover:text-secondary hover:bg-secondary/10 transition-all"
           title="Làm mới"
         >
