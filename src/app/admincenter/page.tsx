@@ -210,6 +210,7 @@ export default function AdminCenterPage() {
   const [supervisorLoading, setSupervisorLoading] = useState<boolean>(false);
   const [isRecruiting, setIsRecruiting] = useState<boolean>(false);
   const [isAuditingQuota, setIsAuditingQuota] = useState<boolean>(false);
+  const [isDispatchingAutonomous, setIsDispatchingAutonomous] = useState<boolean>(false);
 
 
   // Modals & Selected Agent
@@ -394,10 +395,31 @@ export default function AdminCenterPage() {
     }
   };
 
-
-
-
-  // Check Ollama Health on Node-01
+  // Autonomous 24/7 Multi-Agent Dispatch Handler
+  const handleContinuousAutonomousDispatch = async () => {
+    setIsDispatchingAutonomous(true);
+    try {
+      const res = await fetch("/api/admincenter/supervisor", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "autonomous_tick" }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        addToast(
+          "Điều Phối 24/7",
+          "Đã kích hoạt nhịp điều phối tự động 24/7! Các AI worker đang xử lý nhiệm vụ song song trong worktree.",
+          "success"
+        );
+        fetchSupervisorStatus();
+        fetchTelemetry();
+      }
+    } catch (err) {
+      addToast("Lỗi Điều Phối", getErrorMessage(err), "error");
+    } finally {
+      setIsDispatchingAutonomous(false);
+    }
+  };
   const checkOllamaHealth = async () => {
     setOllamaChecking(true);
     try {
@@ -3170,6 +3192,14 @@ export default function AdminCenterPage() {
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={handleContinuousAutonomousDispatch}
+                disabled={isDispatchingAutonomous}
+                className="px-4 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 active:scale-95 border border-emerald-500/40 text-emerald-300 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                <Zap className={`w-3.5 h-3.5 ${isDispatchingAutonomous ? "animate-bounce text-amber-400" : "text-emerald-400"}`} />
+                {isDispatchingAutonomous ? "Đang điều phối..." : "⚡ Kích Hoạt Điều Phối Đa Tác Tử (24/7)"}
+              </button>
               <button
                 onClick={() => handleRecruitHrAgent("code_generation")}
                 disabled={isRecruiting}
