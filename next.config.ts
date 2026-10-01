@@ -42,6 +42,19 @@ const nextConfig: NextConfig = {
         headers: defaultHeaders,
       },
     ];
+  async redirects() {
+    return [
+      {
+        source: "/apps/teacher-ai",
+        destination: "https://www.gvcncdsai.io.vn/",
+        permanent: true,
+      },
+      {
+        source: "/apps/teacher-ai/:path*",
+        destination: "https://www.gvcncdsai.io.vn/",
+        permanent: true,
+      },
+    ];
   },
 };
 
