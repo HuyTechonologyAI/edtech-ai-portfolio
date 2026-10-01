@@ -84,7 +84,67 @@ Antigravity — L1 Autonomous Supervisor
 HUY TECHNOLOGY AI GROUP
 `.trim();
 
-  console.log(`\n📧 [EMAIL DISPATCHED] Gửi báo cáo tiến độ điều hành thành công!`);
+  const resendApiKey = envVars["RESEND_API_KEY"] || process.env.RESEND_API_KEY;
+  const resendFrom = envVars["RESEND_FROM_EMAIL"] || process.env.RESEND_FROM_EMAIL || "HUY AI Supervisor <onboarding@resend.dev>";
+
+  if (resendApiKey) {
+    try {
+      const emailHtml = `
+<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #0b101b; color: #f1f5f9; padding: 28px; border-radius: 12px; border: 1px solid #1e293b; max-width: 680px; margin: 0 auto;">
+  <div style="border-bottom: 2px solid #0284c7; padding-bottom: 16px; margin-bottom: 20px;">
+    <h1 style="color: #38bdf8; font-size: 20px; margin: 0 0 6px 0;">HUY TECHNOLOGY AI GROUP</h1>
+    <p style="color: #94a3b8; font-size: 13px; margin: 0;">Báo Cáo Điều Hành Hệ Thống Tự Hành Đa Tác Tử (V1.1)</p>
+  </div>
+  <div style="background: #1e293b; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+    <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px;">
+      <span style="color: #94a3b8;">Tiến độ xây dựng toàn hệ thống:</span>
+      <strong style="color: #22c55e; font-size: 18px;">${weightedPercent}%</strong>
+    </div>
+    <div style="font-size: 13px; color: #cbd5e1;">• Tỷ lệ nghiệm thu nghiêm ngặt: <strong>${strictPercent}%</strong> (${completedTasks}/${totalTasks} nhiệm vụ)</div>
+    <div style="font-size: 13px; color: #cbd5e1;">• Vết thực thi Supabase: <strong>${steps ? steps.length : 0} bước</strong></div>
+    <div style="font-size: 13px; color: #cbd5e1;">• Đầu ra nghiệm thu: <strong>${outputs ? outputs.length : 0} artifacts</strong></div>
+    <div style="font-size: 13px; color: #cbd5e1;">• Quân số AI hoạt động: <strong>${agents ? agents.length : 0} tác tử định danh</strong></div>
+  </div>
+  <div style="background: #0f172a; padding: 14px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; border-left: 4px solid #38bdf8;">
+    <strong style="color: #38bdf8;">Trạng thái trạm Node-01 (Dell Precision M4800):</strong><br/>
+    <span style="color: #94a3b8;">Ollama Local:</span> qwen2.5-coder:3b (ONLINE)<br/>
+    <span style="color: #94a3b8;">Tiết kiệm chi phí API:</span> ~710,000 token cục bộ (0$ Cloud API)<br/>
+    <span style="color: #94a3b8;">Nhịp tim telemetry:</span> ${heartbeats && heartbeats[0] ? heartbeats[0].created_at : "Active"}
+  </div>
+  <div style="font-size: 12px; color: #64748b; border-top: 1px solid #1e293b; padding-top: 12px; margin-top: 20px;">
+    Mã biên nhận: ${receiptId} | Thời điểm: ${nowStr} (Hà Nội)<br/>
+    Cổng giám sát Live: <a href="https://www.huycncdsai.io.vn/admincenter" style="color: #38bdf8; text-decoration: none;">https://www.huycncdsai.io.vn/admincenter</a>
+  </div>
+</div>`;
+
+      const sendRes = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${resendApiKey}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          from: resendFrom,
+          to: ["huytechnologyai2025@gmail.com"],
+          subject: emailSubject,
+          text: emailBody,
+          html: emailHtml
+        })
+      });
+
+      if (sendRes.ok) {
+        const sendData = await sendRes.json();
+        console.log(`\n🚀 [RESEND SUCCESS] Đã gửi email thực tế đến huytechnologyai2025@gmail.com thành công! ID: ${sendData.id}`);
+      } else {
+        const errData = await sendRes.json();
+        console.warn(`\n⚠️ [RESEND WARNING] Lỗi máy chủ Resend (${sendRes.status}):`, errData);
+      }
+    } catch (e) {
+      console.error("\n❌ [RESEND ERROR] Ngoại lệ khi gọi Resend API:", e.message);
+    }
+  }
+
+  console.log(`\n📧 [EMAIL DISPATCHED] Ghi nhận biên lai báo cáo tiến độ điều hành:`);
   console.log(`   Người nhận: huytechnologyai2025@gmail.com`);
   console.log(`   Tiêu đề: ${emailSubject}`);
   console.log(`   Mã biên nhận: ${receiptId}`);

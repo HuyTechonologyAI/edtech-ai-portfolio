@@ -134,7 +134,7 @@ export async function dispatchHumanGateNotification(
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          from: "HUY AI Supervisor <supervisor@huycncdsai.io.vn>",
+          from: process.env.RESEND_FROM_EMAIL || "HUY AI Supervisor <onboarding@resend.dev>",
           to: [email.to],
           subject: email.subject,
           text: email.bodyText,
