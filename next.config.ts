@@ -42,6 +42,7 @@ const nextConfig: NextConfig = {
         headers: defaultHeaders,
       },
     ];
+  },
   async redirects() {
     return [
       {
