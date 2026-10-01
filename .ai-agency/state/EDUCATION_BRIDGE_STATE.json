@@ -1,0 +1,43 @@
+{
+  "schema_version": "1.0",
+  "status": "ACTIVE",
+  "source_app": "eduviet",
+  "control_plane": "huy-ai-center",
+  "queue": "pgmq.ai-jobs",
+  "organization_id": "org-02-aischool",
+  "supported_request_types": [
+    "LESSON_PACKAGE",
+    "LESSON_PLAN",
+    "SLIDES",
+    "MINDMAP",
+    "MINI_GAME",
+    "QUESTION_BANK",
+    "WORKSHEET",
+    "RUBRIC",
+    "VIDEO_SCRIPT",
+    "TEACHER_ASSIST",
+    "STUDENT_TUTOR"
+  ],
+  "supported_output_types": [
+    "LESSON_PLAN",
+    "SLIDES",
+    "MINDMAP",
+    "MINI_GAME"
+  ],
+  "active_workers": [
+    {
+      "id": "WORKER-L3-DEV-01",
+      "role": "Node01 Education Execution Worker",
+      "node": "huy-ai-node-01",
+      "model": "qwen2.5-coder:3b",
+      "status": "ONLINE"
+    }
+  ],
+  "last_verified_e2e": "2026-10-01T07:33:42.992Z",
+  "last_schema_version": "1.0.0",
+  "known_issues": [],
+  "next_actions": [
+    "CONTINUOUS_OBSERVABILITY",
+    "MONITOR_QUEUED_TASKS"
+  ]
+}
