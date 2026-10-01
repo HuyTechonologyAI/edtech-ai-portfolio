@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# bootstrap scripts with embedded tokens
+scripts/bootstrap-node01.sh
+scripts/build-bootstrap.mjs
+scripts/sync.sh
+scripts/ingest.sh
+
