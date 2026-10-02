@@ -11,7 +11,7 @@ import { NextResponse } from "next/server";
  *   OLLAMA_MODEL     — defaults to qwen2.5-coder:32b
  */
 
-const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || "http://100.79.240.108:11434";
+const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || "http://192.168.1.43:11434";
 const OLLAMA_DEFAULT_MODEL = process.env.OLLAMA_MODEL || "qwen2.5-coder:32b";
 const OLLAMA_TIMEOUT_MS = 120_000; // 2 min hard cap
 

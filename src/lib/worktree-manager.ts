@@ -44,7 +44,7 @@ export function createWorktreeManifest(params: {
     capability: params.capability,
     execution_backend: 'OLLAMA_LOCAL',
     model: params.model || 'qwen2.5-coder:32b',
-    node: 'huy-node01 @ 100.79.240.108',
+    node: 'HUYAI-N01 @ 192.168.1.43',
     checkpoint: 'TASK_CREATED',
     lifecycle_phase: 'PREDICT',
     retry_count: 0,

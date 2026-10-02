@@ -1536,11 +1536,11 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
               <Server className="w-4 h-4 text-amber-400" />
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="text-sm font-extrabold text-amber-400 font-mono">huy-node01</span>
-              <span className="text-[11px] text-emerald-400 font-bold">CONNECTED</span>
+              <span className="text-sm font-extrabold text-amber-400 font-mono">{telemetryNode01?.peerName || "HUYAI-N01"}</span>
+              <span className="text-[11px] text-emerald-400 font-bold">{telemetryNode01?.status || "CONNECTED"}</span>
             </div>
             <p className="text-[10px] text-slate-400 mt-2 font-mono truncate">
-              CPU: {telemetryNode01?.cpuUsagePct ?? 2}% • RAM: {telemetryNode01?.ramUsagePct ?? 7.2}% ({Math.round((telemetryNode01?.ramTotalMb ?? 32001) / 1024)}GB)
+              IP: {telemetryNode01?.lanIP || "192.168.1.43"} • CPU: {telemetryNode01?.cpuUsagePct ?? 2}% • RAM: {telemetryNode01?.ramUsagePct ?? 7.2}% ({Math.round((telemetryNode01?.ramTotalMb ?? 32001) / 1024)}GB)
             </p>
           </div>
 
@@ -2321,7 +2321,7 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
                             : "Đang nạp luồng sự kiện A2A..."}
                         </p>
                         <p className="text-xs text-slate-500 mt-1 max-w-sm">
-                          Hệ thống đang đồng bộ trực tiếp với sổ cái Supabase PGMQ và trạm giám sát Dell Precision M4800 (100.79.240.108).
+                          Hệ thống đang đồng bộ trực tiếp với sổ cái Supabase PGMQ và trạm tính toán Dell Precision M4800 HUYAI-N01 ({telemetryNode01?.lanIP || "192.168.1.43"}).
                         </p>
                         {eventFilter !== "ALL" && (
                           <button
@@ -2725,7 +2725,7 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
                       <Server className="w-5 h-5 text-emerald-400" />
-                      <span className="font-bold text-white">Dell Precision M4800 (huy-node01)</span>
+                      <span className="font-bold text-white">Dell Precision M4800 ({telemetryNode01?.peerName || "HUYAI-N01"})</span>
                     </div>
                     <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                       AUTHORITATIVE ANCHOR
@@ -2734,12 +2734,16 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
 
                   <div className="space-y-2 text-xs text-slate-300 font-mono">
                     <div className="flex justify-between py-1 border-b border-white/5">
-                      <span className="text-slate-400">Tailscale IP:</span>
-                      <span className="text-white">100.79.240.108</span>
+                      <span className="text-slate-400">Zero-Trust WAN Tunnel:</span>
+                      <span className="text-cyan-400 font-bold">ops.huycncdsai.io.vn</span>
                     </div>
                     <div className="flex justify-between py-1 border-b border-white/5">
-                      <span className="text-slate-400">LAN Peer:</span>
-                      <span className="text-white">192.168.1.230:41641 (Độ trễ 5.2ms)</span>
+                      <span className="text-slate-400">Địa chỉ IP Cố Định (LAN):</span>
+                      <span className="text-emerald-400 font-bold">{telemetryNode01?.lanIP || "192.168.1.43"} (DHCP Binding: 0C:8B:FD:CE:65:9E)</span>
+                    </div>
+                    <div className="flex justify-between py-1 border-b border-white/5">
+                      <span className="text-slate-400">Bảo vệ Kernel Soft Lockup:</span>
+                      <span className="text-emerald-400 font-bold">vm.compaction_proactiveness=0 (ACTIVE)</span>
                     </div>
                     <div className="flex justify-between py-1 border-b border-white/5">
                       <span className="text-slate-400">Root dự án chính thức:</span>
@@ -3168,7 +3172,7 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
               <div>
                 <label className="block text-slate-400 font-semibold mb-1">Môi trường thực thi:</label>
                 <div className="p-2.5 rounded-xl bg-[#070B14] border border-white/5 text-slate-200 font-mono">
-                  Dell M4800 Node-01 (100.79.240.108:41641) / PGMQ Queue
+                  Dell M4800 HUYAI-N01 ({telemetryNode01?.lanIP || "192.168.1.43"} / Cloudflare Tunnel) / PGMQ Queue
                 </div>
               </div>
 
@@ -3619,8 +3623,8 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
               <ChevronRight className="w-4 h-4 text-slate-600 rotate-90" />
               {/* Node-01 */}
               <div className="px-4 py-2 rounded-xl bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 font-bold text-center min-w-[220px]">
-                🖥️ Node-01 Dell M4800<br />
-                <span className="text-[10px] text-cyan-200/70">100.79.240.108:11434 — Qwen 2.5 Coder 32B</span>
+                🖥️ Node-01 HUYAI-N01<br />
+                <span className="text-[10px] text-cyan-200/70">{telemetryNode01?.lanIP || "192.168.1.43"}:11434 — Qwen 2.5 Coder</span>
               </div>
               <ChevronRight className="w-4 h-4 text-slate-600 rotate-90" />
               {/* Telemetry + Dashboard */}
