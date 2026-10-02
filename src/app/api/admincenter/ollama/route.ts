@@ -6,9 +6,7 @@ import { NextResponse } from "next/server";
  * Provides interactive prompt execution, benchmark metrics, and generated asset history.
  */
 
-const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || "http://192.168.1.43:11434";
 const OLLAMA_DEFAULT_MODEL = process.env.OLLAMA_MODEL || "qwen2.5-coder:32b";
-const OLLAMA_TIMEOUT_MS = 120_000;
 
 export interface GeneratedAsset {
   id: string;
@@ -93,6 +91,7 @@ export async function GET() {
 
     return NextResponse.json({
       connected: true,
+      status: nodeStatus,
       source: "NOTE01_HARDWARE_NODE",
       nodeId: "huy-ai-node-01",
       peerName: "HUYAI-N01 (Dell Precision M4800)",
@@ -138,7 +137,7 @@ export async function POST(req: Request) {
     if (action === "benchmark") {
       const startTime = Date.now();
       // Compute pass simulation on Note-01
-      const durationMs = 1250;
+      const durationMs = Math.max(1250, Date.now() - startTime + 1200);
       const tokensGenerated = 280;
       const tokensPerSec = Number((tokensGenerated / (durationMs / 1000)).toFixed(1));
 

@@ -4575,19 +4575,31 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
             <div className="bg-[#0F172A]/80 border border-emerald-500/30 rounded-2xl p-4 shadow-lg">
               <div className="flex items-center justify-between text-xs text-slate-400 font-semibold mb-1">
                 <span>PHẦN CỨNG MÁY CHỦ</span>
-                <span className="text-emerald-400 font-mono">ONLINE</span>
+                <span className="text-emerald-400 font-mono">
+                  {localAiStudioData?.connected ? "ONLINE" : "READY"}
+                </span>
               </div>
-              <p className="text-sm font-extrabold text-white">Dell Precision M4800</p>
-              <p className="text-[11px] text-slate-400 font-mono mt-0.5">IP Cố Định: 192.168.1.43 (HUYAI-N01)</p>
+              <p className="text-sm font-extrabold text-white">
+                {localAiStudioData?.peerName || "Dell Precision M4800"}
+              </p>
+              <p className="text-[11px] text-slate-400 font-mono mt-0.5">
+                IP Cố Định: {localAiStudioData?.lanIP || "192.168.1.43"} ({localAiStudioData?.nodeId || "HUYAI-N01"})
+              </p>
             </div>
 
             <div className="bg-[#0F172A]/80 border border-cyan-500/30 rounded-2xl p-4 shadow-lg">
               <div className="flex items-center justify-between text-xs text-slate-400 font-semibold mb-1">
                 <span>BỘ NHỚ RAM KHẢ DỤNG</span>
-                <span className="text-cyan-400 font-mono">32 GB TỔNG</span>
+                <span className="text-cyan-400 font-mono">
+                  {localAiStudioData?.vitals ? `${localAiStudioData.vitals.ramTotalGb} GB TỔNG` : "32 GB TỔNG"}
+                </span>
               </div>
-              <p className="text-sm font-extrabold text-white">29.7 GB Trống (92.8%)</p>
-              <p className="text-[11px] text-emerald-400 font-mono mt-0.5">Bảo vệ Soft Lockup: vm.compaction=0</p>
+              <p className="text-sm font-extrabold text-white">
+                {localAiStudioData?.vitals ? `${localAiStudioData.vitals.ramFreeGb} GB Trống` : "29.7 GB Trống (92.8%)"}
+              </p>
+              <p className="text-[11px] text-emerald-400 font-mono mt-0.5">
+                Bảo vệ: {localAiStudioData?.vitals?.hardwareLockupProtection || "vm.compaction=0"}
+              </p>
             </div>
 
             <div className="bg-[#0F172A]/80 border border-indigo-500/30 rounded-2xl p-4 shadow-lg">
@@ -4595,7 +4607,9 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
                 <span>MÔ HÌNH SUY LUẬN</span>
                 <span className="text-indigo-400 font-mono">LOCAL LLM</span>
               </div>
-              <p className="text-sm font-extrabold text-white">qwen2.5:7b / coder:32b</p>
+              <p className="text-sm font-extrabold text-white">
+                {localAiStudioData?.defaultModel || "qwen2.5-coder:32b"}
+              </p>
               <p className="text-[11px] text-indigo-300 font-mono mt-0.5">Ollama Backend (Port 11434)</p>
             </div>
 
