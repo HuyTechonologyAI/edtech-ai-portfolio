@@ -48,6 +48,8 @@ import {
 } from "lucide-react";
 
 import type { ComplianceAuditResult } from "@/lib/compliance-guard";
+import { LocalAIAgentTreeControlPlane } from "@/components/LocalAIAgentTreeControlPlane";
+import type { RuntimeEvent } from "@/lib/agent-tree-runtime";
 
 import {
   CANONICAL_59_AGENTS,
@@ -434,6 +436,7 @@ export default function AdminCenterPage() {
     status: string;
   }>>([]);
   const [studioBenchmarking, setStudioBenchmarking] = useState<boolean>(false);
+  const [studioAgentTreeEvents, setStudioAgentTreeEvents] = useState<RuntimeEvent[]>([]);
 
   const fetchN8nData = async () => {
     try {
@@ -605,6 +608,9 @@ export default function AdminCenterPage() {
         const data = await res.json();
         setLocalAiStudioData(data);
         if (data.assets) setStudioAssets(data.assets);
+        if (data.agentTreeEvents && Array.isArray(data.agentTreeEvents)) {
+          setStudioAgentTreeEvents(data.agentTreeEvents);
+        }
       }
     } catch (err) {
       console.error("fetchLocalAiData error:", err);
@@ -629,6 +635,9 @@ export default function AdminCenterPage() {
 
       if (res.ok) {
         const data = await res.json();
+        if (data.agentTreeEvents && Array.isArray(data.agentTreeEvents)) {
+          setStudioAgentTreeEvents((prev) => [...prev, ...data.agentTreeEvents]);
+        }
         const content = data.asset?.content || "";
         let currentText = "";
         const words = content.split(" ");
@@ -661,6 +670,9 @@ export default function AdminCenterPage() {
       });
       if (res.ok) {
         const data = await res.json();
+        if (data.agentTreeEvents && Array.isArray(data.agentTreeEvents)) {
+          setStudioAgentTreeEvents((prev) => [...prev, ...data.agentTreeEvents]);
+        }
         setStudioStreamingText(data.asset?.content || "Benchmark hoàn tất.");
         setStudioMetrics({
           tokensPerSec: data.metrics?.tokensPerSec || 18.5,
@@ -5557,54 +5569,17 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
               </div>
             </div>
 
-            {/* Right Column: Live Streaming Terminal & Output (7 cols) */}
+            {/* Right Column: HUY AI Local Agent Tree / Runtime Control Plane (7 cols) */}
             <div className="lg:col-span-7 flex flex-col">
-              <div className="bg-[#050811] border border-cyan-500/30 rounded-2xl p-5 shadow-2xl flex-1 flex flex-col">
-                <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-red-500/80 inline-block" />
-                    <span className="w-2.5 h-2.5 rounded-full bg-yellow-500/80 inline-block" />
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80 inline-block" />
-                    <span className="text-xs font-mono text-cyan-300 ml-2 font-bold">
-                      STREAMING MONITOR — HUYAI-N01:11434
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-3 text-[11px] font-mono text-slate-400">
-                    {studioMetrics && (
-                      <span className="text-emerald-400 font-bold">
-                        ⚡ {studioMetrics.tokensPerSec.toFixed(1)} t/s
-                      </span>
-                    )}
-                    {studioStreamingText && (
-                      <button
-                        onClick={() => handleCopyToClipboard(studioStreamingText, "Đã sao chép nội dung sinh")}
-                        className="text-xs text-cyan-400 hover:text-white transition-colors cursor-pointer flex items-center gap-1"
-                      >
-                        <Copy className="w-3.5 h-3.5" />
-                        Sao chép
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Output Window */}
-                <div className="flex-1 bg-black/60 rounded-xl p-4 border border-white/5 font-mono text-xs text-slate-200 overflow-y-auto max-h-[420px] whitespace-pre-wrap leading-relaxed">
-                  {studioStreamingText ? (
-                    <div>
-                      {studioStreamingText}
-                      {studioGenerating && (
-                        <span className="inline-block w-2 h-4 bg-emerald-400 ml-1 animate-pulse" />
-                      )}
-                    </div>
-                  ) : (
-                    <div className="text-slate-600 h-64 flex flex-col items-center justify-center">
-                      <Bot className="w-10 h-10 mb-2 opacity-30" />
-                      <p>Chưa có dữ liệu suy luận. Hãy bấm một nút mẫu bên trái để kích hoạt máy tính Node-01.</p>
-                    </div>
-                  )}
-                </div>
-              </div>
+              <LocalAIAgentTreeControlPlane
+                nodeVitals={localAiStudioData?.vitals}
+                nodeStatus={localAiStudioData?.connected ? "ONLINE" : "READY"}
+                nodeIp={localAiStudioData?.lanIP || "192.168.1.43"}
+                streamingText={studioStreamingText}
+                isGenerating={studioGenerating}
+                tokensPerSec={studioMetrics?.tokensPerSec || 18.5}
+                externalEvents={studioAgentTreeEvents}
+              />
             </div>
           </div>
 
