@@ -4,40 +4,22 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   Shield,
   ShieldCheck,
-  Cpu,
-  Layers,
-  Activity,
-  CheckCircle2,
-  AlertTriangle,
-  AlertCircle,
-  RefreshCw,
-  Bot,
-  Sparkles,
-  Clock,
-  ArrowRight,
-  Database,
-  Terminal,
-  Zap,
   Radio,
   X,
-  Play,
-  Share2,
-  Send,
-  Network,
   ChevronRight,
   Check,
   Copy,
-  ExternalLink,
   Sliders,
-  Eye,
   Info,
+  Network,
+  Bot,
+  Terminal,
+  AlertTriangle,
 } from "lucide-react";
 import {
   RuntimeEvent,
-  RuntimeGraphState,
   createInitialGraphState,
   reduceRuntimeEvent,
-  formatTerminalLogLine,
   resolveNodeHeartbeatStatus,
   AgentNodeState,
 } from "@/lib/agent-tree-runtime";
@@ -55,7 +37,6 @@ export interface LocalAIAgentTreeControlPlaneProps {
   streamingText?: string;
   isGenerating?: boolean;
   tokensPerSec?: number;
-  onExecutePrompt?: (prompt: string, type: string) => void;
   externalEvents?: RuntimeEvent[];
 }
 
@@ -66,15 +47,12 @@ export function LocalAIAgentTreeControlPlane({
   streamingText = "",
   isGenerating = false,
   tokensPerSec = 18.5,
-  onExecutePrompt,
   externalEvents = [],
 }: LocalAIAgentTreeControlPlaneProps) {
-  // Graph state managed deterministically via pure reducer
-  const [graphState, setGraphState] = useState<RuntimeGraphState>(() =>
-    createInitialGraphState("HUYAI-N01")
-  );
+  // Local interaction events (e.g. human gate approvals)
+  const [localEvents, setLocalEvents] = useState<RuntimeEvent[]>([]);
 
-  // UI display modes: 'tree' | 'terminal' | 'stream' | 'split'
+  // UI display modes: 'split' | 'tree' | 'stream' | 'terminal'
   const [viewMode, setViewMode] = useState<"split" | "tree" | "stream" | "terminal">("split");
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>("L1-SUPERVISOR");
   const [logFilter, setLogFilter] = useState<"ALL" | "TASK" | "A2A" | "VERIFY" | "ERROR">("ALL");
@@ -84,37 +62,34 @@ export function LocalAIAgentTreeControlPlane({
   const terminalEndRef = useRef<HTMLDivElement>(null);
   const streamEndRef = useRef<HTMLDivElement>(null);
 
-  // Sync external incoming events into state engine
-  useEffect(() => {
-    if (!externalEvents || externalEvents.length === 0) return;
-
-    setGraphState((prevState) => {
-      let current = prevState;
-      for (const evt of externalEvents) {
-        current = reduceRuntimeEvent(current, evt);
-      }
-      return current;
-    });
-  }, [externalEvents]);
-
-  // Synchronize generation state into Supervisor & Coder agent
-  useEffect(() => {
-    if (isGenerating) {
-      const liveEvent: RuntimeEvent = {
-        eventId: `evt-gen-${Date.now()}`,
-        schemaVersion: "1.0",
-        timestamp: new Date().toISOString(),
-        nodeId: "HUYAI-N01",
-        traceId: `trc-stream-${Date.now()}`,
-        sourceAgentId: "L1-SUPERVISOR",
-        targetAgentId: "worker-code",
-        type: "a2a.sent",
-        status: "running",
-        summary: "Supervisor phân luồng suy luận mã nguồn tới Worker Local Coder (Qwen 2.5 32B)",
-      };
-      setGraphState((prev) => reduceRuntimeEvent(prev, liveEvent));
+  // Compute graph state deterministically from initial state and all events
+  const graphState = useMemo(() => {
+    let state = createInitialGraphState("HUYAI-N01");
+    const allEvents = [...externalEvents, ...localEvents];
+    for (const evt of allEvents) {
+      state = reduceRuntimeEvent(state, evt);
     }
-  }, [isGenerating]);
+
+    if (isGenerating) {
+      state = {
+        ...state,
+        supervisor: {
+          ...state.supervisor,
+          status: "RUNNING",
+          currentTask: state.supervisor.currentTask || "Đang xử lý luồng suy luận trực tiếp trên Note-01...",
+        },
+        agents: {
+          ...state.agents,
+          "worker-code": {
+            ...state.agents["worker-code"],
+            status: "RUNNING",
+            currentAction: "Đang sinh mã nguồn với mô hình Qwen 2.5 Coder 32B trên Node-01...",
+          },
+        },
+      };
+    }
+    return state;
+  }, [externalEvents, localEvents, isGenerating]);
 
   // Auto-scroll stream and terminal
   useEffect(() => {
@@ -268,7 +243,7 @@ export function LocalAIAgentTreeControlPlane({
                   status: "running",
                   summary: "Human Owner phê duyệt tiếp tục thực thi tác vụ",
                 };
-                setGraphState((prev) => reduceRuntimeEvent(prev, resolveEvt));
+                setLocalEvents((prev) => [...prev, resolveEvt]);
               }}
               className="px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-black font-bold rounded text-[11px] transition-colors"
             >
@@ -522,7 +497,9 @@ export function LocalAIAgentTreeControlPlane({
                   </div>
                   <div className="bg-black/30 p-2 rounded border border-white/5">
                     <span className="text-slate-500 block text-[10px]">THỰC THI TẠI</span>
-                    <span className="text-slate-300 block">Node-01 (LAN 192.168.1.43)</span>
+                    <span className="text-slate-300 block">
+                      {nodeVitals ? `${nodeVitals.ramFreeGb} GB RAM Trống / ${nodeVitals.ramTotalGb} GB` : "Node-01 (LAN 192.168.1.43)"}
+                    </span>
                   </div>
                 </div>
               </div>

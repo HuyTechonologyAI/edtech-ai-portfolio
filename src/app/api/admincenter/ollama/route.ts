@@ -183,7 +183,6 @@ export async function POST(req: Request) {
     }
 
     if (action === "benchmark") {
-      const startTime = Date.now();
       const durationMs = 1280;
       const tokensGenerated = 280;
       const tokensPerSec = Number((tokensGenerated / (durationMs / 1000)).toFixed(1));
