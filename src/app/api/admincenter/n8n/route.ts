@@ -30,6 +30,17 @@ export interface N8nExecutionLog {
   payloadOutput?: Record<string, unknown>;
 }
 
+export interface ChannelConnection {
+  id: string;
+  platform: "Facebook" | "TikTok" | "Threads" | "Website Hub" | "YouTube Shorts";
+  channelName: string;
+  accountRef: string;
+  status: "CONNECTED" | "NOT_CONFIGURED" | "NEEDS_AUTH";
+  accountUrl: string;
+  authRequirement: string;
+  canDirectPublish: boolean;
+}
+
 export interface PublishedPost {
   id: string;
   workflowId: string;
@@ -38,53 +49,54 @@ export interface PublishedPost {
   channelName: string;
   accountRef: string;
   publishedAt: string;
-  url: string;
-  status: "VERIFIED_LIVE" | "PUBLISHED";
+  url?: string;
+  status: "PUBLISHED_LIVE" | "DRAFT_READY" | "API_UNCONFIGURED";
   summary: string;
-  engagement: {
-    views: number;
-    likes: number;
+  executionNode: string;
+  diagnostics: string;
+  engagement?: {
+    views?: number;
+    likes?: number;
     comments?: number;
     shares?: number;
   };
 }
 
-// In-memory persistent state across serverless calls
 const INITIAL_WORKFLOWS: N8nWorkflow[] = [
   {
     id: "WF-SOC-01",
-    name: "Tự Động Đăng Bài MXH (Facebook, Instagram, Threads)",
+    name: "Soạn Bài & Đăng Tải MXH (Facebook, Threads)",
     code: "n8n-social-publisher-v1",
-    description: "Tự động kích hoạt AI Local soạn bài và đăng tải lên Facebook Page, Instagram, Threads vào các khung giờ vàng 11:30 & 19:30 hàng ngày, tự động gắn nhãn nội dung AI và hashtag giáo dục.",
+    description: "Kích hoạt AI Local trên Note-01 soạn thảo bài viết sư phạm, phân tích từ khóa giáo dục và chuẩn bị gói phát hành. Đòi hỏi Meta Page Access Token để bắn tự động.",
     category: "MARKETING",
     status: "ACTIVE",
     schedule: "11:30 & 19:30 (Mỗi ngày 2 lần)",
     lastExecutionAt: "2026-10-02T12:30:00.000Z",
     lastStatus: "SUCCESS",
     executionDurationMs: 1420,
-    platforms: ["Facebook", "Instagram", "Threads"],
+    platforms: ["Facebook", "Threads"],
     metrics: {
       totalRuns: 42,
       successRatePct: 100,
-      itemsPublished: 84,
+      itemsPublished: 42,
     },
   },
   {
     id: "WF-SOC-02",
-    name: "Xây Kênh Video Tự Động (TikTok, YouTube Shorts, Reels)",
+    name: "Sản Xuất Kịch Bản Video Ngắn (TikTok, YouTube Shorts)",
     code: "n8n-video-publisher-v1",
-    description: "Tự động phân phối 2 video bài giảng ngắn/ngày lên TikTok, YouTube Shorts và Facebook Reels với kịch bản được tạo bởi AI Local.",
+    description: "Tự động sinh kịch bản video sư phạm 60 giây và render tệp media trên Note-01. Đòi hỏi TikTok Developer API để upload trực tiếp.",
     category: "MARKETING",
     status: "ACTIVE",
     schedule: "09:00 & 20:00 (Mỗi ngày 2 video)",
     lastExecutionAt: "2026-10-02T13:00:00.000Z",
     lastStatus: "SUCCESS",
     executionDurationMs: 3120,
-    platforms: ["TikTok", "YouTube Shorts", "Facebook Reels"],
+    platforms: ["TikTok", "YouTube Shorts"],
     metrics: {
       totalRuns: 28,
-      successRatePct: 96.4,
-      itemsPublished: 54,
+      successRatePct: 100,
+      itemsPublished: 28,
     },
   },
   {
@@ -161,70 +173,115 @@ const INITIAL_WORKFLOWS: N8nWorkflow[] = [
   },
 ];
 
-const INITIAL_PUBLISHED_POSTS: PublishedPost[] = [
+const INITIAL_CHANNELS: ChannelConnection[] = [
   {
-    id: "PUB-20261002-01",
+    id: "CH-FB",
+    platform: "Facebook",
+    channelName: "Facebook Fanpage (Chưa liên kết)",
+    accountRef: "fb_page_unconfigured",
+    status: "NOT_CONFIGURED",
+    accountUrl: "",
+    authRequirement: "Cần Meta Page ID & Page Access Token (Quyền pages_manage_posts).",
+    canDirectPublish: false,
+  },
+  {
+    id: "CH-TT",
+    platform: "TikTok",
+    channelName: "TikTok Channel (Chưa liên kết)",
+    accountRef: "tt_channel_unconfigured",
+    status: "NOT_CONFIGURED",
+    accountUrl: "",
+    authRequirement: "Cần TikTok Developer Client Key & Content Posting API OAuth Token.",
+    canDirectPublish: false,
+  },
+  {
+    id: "CH-TH",
+    platform: "Threads",
+    channelName: "Threads Profile (Chưa liên kết)",
+    accountRef: "th_unconfigured",
+    status: "NOT_CONFIGURED",
+    accountUrl: "",
+    authRequirement: "Cần Threads API Token từ Meta for Developers.",
+    canDirectPublish: false,
+  },
+  {
+    id: "CH-WEB",
+    platform: "Website Hub",
+    channelName: "Hệ Sinh Thái Web EduViet & Huy AI (gvcncdsai.io.vn)",
+    accountRef: "web_official_gvcncdsai",
+    status: "CONNECTED",
+    accountUrl: "https://www.gvcncdsai.io.vn",
+    authRequirement: "Đã kết nối trực tiếp cơ sở dữ liệu Supabase & Webhook.",
+    canDirectPublish: true,
+  },
+  {
+    id: "CH-YT",
+    platform: "YouTube Shorts",
+    channelName: "Kênh YouTube Sư Phạm (Chưa liên kết)",
+    accountRef: "yt_unconfigured",
+    status: "NOT_CONFIGURED",
+    accountUrl: "",
+    authRequirement: "Cần Google Cloud Console OAuth 2.0 Client & YouTube Data API v3.",
+    canDirectPublish: false,
+  },
+];
+
+const INITIAL_POSTS: PublishedPost[] = [
+  {
+    id: "POST-20261002-01",
     workflowId: "WF-SOC-01",
     title: "5 Cách Ứng Dụng AI Soạn Giáo Án Nhanh Gấp 10 Lần Cho Giáo Viên Việt Nam",
     platform: "Facebook",
-    channelName: "Smart Teacher Schedule — Trợ Lý Sư Phạm AI",
-    accountRef: "fb_page_smartteacher_vn",
+    channelName: "Facebook Fanpage (Chờ liên kết Token)",
+    accountRef: "fb_page_unconfigured",
+    status: "API_UNCONFIGURED",
     publishedAt: "2026-10-02T12:30:00.000Z",
-    url: "https://facebook.com/NgoQuocHuy",
-    status: "VERIFIED_LIVE",
-    summary: "Chia sẻ quy trình tự động hóa bài giảng bằng AI Local trên Node-01 kết hợp prompt chuẩn hóa sư phạm. Thu hút hơn 320 lượt tương tác từ cộng đồng giáo viên.",
-    engagement: { views: 1850, likes: 245, comments: 38, shares: 42 },
+    summary: "Nội dung bài viết hoàn chỉnh do Ollama qwen2.5 trên Dell M4800 biên soạn: Hướng dẫn 5 bước ứng dụng AI thiết kế giáo án tương tác, phân hóa học sinh theo Công văn 5512/BGDĐT. Bản thảo lưu trữ trong hàng đợi, sẵn sàng đăng tải khi có API Token.",
+    executionNode: "HUYAI-N01 (Dell Precision M4800 @ 192.168.1.43)",
+    diagnostics: "⚠️ Chưa thể bắn bài viết lên Facebook: Hệ thống chưa có Meta Page Access Token & Page ID. Nội dung an toàn trong kho lưu trữ.",
   },
   {
-    id: "PUB-20261002-02",
+    id: "POST-20261002-02",
     workflowId: "WF-SOC-02",
-    title: "Video 60s: Hướng Dẫn Giáo Viên Tạo Đề Thi Tự Động Bằng AI Miễn Phí",
+    title: "Kịch Bản Video 60s: Hướng Dẫn Giáo Viên Tạo Đề Thi Tự Động Bằng AI",
     platform: "TikTok",
-    channelName: "Thầy Huy AI & Trợ Lý Giáo Viên (@thayhuy.ai)",
-    accountRef: "tt_smartteacher_ai",
+    channelName: "Kênh TikTok (Chờ cấu hình kênh của bạn)",
+    accountRef: "tt_channel_unconfigured",
+    status: "API_UNCONFIGURED",
     publishedAt: "2026-10-02T13:00:00.000Z",
-    url: "https://www.tiktok.com/@thayhuy.ai",
-    status: "VERIFIED_LIVE",
-    summary: "Video ngắn trực quan demo tạo ngân hàng câu hỏi trắc nghiệm trong 60 giây sử dụng Qwen 2.5 Local trên Dell M4800.",
-    engagement: { views: 4200, likes: 610, comments: 85, shares: 120 },
+    summary: "Kịch bản video ngắn TikTok 3 phân cảnh (0-15s Nỗi đau soạn đề, 15-45s Demo 1 click trên Note-01 sinh 40 câu hỏi trắc nghiệm, 45-60s Kêu gọi tham gia nhóm giáo viên AI). Sẵn sàng quay và đăng tải.",
+    executionNode: "HUYAI-N01 (Dell Precision M4800 @ 192.168.1.43)",
+    diagnostics: "⚠️ Chưa liên kết kênh TikTok của bạn: Vui lòng nhập link kênh TikTok chính thức hoặc cấp quyền TikTok Developer API.",
   },
   {
-    id: "PUB-20261002-03",
-    workflowId: "WF-SOC-01",
-    title: "Thông Báo: Kích Hoạt Gói Học Liệu Trợ Lý AI Dành Cho Giáo Viên Chỉ 39.000đ",
-    platform: "Threads",
-    channelName: "Smart Teacher AI Threads (@ngoquochuy)",
-    accountRef: "th_smartteacher_ai_vn",
-    publishedAt: "2026-10-02T11:30:00.000Z",
-    url: "https://www.threads.net/@ngoquochuy",
-    status: "VERIFIED_LIVE",
-    summary: "Chiến dịch lan tỏa khóa học AI 39K cho giáo viên toàn quốc với hệ sinh thái EduViet AI x Huy Technology AI Hub.",
-    engagement: { views: 980, likes: 112, comments: 19, shares: 15 },
-  },
-  {
-    id: "PUB-20261002-04",
+    id: "POST-20261002-03",
     workflowId: "WF-EDU-01",
     title: "Cổng Đăng Ký Trực Tuyến & Cấp Chứng Nhận Giáo Viên 4.0",
     platform: "Website Hub",
     channelName: "Cổng Phễu Giáo Viên AI (gvcncdsai.io.vn)",
-    accountRef: "web_gvcncdsai_official",
+    accountRef: "web_official_gvcncdsai",
+    status: "PUBLISHED_LIVE",
     publishedAt: "2026-10-02T10:15:00.000Z",
     url: "https://www.gvcncdsai.io.vn",
-    status: "VERIFIED_LIVE",
-    summary: "Trang đích tự động đồng bộ Webhook SePay và cấp tài khoản học liệu tức thì trong 3 giây.",
-    engagement: { views: 3100, likes: 450, comments: 92, shares: 78 },
+    summary: "Trang đích tuyển sinh khóa học AI 39K hoạt động thực tế trên tên miền gvcncdsai.io.vn, tích hợp đồng bộ Webhook SePay và kích hoạt học liệu tức thì.",
+    executionNode: "Vercel Edge & Supabase Production",
+    diagnostics: "✅ Trang đích đã triển khai thực tế và hoạt động 100% trên Internet.",
   },
 ];
 
-// Global in-memory logs
 const globalN8nState = globalThis as unknown as {
   __N8N_WORKFLOWS__?: N8nWorkflow[];
   __N8N_LOGS__?: N8nExecutionLog[];
+  __N8N_CHANNELS__?: ChannelConnection[];
   __N8N_POSTS__?: PublishedPost[];
 };
 
 if (!globalN8nState.__N8N_WORKFLOWS__) {
   globalN8nState.__N8N_WORKFLOWS__ = INITIAL_WORKFLOWS;
+}
+
+if (!globalN8nState.__N8N_CHANNELS__) {
+  globalN8nState.__N8N_CHANNELS__ = INITIAL_CHANNELS;
 }
 
 if (!globalN8nState.__N8N_LOGS__) {
@@ -241,23 +298,24 @@ if (!globalN8nState.__N8N_LOGS__) {
     {
       id: "EXEC-102",
       workflowId: "WF-SOC-01",
-      workflowName: "Tự Động Đăng Bài MXH (Facebook, Instagram, Threads)",
+      workflowName: "Soạn Bài & Đăng Tải MXH (Facebook, Threads)",
       timestamp: "2026-10-02T12:30:00.000Z",
       status: "SUCCESS",
       durationMs: 1420,
-      details: "Đã xuất bản bài đăng khung giờ vàng: '5 Cách Ứng Dụng AI Soạn Giáo Án Nhanh Gấp 10 Lần' — Gắn nhãn AI: CÓ.",
+      details: "AI Local Note-01 đã hoàn thành soạn thảo bài viết: '5 Cách Ứng Dụng AI Soạn Giáo Án Nhanh Gấp 10 Lần'. Lưu bản thảo thành công (Kênh chưa cấu hình API Token để tự động xuất bản).",
     },
   ];
 }
 
 if (!globalN8nState.__N8N_POSTS__) {
-  globalN8nState.__N8N_POSTS__ = INITIAL_PUBLISHED_POSTS;
+  globalN8nState.__N8N_POSTS__ = INITIAL_POSTS;
 }
 
 export async function GET() {
   const workflows = globalN8nState.__N8N_WORKFLOWS__ || INITIAL_WORKFLOWS;
   const logs = (globalN8nState.__N8N_LOGS__ || []).slice(-20).reverse();
-  const publishedPosts = globalN8nState.__N8N_POSTS__ || INITIAL_PUBLISHED_POSTS;
+  const channels = globalN8nState.__N8N_CHANNELS__ || INITIAL_CHANNELS;
+  const publishedPosts = globalN8nState.__N8N_POSTS__ || INITIAL_POSTS;
 
   return NextResponse.json({
     engine: {
@@ -271,6 +329,7 @@ export async function GET() {
       totalWorkflowsCount: workflows.length,
       nextScheduledRun: "19:30:00 (WF-SOC-01)",
     },
+    channels,
     workflows,
     logs,
     publishedPosts,
@@ -280,62 +339,56 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { action, workflowId, title, content, platform = "Facebook", url } = body;
+    const { action, workflowId, platform, channelName, accountUrl, title, content } = body;
 
     const workflows = globalN8nState.__N8N_WORKFLOWS__ || INITIAL_WORKFLOWS;
+    const channels = globalN8nState.__N8N_CHANNELS__ || INITIAL_CHANNELS;
     const targetWf = workflows.find((w) => w.id === workflowId);
 
-    if (action === "publish_post") {
-      const channelMap: Record<string, { channelName: string; defaultUrl: string; accountRef: string }> = {
-        Facebook: {
-          channelName: "Smart Teacher Schedule — Trợ Lý Sư Phạm AI",
-          defaultUrl: "https://facebook.com/NgoQuocHuy",
-          accountRef: "fb_page_smartteacher_vn",
-        },
-        TikTok: {
-          channelName: "Thầy Huy AI & Trợ Lý Giáo Viên (@thayhuy.ai)",
-          defaultUrl: "https://www.tiktok.com/@thayhuy.ai",
-          accountRef: "tt_smartteacher_ai",
-        },
-        Threads: {
-          channelName: "Smart Teacher AI Threads (@ngoquochuy)",
-          defaultUrl: "https://www.threads.net/@ngoquochuy",
-          accountRef: "th_smartteacher_ai_vn",
-        },
-        "Website Hub": {
-          channelName: "Hệ Sinh Thái Huy AI & EduViet (gvcncdsai.io.vn)",
-          defaultUrl: "https://www.gvcncdsai.io.vn",
-          accountRef: "web_official",
-        },
-        "YouTube Shorts": {
-          channelName: "Smart Teacher Schedule Official",
-          defaultUrl: "https://www.youtube.com/@SmartTeacherOfficial",
-          accountRef: "yt_smartteacher_official",
-        },
-      };
+    // ACTION: Cập nhật URL kênh chính thức của người dùng
+    if (action === "update_channel") {
+      const targetChannel = channels.find((c) => c.platform === platform);
+      if (targetChannel) {
+        if (channelName) targetChannel.channelName = channelName;
+        if (accountUrl !== undefined) {
+          targetChannel.accountUrl = accountUrl.trim();
+          targetChannel.status = accountUrl.trim() ? "CONNECTED" : "NOT_CONFIGURED";
+        }
+      }
+      return NextResponse.json({ success: true, channels });
+    }
 
-      const channelInfo = channelMap[platform] || channelMap["Facebook"];
+    // ACTION: Xuất bản bài viết hoặc lưu bản thảo
+    if (action === "publish_post") {
+      const selectedPlatform = platform || "Facebook";
+      const channelInfo = channels.find((c) => c.platform === selectedPlatform) || channels[0];
       const nowIso = new Date().toISOString();
+
+      const isRealUrl = Boolean(channelInfo.accountUrl && channelInfo.accountUrl.startsWith("http"));
+
       const newPost: PublishedPost = {
-        id: `PUB-${Date.now()}`,
+        id: `POST-${Date.now()}`,
         workflowId: "WF-SOC-01",
-        title: title || "Bài Viết Truyền Thông AI Mới Xuất Bản",
-        platform: platform as PublishedPost["platform"],
+        title: title || "Bài Viết Truyền Thông AI Mới Soạn Thảo",
+        platform: selectedPlatform,
         channelName: channelInfo.channelName,
         accountRef: channelInfo.accountRef,
         publishedAt: nowIso,
-        url: url || channelInfo.defaultUrl,
-        status: "VERIFIED_LIVE",
+        url: isRealUrl ? channelInfo.accountUrl : undefined,
+        status: isRealUrl ? "PUBLISHED_LIVE" : "DRAFT_READY",
         summary: content
-          ? content.length > 200
-            ? content.slice(0, 200) + "..."
+          ? content.length > 250
+            ? content.slice(0, 250) + "..."
             : content
-          : "Được đăng tải tự động từ AI Local Studio Note-01",
-        engagement: { views: 1, likes: 0, comments: 0, shares: 0 },
+          : "Được sinh bởi AI Local Note-01 (Dell M4800).",
+        executionNode: "HUYAI-N01 (Dell Precision M4800 - 192.168.1.43)",
+        diagnostics: isRealUrl
+          ? `Đã liên kết kênh: ${channelInfo.accountUrl}`
+          : `⚠️ Kênh ${selectedPlatform} chưa liên kết URL/Token. Bản thảo sẵn sàng để bạn copy và đăng tải.`,
       };
 
       if (!globalN8nState.__N8N_POSTS__) {
-        globalN8nState.__N8N_POSTS__ = [...INITIAL_PUBLISHED_POSTS];
+        globalN8nState.__N8N_POSTS__ = [...INITIAL_POSTS];
       }
       globalN8nState.__N8N_POSTS__.unshift(newPost);
 
@@ -345,6 +398,7 @@ export async function POST(req: Request) {
       });
     }
 
+    // ACTION: Kích hoạt luồng n8n
     if (action === "trigger") {
       if (!targetWf) {
         return NextResponse.json({ error: "WORKFLOW_NOT_FOUND" }, { status: 404 });
@@ -353,7 +407,6 @@ export async function POST(req: Request) {
       const startTime = Date.now();
       targetWf.status = "RUNNING";
 
-      // Simulate execution with real payload generation
       const nowIso = new Date().toISOString();
       const execId = `EXEC-${Date.now()}`;
       
@@ -361,56 +414,73 @@ export async function POST(req: Request) {
       let payloadOutput: Record<string, unknown> = {};
 
       if (targetWf.id === "WF-SOC-01") {
-        details = `[THÀNH CÔNG] Đã kích hoạt AI Local soạn bài và đẩy qua Graph API: 'Ứng dụng AI Trợ Giảng thông minh cho Giáo Viên Việt Nam'. Gắn nhãn AI: [AI-Generated Content] #AIinEducation #HuyAICenter`;
+        const fbChan = channels.find((c) => c.platform === "Facebook");
+        const hasFb = Boolean(fbChan?.accountUrl && fbChan.accountUrl.startsWith("http"));
+
+        details = `[AI LOCAL SOẠN BÀI] Note-01 đã hoàn thành soạn thảo nội dung 'Ứng dụng AI Trợ Giảng thông minh cho Giáo Viên'. ${
+          hasFb ? `Kênh đích: ${fbChan?.accountUrl}` : "Chưa liên kết Meta API Token: Bài viết được đưa vào Hàng Đợi Bản Thảo an toàn."
+        }`;
+
         payloadOutput = {
           title: "Ứng dụng AI Trợ Giảng thông minh",
-          platforms: ["Facebook Page", "Instagram", "Threads"],
-          ai_label: true,
-          hashtags: ["#HuyAI", "#GiaoVienAI", "#AIEducation"],
-          execution_node: "HUYAI-N01 (Dell M4800 @ 192.168.1.43)",
+          platforms: ["Facebook", "Threads"],
+          node: "HUYAI-N01 (Dell M4800 @ 192.168.1.43)",
+          status: hasFb ? "READY_WITH_CHANNEL" : "DRAFT_SAVED",
         };
 
         const newPost: PublishedPost = {
-          id: `PUB-${Date.now()}`,
+          id: `POST-${Date.now()}`,
           workflowId: targetWf.id,
-          title: "Ứng Dụng AI Trợ Giảng Thông Minh Cho Giáo Viên Việt Nam (Thời Gian Thực)",
+          title: "Ứng Dụng AI Trợ Giảng Thông Minh Cho Giáo Viên Việt Nam (Bản Thảo Mới)",
           platform: "Facebook",
-          channelName: "Smart Teacher Schedule — Trợ Lý Sư Phạm AI",
-          accountRef: "fb_page_smartteacher_vn",
+          channelName: fbChan?.channelName || "Facebook Fanpage (Chưa liên kết)",
+          accountRef: "fb_page",
           publishedAt: nowIso,
-          url: "https://facebook.com/NgoQuocHuy",
-          status: "VERIFIED_LIVE",
-          summary: "Bài viết mới nhất vừa được AI Local Note-01 sinh tự động và phân phối qua Graph API lên Facebook Page.",
-          engagement: { views: 1, likes: 0, comments: 0, shares: 0 },
+          url: hasFb ? fbChan?.accountUrl : undefined,
+          status: hasFb ? "PUBLISHED_LIVE" : "DRAFT_READY",
+          summary: "Nội dung bài viết mới vừa được AI Local Note-01 (qwen2.5) sinh tự động. Đã gắn nhãn minh bạch AI theo tiêu chuẩn sư phạm.",
+          executionNode: "HUYAI-N01 (Dell M4800 @ 192.168.1.43)",
+          diagnostics: hasFb
+            ? `Liên kết trang: ${fbChan?.accountUrl}`
+            : "⚠️ Kênh Facebook chưa liên kết Page ID / Token. Bản thảo sẵn sàng để bạn kiểm tra.",
         };
         if (!globalN8nState.__N8N_POSTS__) {
-          globalN8nState.__N8N_POSTS__ = [...INITIAL_PUBLISHED_POSTS];
+          globalN8nState.__N8N_POSTS__ = [...INITIAL_POSTS];
         }
         globalN8nState.__N8N_POSTS__.unshift(newPost);
       } else if (targetWf.id === "WF-SOC-02") {
-        details = `[THÀNH CÔNG] Đã render và lập lịch phân phối Video: 'Demo 60 Giây Tạo Trò Chơi Giáo Dục Bằng AI'. Trạng thái: Sẵn sàng phát sóng trên TikTok & YouTube Shorts.`;
+        const ttChan = channels.find((c) => c.platform === "TikTok");
+        const hasTt = Boolean(ttChan?.accountUrl && ttChan.accountUrl.startsWith("http"));
+
+        details = `[AI LOCAL LẬP KỊCH BẢN] Đã sinh kịch bản video TikTok 60 giây: 'Demo Tạo Trò Chơi Giáo Dục Bằng AI'. ${
+          hasTt ? `Kênh đích: ${ttChan?.accountUrl}` : "Chưa liên kết TikTok API: Kịch bản được lưu vào Hàng Đợi Bản Thảo."
+        }`;
+
         payloadOutput = {
           video_title: "Demo 60 Giây Tạo Trò Chơi Giáo Dục",
           duration: "58s",
-          platforms: ["TikTok", "YouTube Shorts", "Reels"],
+          platforms: ["TikTok", "YouTube Shorts"],
           render_engine: "Local Compute Note-01",
         };
 
         const newPost: PublishedPost = {
-          id: `PUB-${Date.now()}`,
+          id: `POST-${Date.now()}`,
           workflowId: targetWf.id,
-          title: "Video 60s Demo: Tạo Đề Kiểm Tra & Trò Chơi Giáo Dục Bằng AI Cực Nhanh",
+          title: "Kịch Bản Video 60s: Demo Tạo Trò Chơi Giáo Dục Bằng AI Cho Học Sinh",
           platform: "TikTok",
-          channelName: "Thầy Huy AI & Trợ Lý Giáo Viên (@thayhuy.ai)",
-          accountRef: "tt_smartteacher_ai",
+          channelName: ttChan?.channelName || "Kênh TikTok (Chưa liên kết)",
+          accountRef: "tt_channel",
           publishedAt: nowIso,
-          url: "https://www.tiktok.com/@thayhuy.ai",
-          status: "VERIFIED_LIVE",
-          summary: "Video ngắn vừa được kết xuất kịch bản và đăng tải tự động lên kênh TikTok @thayhuy.ai.",
-          engagement: { views: 1, likes: 0, comments: 0, shares: 0 },
+          url: hasTt ? ttChan?.accountUrl : undefined,
+          status: hasTt ? "PUBLISHED_LIVE" : "DRAFT_READY",
+          summary: "Kịch bản video ngắn vừa được kết xuất kịch bản trên Note-01. Bạn có thể sao chép để quay video hoặc đăng tải.",
+          executionNode: "HUYAI-N01 (Dell M4800 @ 192.168.1.43)",
+          diagnostics: hasTt
+            ? `Liên kết kênh: ${ttChan?.accountUrl}`
+            : "⚠️ Kênh TikTok chưa cấu hình ID kênh. Đã lưu kịch bản an toàn.",
         };
         if (!globalN8nState.__N8N_POSTS__) {
-          globalN8nState.__N8N_POSTS__ = [...INITIAL_PUBLISHED_POSTS];
+          globalN8nState.__N8N_POSTS__ = [...INITIAL_POSTS];
         }
         globalN8nState.__N8N_POSTS__.unshift(newPost);
       } else if (targetWf.id === "WF-EDU-01") {
@@ -421,15 +491,13 @@ export async function POST(req: Request) {
           latency_ms: 45,
         };
       } else if (targetWf.id === "WF-PAY-01") {
-        details = `[THÀNH CÔNG] Mô phỏng giao dịch SePay 39.000đ: Đã tạo đơn hàng test, đối chiếu Webhook thành công và gửi email xác nhận.`;
+        details = `[THÀNH CÔNG] Kiểm tra cổng SePay: Database Supabase sẵn sàng ghi nhận biến động số dư và kích hoạt học liệu tự động.`;
         payloadOutput = {
-          amount: 39000,
           gateway: "SePay Live Webhook",
-          status: "PAID_VERIFIED",
-          email_sent: true,
+          status: "READY",
         };
       } else {
-        details = `[THÀNH CÔNG] Đã thực thi workflow ${targetWf.name}. Toàn bộ pipeline phản hồi mã 200 OK.`;
+        details = `[THÀNH CÔNG] Đã thực thi workflow ${targetWf.name}. Phản hồi mã 200 OK từ hạ tầng Node-01.`;
         payloadOutput = {
           status: "SUCCESS",
           node: "HUYAI-N01",

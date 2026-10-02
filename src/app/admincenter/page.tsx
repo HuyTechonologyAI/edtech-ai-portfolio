@@ -44,6 +44,7 @@ import {
   FileText,
   Archive,
   ExternalLink,
+  Settings,
 } from "lucide-react";
 
 import {
@@ -355,11 +356,28 @@ export default function AdminCenterPage() {
     channelName: string;
     accountRef: string;
     publishedAt: string;
-    url: string;
+    url?: string;
     status: string;
     summary: string;
-    engagement: { views: number; likes: number; comments?: number; shares?: number };
+    executionNode?: string;
+    diagnostics?: string;
+    engagement?: { views?: number; likes?: number; comments?: number; shares?: number };
   }>>([]);
+  const [n8nChannels, setN8nChannels] = useState<Array<{
+    id: string;
+    platform: string;
+    channelName: string;
+    accountRef: string;
+    status: string;
+    accountUrl: string;
+    authRequirement: string;
+    canDirectPublish: boolean;
+  }>>([]);
+  const [editingChannel, setEditingChannel] = useState<{
+    platform: string;
+    channelName: string;
+    accountUrl: string;
+  } | null>(null);
   const [publishedPlatformFilter, setPublishedPlatformFilter] = useState<string>("ALL");
   const [publishingAssetId, setPublishingAssetId] = useState<string | null>(null);
 
@@ -399,6 +417,9 @@ export default function AdminCenterPage() {
         setN8nEngine(data.engine);
         setN8nWorkflows(data.workflows || []);
         setN8nLogs(data.logs || []);
+        if (data.channels) {
+          setN8nChannels(data.channels);
+        }
         if (data.publishedPosts) {
           setN8nPublishedPosts(data.publishedPosts);
         }
@@ -407,6 +428,23 @@ export default function AdminCenterPage() {
       console.error("fetchN8nData error:", err);
     } finally {
       setN8nLoading(false);
+    }
+  };
+
+  const handleSaveChannelConfig = async (platform: string, channelName: string, accountUrl: string) => {
+    try {
+      const res = await fetch("/api/admincenter/n8n", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "update_channel", platform, channelName, accountUrl }),
+      });
+      if (res.ok) {
+        addToast("Cấu Hình Kênh", `Đã lưu liên kết kênh ${platform}!`, "success");
+        setEditingChannel(null);
+        fetchN8nData();
+      }
+    } catch {
+      addToast("Lỗi", "Không thể lưu cấu hình kênh", "error");
     }
   };
 
@@ -4576,119 +4614,332 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
           </div>
 
           {/* ============================================================ */}
-          {/* BẢNG THEO DÕI BÀI VIẾT ĐÃ ĐĂNG TẢI ĐA KÊNH (LIVE PUBLISHED FEED) */}
+          {/* CẤU HÌNH KÊNH TRUYỀN THÔNG & HÀNG ĐỢI XUẤT BẢN AI LOCAL     */}
           {/* ============================================================ */}
-          <div className="bg-[#0F172A] border border-white/10 rounded-2xl p-5 shadow-xl space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <div className="flex items-center gap-2">
-                  <Share2 className="w-4 h-4 text-cyan-400" />
-                  <h3 className="text-sm font-bold text-white">Danh Sách Bài Viết Đã Đăng Tải Đa Kênh (Kèm Link Truy Cập)</h3>
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 font-mono">
-                    LIVE FEED
-                  </span>
+          <div className="space-y-6">
+            {/* 1. KHUNG MINH BẠCH VÀ GIẢI TRÌNH KỸ THUẬT */}
+            <div className="bg-amber-950/20 border border-amber-500/30 rounded-2xl p-5 shadow-xl">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                <div className="space-y-2 text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-amber-200 text-sm">Báo Cáo Minh Bạch Kỹ Thuật: Cơ Chế Xuất Bản & Trạng Thái Kênh</span>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 font-mono">
+                      XÁC THỰC THỰC TẾ
+                    </span>
+                  </div>
+                  <p className="text-slate-300 leading-relaxed">
+                    1. <strong className="text-white">AI Local trên Node-01 (Dell M4800):</strong> Hoạt động 100% độc lập để sáng tạo kịch bản, bài viết sư phạm và lưu trữ bản thảo hoàn chỉnh tại hàng đợi bên dưới.
+                  </p>
+                  <p className="text-slate-300 leading-relaxed">
+                    2. <strong className="text-white">Xuất bản tự động ra Mạng Xã Hội (Facebook, TikTok):</strong> Đòi hỏi kết nối OAuth API chính chủ từ Meta for Developers (Page Access Token) và TikTok Open API. Khi chưa có Token này, hệ thống tuyệt đối <strong className="text-amber-300">không tự ý bắn ra ngoài hay chuyển hướng link giả lập</strong>.
+                  </p>
+                  <p className="text-slate-300 leading-relaxed">
+                    3. <strong className="text-white">Hành động của bạn:</strong> Bạn có thể cấu hình liên kết kênh chính thức của bạn ở bảng bên dưới, hoặc bấm nút <strong className="text-cyan-400">📋 Sao Chép Nội Dung</strong> để đăng trực tiếp lên kênh của mình ngay bây giờ.
+                  </p>
                 </div>
-                <p className="text-xs text-slate-400 mt-1">
-                  Lưu trữ minh bạch toàn bộ bài viết đã xuất bản kèm thời gian, kênh phát hành và đường dẫn trực tiếp để người dùng bấm vào xem ngay.
-                </p>
-              </div>
-
-              {/* Channel Filter Pills */}
-              <div className="flex flex-wrap items-center gap-1.5 text-xs font-mono">
-                {["ALL", "Facebook", "TikTok", "Threads", "Website Hub"].map((p) => (
-                  <button
-                    key={p}
-                    onClick={() => setPublishedPlatformFilter(p)}
-                    className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
-                      publishedPlatformFilter === p
-                        ? "bg-cyan-500 text-black font-bold shadow-md shadow-cyan-500/20"
-                        : "bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white border border-white/5"
-                    }`}
-                  >
-                    {p === "ALL" ? "Tất Cả Kênh" : p}
-                  </button>
-                ))}
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {n8nPublishedPosts
-                .filter((post) => publishedPlatformFilter === "ALL" || post.platform === publishedPlatformFilter)
-                .map((post) => (
-                  <div
-                    key={post.id}
-                    className="bg-[#070B14] border border-white/10 hover:border-cyan-500/40 rounded-2xl p-4.5 flex flex-col justify-between transition-all group shadow-lg"
-                  >
-                    <div>
-                      {/* Platform & Timestamp Header */}
-                      <div className="flex items-start justify-between gap-2 mb-2.5">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className={`px-2.5 py-0.5 rounded-lg text-[10px] font-bold font-mono flex items-center gap-1.5 ${
-                            post.platform === "Facebook"
-                              ? "bg-blue-600/20 text-blue-300 border border-blue-500/40"
-                              : post.platform === "TikTok"
-                              ? "bg-rose-500/20 text-rose-300 border border-rose-500/40"
-                              : post.platform === "Threads"
-                              ? "bg-purple-600/20 text-purple-300 border border-purple-500/40"
-                              : "bg-emerald-600/20 text-emerald-300 border border-emerald-500/40"
-                          }`}>
-                            <span>●</span>
-                            <span>{post.platform}</span>
-                          </span>
-                          <span className="text-[11px] text-slate-300 font-semibold truncate max-w-[200px]">
-                            {post.channelName}
-                          </span>
-                        </div>
+            {/* 2. BẢNG QUẢN LÝ KẾT NỐI KÊNH (CHANNEL CONNECTIVITY HUB) */}
+            <div className="bg-[#0F172A] border border-white/10 rounded-2xl p-5 shadow-xl space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Network className="w-4 h-4 text-emerald-400" />
+                    <h3 className="text-sm font-bold text-white">Trung Tâm Kết Nối Kênh Đa Nền Tảng (Channel Hub)</h3>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-mono">
+                      {n8nChannels.filter((c) => c.status === "CONNECTED").length}/{n8nChannels.length} KẾT NỐI
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Cấu hình địa chỉ trang/kênh chính chủ của bạn để n8n và AI Local liên kết phát hành chính xác.
+                  </p>
+                </div>
+              </div>
 
-                        <span className="text-[11px] text-slate-400 font-mono shrink-0">
-                          {new Date(post.publishedAt).toLocaleString("vi-VN")}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {n8nChannels.map((channel) => (
+                  <div
+                    key={channel.id}
+                    className="bg-[#070B14] border border-white/10 hover:border-white/20 rounded-2xl p-4 flex flex-col justify-between transition-all"
+                  >
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className={`px-2.5 py-0.5 rounded-lg text-[10px] font-bold font-mono ${
+                          channel.platform === "Facebook"
+                            ? "bg-blue-600/20 text-blue-300 border border-blue-500/40"
+                            : channel.platform === "TikTok"
+                            ? "bg-rose-500/20 text-rose-300 border border-rose-500/40"
+                            : channel.platform === "Threads"
+                            ? "bg-purple-600/20 text-purple-300 border border-purple-500/40"
+                            : "bg-emerald-600/20 text-emerald-300 border border-emerald-500/40"
+                        }`}>
+                          {channel.platform}
+                        </span>
+
+                        <span className={`px-2 py-0.5 rounded text-[9px] font-bold font-mono ${
+                          channel.status === "CONNECTED"
+                            ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
+                            : "bg-amber-500/10 text-amber-400 border border-amber-500/30"
+                        }`}>
+                          {channel.status === "CONNECTED" ? "● ĐÃ KẾT NỐI" : "○ CHỜ CẤU HÌNH"}
                         </span>
                       </div>
 
-                      {/* Title */}
-                      <h4 className="text-sm font-bold text-white group-hover:text-cyan-300 transition-colors line-clamp-2">
-                        {post.title}
-                      </h4>
-
-                      {/* Summary */}
-                      <p className="text-xs text-slate-400 mt-2 line-clamp-3 leading-relaxed">
-                        {post.summary}
-                      </p>
-
-                      {/* Engagement stats */}
-                      <div className="flex items-center gap-4 mt-3 pt-2 border-t border-white/5 text-[11px] text-slate-400 font-mono">
-                        <span>👁 {post.engagement?.views?.toLocaleString() || 0} lượt xem</span>
-                        <span>❤️ {post.engagement?.likes?.toLocaleString() || 0} yêu thích</span>
-                        {post.engagement?.shares !== undefined && (
-                          <span>🔄 {post.engagement.shares} chia sẻ</span>
+                      <div>
+                        <h4 className="text-xs font-bold text-white truncate">{channel.channelName}</h4>
+                        {channel.accountUrl ? (
+                          <a
+                            href={channel.accountUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-[11px] text-cyan-400 hover:underline flex items-center gap-1 mt-1 truncate"
+                          >
+                            <span>{channel.accountUrl}</span>
+                            <ExternalLink className="w-3 h-3 shrink-0" />
+                          </a>
+                        ) : (
+                          <p className="text-[11px] text-slate-500 italic mt-1">Chưa cập nhật URL kênh chính thức</p>
                         )}
-                        <span className="ml-auto text-emerald-400 font-bold flex items-center gap-1">
-                          <CheckCircle2 className="w-3.5 h-3.5" /> ĐÃ XÁC THỰC
-                        </span>
+                      </div>
+
+                      <div className="bg-white/5 rounded-xl p-2.5 text-[10px] text-slate-400 leading-relaxed font-mono">
+                        {channel.authRequirement}
                       </div>
                     </div>
 
-                    {/* Action Bar with Direct Link */}
-                    <div className="flex items-center gap-2 mt-4 pt-3 border-t border-white/5">
-                      <a
-                        href={post.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex-1 py-2 px-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black text-xs font-extrabold transition-all flex items-center justify-center gap-1.5 shadow-md shadow-cyan-500/20 hover:scale-[1.01]"
-                      >
-                        <ExternalLink className="w-3.5 h-3.5" />
-                        <span>Mở Xem Bài Đăng Trực Tiếp ↗</span>
-                      </a>
+                    <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between gap-2">
                       <button
-                        onClick={() => handleCopyToClipboard(post.url, "Đã sao chép link bài đăng")}
-                        className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 transition-colors cursor-pointer"
-                        title="Sao chép liên kết"
+                        onClick={() => {
+                          setEditingChannel({
+                            platform: channel.platform,
+                            channelName: channel.channelName.includes("Chưa liên kết") ? "" : channel.channelName,
+                            accountUrl: channel.accountUrl,
+                          });
+                        }}
+                        className="w-full py-1.5 px-3 rounded-lg bg-white/5 hover:bg-white/10 text-slate-200 hover:text-white border border-white/10 text-xs font-medium transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                       >
-                        <Copy className="w-3.5 h-3.5" />
+                        <Settings className="w-3.5 h-3.5 text-cyan-400" />
+                        <span>Cấu Hình Kênh Này</span>
                       </button>
                     </div>
                   </div>
                 ))}
+              </div>
+
+              {/* Modal / Form sửa cấu hình kênh */}
+              {editingChannel && (
+                <div className="bg-[#1E293B] border border-cyan-500/40 rounded-2xl p-4.5 mt-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-bold text-white flex items-center gap-2">
+                      <Settings className="w-4 h-4 text-cyan-400" />
+                      Cập Nhật Kênh: <span className="text-cyan-300">{editingChannel.platform}</span>
+                    </h4>
+                    <button
+                      onClick={() => setEditingChannel(null)}
+                      className="text-slate-400 hover:text-white text-xs p-1"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                    <div>
+                      <label className="text-[11px] text-slate-300 font-medium block mb-1">Tên Kênh / Trang Của Bạn:</label>
+                      <input
+                        type="text"
+                        value={editingChannel.channelName}
+                        onChange={(e) => setEditingChannel({ ...editingChannel, channelName: e.target.value })}
+                        placeholder="VD: Thầy Huy AI - Giáo Viên 4.0"
+                        className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/10 text-white placeholder-slate-500 text-xs focus:outline-none focus:border-cyan-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] text-slate-300 font-medium block mb-1">Đường Dẫn URL Kênh Chính Thức:</label>
+                      <input
+                        type="url"
+                        value={editingChannel.accountUrl}
+                        onChange={(e) => setEditingChannel({ ...editingChannel, accountUrl: e.target.value })}
+                        placeholder="VD: https://facebook.com/trang-chinh-chu-cua-ban"
+                        className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/10 text-white placeholder-slate-500 text-xs focus:outline-none focus:border-cyan-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-2 pt-2">
+                    <button
+                      onClick={() => setEditingChannel(null)}
+                      className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-medium cursor-pointer"
+                    >
+                      Hủy Bỏ
+                    </button>
+                    <button
+                      onClick={() => handleSaveChannelConfig(editingChannel.platform, editingChannel.channelName, editingChannel.accountUrl)}
+                      className="px-4 py-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-black text-xs font-bold transition-all shadow-md shadow-cyan-500/20 cursor-pointer"
+                    >
+                      Lưu Liên Kết Kênh
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 3. BẢNG HÀNG ĐỢI BẢN THẢO AI LOCAL & BÀI ĐĂNG THỰC TẾ */}
+            <div className="bg-[#0F172A] border border-white/10 rounded-2xl p-5 shadow-xl space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Share2 className="w-4 h-4 text-cyan-400" />
+                    <h3 className="text-sm font-bold text-white">Hàng Đợi Bản Thảo AI Local & Bài Đăng Đa Nền Tảng</h3>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 font-mono">
+                      MINH BẠCH 100%
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Toàn bộ nội dung do AI Local trên Node-01 biên soạn. Các bài có API Token sẽ tự động xuất bản kèm link thật; các bài chưa cấu hình API được hiển thị minh bạch dưới dạng bản thảo sẵn sàng sao chép.
+                  </p>
+                </div>
+
+                {/* Channel Filter Pills */}
+                <div className="flex flex-wrap items-center gap-1.5 text-xs font-mono">
+                  {["ALL", "Facebook", "TikTok", "Threads", "Website Hub"].map((p) => (
+                    <button
+                      key={p}
+                      onClick={() => setPublishedPlatformFilter(p)}
+                      className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                        publishedPlatformFilter === p
+                          ? "bg-cyan-500 text-black font-bold shadow-md shadow-cyan-500/20"
+                          : "bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white border border-white/5"
+                      }`}
+                    >
+                      {p === "ALL" ? "Tất Cả Kênh" : p}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {n8nPublishedPosts
+                  .filter((post) => publishedPlatformFilter === "ALL" || post.platform === publishedPlatformFilter)
+                  .map((post) => (
+                    <div
+                      key={post.id}
+                      className="bg-[#070B14] border border-white/10 hover:border-cyan-500/40 rounded-2xl p-4.5 flex flex-col justify-between transition-all group shadow-lg"
+                    >
+                      <div>
+                        {/* Platform & Status Header */}
+                        <div className="flex items-start justify-between gap-2 mb-2.5">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className={`px-2.5 py-0.5 rounded-lg text-[10px] font-bold font-mono flex items-center gap-1.5 ${
+                              post.platform === "Facebook"
+                                ? "bg-blue-600/20 text-blue-300 border border-blue-500/40"
+                                : post.platform === "TikTok"
+                                ? "bg-rose-500/20 text-rose-300 border border-rose-500/40"
+                                : post.platform === "Threads"
+                                ? "bg-purple-600/20 text-purple-300 border border-purple-500/40"
+                                : "bg-emerald-600/20 text-emerald-300 border border-emerald-500/40"
+                            }`}>
+                              <span>●</span>
+                              <span>{post.platform}</span>
+                            </span>
+                            <span className="text-[11px] text-slate-300 font-semibold truncate max-w-[180px]">
+                              {post.channelName}
+                            </span>
+                          </div>
+
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold font-mono ${
+                            post.status === "PUBLISHED_LIVE"
+                              ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
+                              : "bg-amber-500/20 text-amber-300 border border-amber-500/40"
+                          }`}>
+                            {post.status === "PUBLISHED_LIVE" ? "ĐÃ XUẤT BẢN THỰC TẾ" : "BẢN THẢO AI LOCAL"}
+                          </span>
+                        </div>
+
+                        {/* Title */}
+                        <h4 className="text-sm font-bold text-white group-hover:text-cyan-300 transition-colors line-clamp-2">
+                          {post.title}
+                        </h4>
+
+                        {/* Summary / Content */}
+                        <p className="text-xs text-slate-400 mt-2 line-clamp-3 leading-relaxed">
+                          {post.summary}
+                        </p>
+
+                        {/* Execution Node & Diagnostics Callout */}
+                        <div className="mt-3 pt-2.5 border-t border-white/5 space-y-1.5 text-[11px] font-mono">
+                          {post.executionNode && (
+                            <div className="text-slate-400 flex items-center gap-1.5 truncate">
+                              <Cpu className="w-3 h-3 text-cyan-400 shrink-0" />
+                              <span className="truncate">{post.executionNode}</span>
+                            </div>
+                          )}
+                          {post.diagnostics && (
+                            <div className={`p-2 rounded-lg text-[10px] leading-relaxed ${
+                              post.status === "PUBLISHED_LIVE"
+                                ? "bg-emerald-500/10 text-emerald-300 border border-emerald-500/20"
+                                : "bg-amber-500/10 text-amber-300 border border-amber-500/20"
+                            }`}>
+                              {post.diagnostics}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Action Bar */}
+                      <div className="flex items-center gap-2 mt-4 pt-3 border-t border-white/5">
+                        {post.url ? (
+                          <>
+                            <a
+                              href={post.url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="flex-1 py-2 px-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-black text-xs font-extrabold transition-all flex items-center justify-center gap-1.5 shadow-md shadow-emerald-500/20 hover:scale-[1.01]"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5" />
+                              <span>Mở Xem Trang Đích Thực Tế ↗</span>
+                            </a>
+                            <button
+                              onClick={() => handleCopyToClipboard(post.url!, "Đã sao chép liên kết trang đích!")}
+                              className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 transition-colors cursor-pointer"
+                              title="Sao chép liên kết"
+                            >
+                              <Copy className="w-3.5 h-3.5" />
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => handleCopyToClipboard(`${post.title}\n\n${post.summary}`, "Đã sao chép nội dung bài viết!")}
+                              className="flex-1 py-2 px-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black text-xs font-extrabold transition-all flex items-center justify-center gap-1.5 shadow-md shadow-cyan-500/20 hover:scale-[1.01] cursor-pointer"
+                            >
+                              <Copy className="w-3.5 h-3.5" />
+                              <span>Sao Chép Nội Dung Đăng Ngay</span>
+                            </button>
+                            {(() => {
+                              const ch = n8nChannels.find((c) => c.platform === post.platform);
+                              if (ch && ch.accountUrl) {
+                                return (
+                                  <a
+                                    href={ch.accountUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-cyan-300 hover:text-white border border-white/10 transition-colors flex items-center gap-1 text-xs"
+                                    title={`Mở trang ${post.platform} của bạn`}
+                                  >
+                                    <ExternalLink className="w-3.5 h-3.5" />
+                                  </a>
+                                );
+                              }
+                              return null;
+                            })()}
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+              </div>
             </div>
           </div>
         </div>
