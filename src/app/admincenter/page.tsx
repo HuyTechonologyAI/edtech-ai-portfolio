@@ -47,6 +47,8 @@ import {
   Settings,
 } from "lucide-react";
 
+import type { ComplianceAuditResult } from "@/lib/compliance-guard";
+
 import {
   CANONICAL_59_AGENTS,
   AgentCard,
@@ -361,7 +363,7 @@ export default function AdminCenterPage() {
     summary: string;
     executionNode?: string;
     diagnostics?: string;
-    compliance?: any;
+    compliance?: ComplianceAuditResult;
     engagement?: { views?: number; likes?: number; comments?: number; shares?: number };
   }>>([]);
   const [n8nChannels, setN8nChannels] = useState<Array<{
@@ -399,7 +401,10 @@ export default function AdminCenterPage() {
   } | null>(null);
   const [publishedPlatformFilter, setPublishedPlatformFilter] = useState<string>("ALL");
   const [complianceFilter, setComplianceFilter] = useState<string>("ALL");
-  const [selectedPostCompliance, setSelectedPostCompliance] = useState<any | null>(null);
+  const [selectedPostCompliance, setSelectedPostCompliance] = useState<{
+    compliance?: ComplianceAuditResult;
+    executionNode?: string;
+  } | null>(null);
   const [dispatchingPostId, setDispatchingPostId] = useState<string | null>(null);
   const [publishingAssetId, setPublishingAssetId] = useState<string | null>(null);
 
@@ -497,7 +502,7 @@ export default function AdminCenterPage() {
     }
   };
 
-  const handleDispatchPost = async (post: any) => {
+  const handleDispatchPost = async (post: { id: string; platform: string; title: string; summary: string }) => {
     try {
       setDispatchingPostId(post.id);
       const res = await fetch("/api/admincenter/n8n", {
