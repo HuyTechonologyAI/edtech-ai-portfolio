@@ -237,13 +237,13 @@ export function getLiveTelemetryData() {
       pgmqQueueDepth: 0,             // 0 Hàng đợi sạch
       pgmqMessagesProcessed: 5,      // 5 Sự kiện thật trong sổ cái
       node01: {
-        peerName: "huy-node01",
-        lanIP: "192.168.1.230:41641",
-        tailscaleIP: "100.79.240.108",
-        pingMs: 5.8, // Thực tế ping ICMP qua Wireguard
+        peerName: "HUYAI-N01 (Dell M4800)",
+        lanIP: "192.168.1.43",
+        tailscaleIP: "ops.huycncdsai.io.vn",
+        pingMs: 1.8,
         status: "CONNECTED",
         storageLock: "R4_PROTECTED_LOCKED",
-        spoolPackages: 3, // 3 gói PKG-01, PKG-02, PKG-03 đã nạp
+        spoolPackages: 3,
         cpuUsagePct: 2.0,
         ramUsagePct: 7.2,
         ramTotalMb: 32001,
@@ -270,13 +270,15 @@ export async function GET() {
         auth: { persistSession: false },
       });
 
-      const [stepsRes, hbRes] = await Promise.all([
+      const [stepsRes, hbRes, nodeRes] = await Promise.all([
         sb.from("ai_task_steps").select("*").order("created_at", { ascending: false }).limit(50),
         sb.from("node_heartbeats").select("*").order("created_at", { ascending: false }).limit(1),
+        sb.from("nodes").select("*").eq("id", "huy-ai-node-01").maybeSingle(),
       ]);
 
       const dbSteps = stepsRes.data || [];
       const latestHeartbeat = (hbRes.data && hbRes.data.length > 0) ? hbRes.data[0] : null;
+      const nodeRecord = nodeRes?.data;
 
       if (dbSteps.length > 0) {
         const dbEvents: LiveEvent[] = dbSteps.map((s) => {
@@ -332,18 +334,27 @@ export async function GET() {
         telemetry.metrics.pgmqMessagesProcessed = combined.length;
       }
 
-      if (latestHeartbeat) {
+      if (latestHeartbeat || nodeRecord) {
+        const hbMeta = latestHeartbeat?.metadata as Record<string, unknown> | undefined;
+        const nodeMeta = nodeRecord?.metadata as Record<string, unknown> | undefined;
+        const liveLanIp = nodeRecord?.ip_address || (typeof hbMeta?.ip === "string" ? hbMeta.ip : "192.168.1.43");
+        const liveCpu = typeof hbMeta?.load === "number" ? hbMeta.load : (typeof latestHeartbeat?.cpu_usage_pct === "number" ? latestHeartbeat.cpu_usage_pct : 2.0);
+        const liveRamFree = typeof nodeMeta?.mem_free_mb === "number" ? nodeMeta.mem_free_mb : (typeof latestHeartbeat?.ram_free_mb === "number" ? latestHeartbeat.ram_free_mb : 29698);
+
         telemetry.metrics.node01 = {
           ...telemetry.metrics.node01,
-          status: "CONNECTED",
-          pingMs: 5.8,
-          cpuUsagePct: typeof latestHeartbeat.cpu_usage_pct === "number" ? latestHeartbeat.cpu_usage_pct : 2.0,
-          ramUsagePct: typeof latestHeartbeat.ram_usage_pct === "number" ? latestHeartbeat.ram_usage_pct : 7.2,
-          ramTotalMb: typeof latestHeartbeat.ram_total_mb === "number" ? latestHeartbeat.ram_total_mb : 32001,
-          ramFreeMb: typeof latestHeartbeat.ram_free_mb === "number" ? latestHeartbeat.ram_free_mb : 29698,
-          queueDepth: typeof latestHeartbeat.queue_depth === "number" ? latestHeartbeat.queue_depth : 0,
+          peerName: "HUYAI-N01 (Dell M4800)",
+          lanIP: liveLanIp,
+          tailscaleIP: "ops.huycncdsai.io.vn",
+          status: nodeRecord?.status === "offline" ? "OFFLINE" : "CONNECTED",
+          pingMs: 1.8,
+          cpuUsagePct: liveCpu,
+          ramUsagePct: typeof latestHeartbeat?.ram_usage_pct === "number" ? latestHeartbeat.ram_usage_pct : 7.2,
+          ramTotalMb: 32001,
+          ramFreeMb: liveRamFree,
+          queueDepth: typeof latestHeartbeat?.queue_depth === "number" ? latestHeartbeat.queue_depth : 0,
         };
-        telemetry.metrics.pgmqQueueDepth = typeof latestHeartbeat.queue_depth === "number" ? latestHeartbeat.queue_depth : 0;
+        telemetry.metrics.pgmqQueueDepth = typeof latestHeartbeat?.queue_depth === "number" ? latestHeartbeat.queue_depth : 0;
       }
     }
   } catch (err) {
