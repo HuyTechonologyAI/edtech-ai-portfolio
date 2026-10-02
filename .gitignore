@@ -45,4 +45,5 @@ scripts/bootstrap-node01.sh
 scripts/build-bootstrap.mjs
 scripts/sync.sh
 scripts/ingest.sh
+scripts/migrate-eduviet-sync-tables.mjs
 
