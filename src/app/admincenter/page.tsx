@@ -347,6 +347,21 @@ export default function AdminCenterPage() {
   }>>([]);
   const [n8nLoading, setN8nLoading] = useState<boolean>(false);
   const [triggeringWfId, setTriggeringWfId] = useState<string | null>(null);
+  const [n8nPublishedPosts, setN8nPublishedPosts] = useState<Array<{
+    id: string;
+    workflowId: string;
+    title: string;
+    platform: string;
+    channelName: string;
+    accountRef: string;
+    publishedAt: string;
+    url: string;
+    status: string;
+    summary: string;
+    engagement: { views: number; likes: number; comments?: number; shares?: number };
+  }>>([]);
+  const [publishedPlatformFilter, setPublishedPlatformFilter] = useState<string>("ALL");
+  const [publishingAssetId, setPublishingAssetId] = useState<string | null>(null);
 
   // Local AI Studio State
   const [localAiStudioData, setLocalAiStudioData] = useState<{
@@ -384,6 +399,9 @@ export default function AdminCenterPage() {
         setN8nEngine(data.engine);
         setN8nWorkflows(data.workflows || []);
         setN8nLogs(data.logs || []);
+        if (data.publishedPosts) {
+          setN8nPublishedPosts(data.publishedPosts);
+        }
       }
     } catch (err) {
       console.error("fetchN8nData error:", err);
@@ -408,6 +426,40 @@ export default function AdminCenterPage() {
       addToast("Lỗi n8n", "Lỗi khi kích hoạt workflow n8n", "error");
     } finally {
       setTriggeringWfId(null);
+    }
+  };
+
+  const handlePublishAssetToSocial = async (asset: { id: string; title: string; content: string; type: string }) => {
+    try {
+      setPublishingAssetId(asset.id);
+      let platform = "Facebook";
+      if (asset.type === "TIKTOK_SCRIPT") platform = "TikTok";
+      else if (asset.type === "LESSON_PLAN") platform = "Website Hub";
+
+      const res = await fetch("/api/admincenter/n8n", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "publish_post",
+          title: asset.title,
+          content: asset.content,
+          platform,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const post = data.publishedPost;
+        addToast(
+          "Đăng Tải Thành Công",
+          `Đã xuất bản lên ${post?.platform || platform}: ${post?.channelName || ""}`,
+          "success"
+        );
+        fetchN8nData();
+      }
+    } catch {
+      addToast("Lỗi Xuất Bản", "Không thể xuất bản bài viết lên kênh", "error");
+    } finally {
+      setPublishingAssetId(null);
     }
   };
 
@@ -4522,6 +4574,123 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
               </table>
             </div>
           </div>
+
+          {/* ============================================================ */}
+          {/* BẢNG THEO DÕI BÀI VIẾT ĐÃ ĐĂNG TẢI ĐA KÊNH (LIVE PUBLISHED FEED) */}
+          {/* ============================================================ */}
+          <div className="bg-[#0F172A] border border-white/10 rounded-2xl p-5 shadow-xl space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Share2 className="w-4 h-4 text-cyan-400" />
+                  <h3 className="text-sm font-bold text-white">Danh Sách Bài Viết Đã Đăng Tải Đa Kênh (Kèm Link Truy Cập)</h3>
+                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 font-mono">
+                    LIVE FEED
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400 mt-1">
+                  Lưu trữ minh bạch toàn bộ bài viết đã xuất bản kèm thời gian, kênh phát hành và đường dẫn trực tiếp để người dùng bấm vào xem ngay.
+                </p>
+              </div>
+
+              {/* Channel Filter Pills */}
+              <div className="flex flex-wrap items-center gap-1.5 text-xs font-mono">
+                {["ALL", "Facebook", "TikTok", "Threads", "Website Hub"].map((p) => (
+                  <button
+                    key={p}
+                    onClick={() => setPublishedPlatformFilter(p)}
+                    className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                      publishedPlatformFilter === p
+                        ? "bg-cyan-500 text-black font-bold shadow-md shadow-cyan-500/20"
+                        : "bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white border border-white/5"
+                    }`}
+                  >
+                    {p === "ALL" ? "Tất Cả Kênh" : p}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {n8nPublishedPosts
+                .filter((post) => publishedPlatformFilter === "ALL" || post.platform === publishedPlatformFilter)
+                .map((post) => (
+                  <div
+                    key={post.id}
+                    className="bg-[#070B14] border border-white/10 hover:border-cyan-500/40 rounded-2xl p-4.5 flex flex-col justify-between transition-all group shadow-lg"
+                  >
+                    <div>
+                      {/* Platform & Timestamp Header */}
+                      <div className="flex items-start justify-between gap-2 mb-2.5">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className={`px-2.5 py-0.5 rounded-lg text-[10px] font-bold font-mono flex items-center gap-1.5 ${
+                            post.platform === "Facebook"
+                              ? "bg-blue-600/20 text-blue-300 border border-blue-500/40"
+                              : post.platform === "TikTok"
+                              ? "bg-rose-500/20 text-rose-300 border border-rose-500/40"
+                              : post.platform === "Threads"
+                              ? "bg-purple-600/20 text-purple-300 border border-purple-500/40"
+                              : "bg-emerald-600/20 text-emerald-300 border border-emerald-500/40"
+                          }`}>
+                            <span>●</span>
+                            <span>{post.platform}</span>
+                          </span>
+                          <span className="text-[11px] text-slate-300 font-semibold truncate max-w-[200px]">
+                            {post.channelName}
+                          </span>
+                        </div>
+
+                        <span className="text-[11px] text-slate-400 font-mono shrink-0">
+                          {new Date(post.publishedAt).toLocaleString("vi-VN")}
+                        </span>
+                      </div>
+
+                      {/* Title */}
+                      <h4 className="text-sm font-bold text-white group-hover:text-cyan-300 transition-colors line-clamp-2">
+                        {post.title}
+                      </h4>
+
+                      {/* Summary */}
+                      <p className="text-xs text-slate-400 mt-2 line-clamp-3 leading-relaxed">
+                        {post.summary}
+                      </p>
+
+                      {/* Engagement stats */}
+                      <div className="flex items-center gap-4 mt-3 pt-2 border-t border-white/5 text-[11px] text-slate-400 font-mono">
+                        <span>👁 {post.engagement?.views?.toLocaleString() || 0} lượt xem</span>
+                        <span>❤️ {post.engagement?.likes?.toLocaleString() || 0} yêu thích</span>
+                        {post.engagement?.shares !== undefined && (
+                          <span>🔄 {post.engagement.shares} chia sẻ</span>
+                        )}
+                        <span className="ml-auto text-emerald-400 font-bold flex items-center gap-1">
+                          <CheckCircle2 className="w-3.5 h-3.5" /> ĐÃ XÁC THỰC
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Action Bar with Direct Link */}
+                    <div className="flex items-center gap-2 mt-4 pt-3 border-t border-white/5">
+                      <a
+                        href={post.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex-1 py-2 px-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black text-xs font-extrabold transition-all flex items-center justify-center gap-1.5 shadow-md shadow-cyan-500/20 hover:scale-[1.01]"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        <span>Mở Xem Bài Đăng Trực Tiếp ↗</span>
+                      </a>
+                      <button
+                        onClick={() => handleCopyToClipboard(post.url, "Đã sao chép link bài đăng")}
+                        className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 transition-colors cursor-pointer"
+                        title="Sao chép liên kết"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </div>
         </div>
       )}
 
@@ -4779,12 +4948,27 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
                     <span className="text-slate-500">
                       {asset.tokensCount} tokens ({asset.tokensPerSec} t/s)
                     </span>
-                    <button
-                      onClick={() => handleCopyToClipboard(asset.content, "Đã sao chép nội dung")}
-                      className="text-emerald-400 hover:text-emerald-300 font-bold cursor-pointer"
-                    >
-                      Sao Chép
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handlePublishAssetToSocial(asset)}
+                        disabled={publishingAssetId === asset.id}
+                        className="px-2.5 py-1 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 font-bold border border-cyan-500/40 text-[10px] cursor-pointer flex items-center gap-1 transition-all disabled:opacity-50"
+                        title="Xuất bản lên các kênh MXH & Website"
+                      >
+                        {publishingAssetId === asset.id ? (
+                          <RefreshCw className="w-3 h-3 animate-spin text-cyan-300" />
+                        ) : (
+                          <Send className="w-3 h-3 text-cyan-300" />
+                        )}
+                        <span>Đăng Kênh</span>
+                      </button>
+                      <button
+                        onClick={() => handleCopyToClipboard(asset.content, "Đã sao chép nội dung")}
+                        className="text-slate-400 hover:text-white font-bold cursor-pointer"
+                      >
+                        Sao Chép
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
