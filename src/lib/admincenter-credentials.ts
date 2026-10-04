@@ -21,6 +21,8 @@ export interface StoredCredentials {
   isInitialDefault: boolean;
   updatedAt: string;
   lockedUntil?: number;
+  mfaSecret?: string;
+  mfaEnabled?: boolean;
 }
 
 function fromLegacyFile(): StoredCredentials | null {

@@ -1,3 +1,5 @@
+import { authenticator } from 'otplib';
+import QRCode from 'qrcode';
 import { getErrorMessage } from "@/lib/error-message";
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
@@ -193,6 +195,23 @@ export async function POST(req: NextRequest) {
         }
       }
 
+      // Check if MFA is enabled
+      if (stored?.mfaEnabled && stored?.mfaSecret) {
+        const { totp } = body;
+        if (!totp) {
+          // If no TOTP provided, tell client it is required
+          return NextResponse.json({ success: true, mfaRequired: true });
+        }
+        
+        // Verify TOTP
+        const isValid = authenticator.verify({ token: totp, secret: stored.mfaSecret });
+        if (!isValid) {
+          recordLoginFailure(ip);
+          recordLoginFailure(GLOBAL_THROTTLE_KEY);
+          return NextResponse.json({ error: "Mã Authenticator (TOTP) không chính xác" }, { status: 401 });
+        }
+      }
+
       const res = NextResponse.json({
         success: true,
         message: "Đăng nhập thành công!",
@@ -201,6 +220,52 @@ export async function POST(req: NextRequest) {
       });
       setSessionCookies(res, usingInitial);
       return res;
+    }
+
+    if (action === "enroll_mfa") {
+      const cookieStore = await cookies();
+      if (!verifySession(cookieStore.get("admincenter_session")?.value, "admincenter")) {
+        return NextResponse.json({ error: "Phiên đăng nhập không hợp lệ" }, { status: 401 });
+      }
+      
+      const secret = authenticator.generateSecret();
+      const otpauthUrl = authenticator.keyuri(DEFAULT_USERNAME, "AdminCenter Node-01", secret);
+      const qrCode = await QRCode.toDataURL(otpauthUrl);
+      
+      // Save secret but don't enable yet
+      const stored = await loadCredentials();
+      await saveCredentials({
+        ...stored!,
+        mfaSecret: secret,
+        mfaEnabled: false,
+        updatedAt: new Date().toISOString()
+      });
+      
+      return NextResponse.json({ success: true, qrCode, secret });
+    }
+
+    if (action === "verify_mfa_enrollment") {
+      const cookieStore = await cookies();
+      if (!verifySession(cookieStore.get("admincenter_session")?.value, "admincenter")) {
+        return NextResponse.json({ error: "Phiên đăng nhập không hợp lệ" }, { status: 401 });
+      }
+      
+      const { totp } = body;
+      const stored = await loadCredentials();
+      if (!stored?.mfaSecret) return NextResponse.json({ error: "Chưa khởi tạo MFA" }, { status: 400 });
+      
+      const isValid = authenticator.verify({ token: totp, secret: stored.mfaSecret });
+      if (!isValid) {
+        return NextResponse.json({ error: "Mã TOTP không chính xác" }, { status: 400 });
+      }
+      
+      await saveCredentials({
+        ...stored,
+        mfaEnabled: true,
+        updatedAt: new Date().toISOString()
+      });
+      
+      return NextResponse.json({ success: true, message: "Đã bật MFA thành công!" });
     }
 
     return NextResponse.json({ error: "Thao tác không được hỗ trợ" }, { status: 400 });
