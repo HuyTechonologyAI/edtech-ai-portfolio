@@ -57,30 +57,20 @@ export async function loadCredentials(): Promise<StoredCredentials | null> {
   } catch (e) {
     console.error("[admincenter-credentials] load exception:", e);
   }
-  return process.env.VERCEL ? null : fromLegacyFile();
+  return null; // Strict Supabase mode
 }
 
-/** Throws when the credential could not be durably persisted. Never reports false success. */
-export async function saveCredentials(c: StoredCredentials): Promise<"supabase" | "file"> {
-  let dbError: string | null = null;
-  try {
-    const { error } = await supabaseAdmin
-      .from("cms_settings")
-      .upsert({ key_name: KEY, setting_value: c, updated_at: new Date().toISOString() });
-    if (!error) {
-      const check = await loadCredentials();
-      if (check && check.updatedAt === c.updatedAt) return "supabase";
-      dbError = "read-back verification failed";
-    } else {
-      dbError = error.message;
-    }
-  } catch (e) {
-    dbError = e instanceof Error ? e.message : String(e);
+export async function saveCredentials(c: StoredCredentials): Promise<"supabase"> {
+  const { error } = await supabaseAdmin
+    .from("cms_settings")
+    .upsert({ key_name: KEY, setting_value: c, updated_at: new Date().toISOString() });
+  
+  if (error) {
+    throw new Error("CREDENTIAL_PERSIST_FAILED: " + error.message);
   }
-  if (!process.env.VERCEL) {
-    mkdirSync(join(process.cwd(), "src", "data"), { recursive: true });
-    writeFileSync(FILE, JSON.stringify({ username: c.username, record: c.record, isInitialDefault: false, updatedAt: c.updatedAt }, null, 2));
-    return "file";
-  }
-  throw new Error("CREDENTIAL_PERSIST_FAILED: " + dbError);
+  
+  const check = await loadCredentials();
+  if (check && check.updatedAt === c.updatedAt) return "supabase";
+  
+  throw new Error("CREDENTIAL_PERSIST_FAILED: read-back verification failed");
 }
