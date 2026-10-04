@@ -1243,7 +1243,7 @@ export const CANONICAL_59_AGENTS: AgentCard[] = [
     role: 'Dự phòng toàn cầu cục bộ (Air-Gapped Local Fallback)',
     state: 'COLD_STANDBY',
     provider: 'Local Node01',
-    model: 'Qwen 2.5 Coder 32B On-Prem',
+    model: 'Qwen 2.5 Coder 7B-INT4 On-Prem',
     framework: 'Multi-Framework Adapter',
     quotaDomain: 'local-node01',
     quotaUsedPct: 0,

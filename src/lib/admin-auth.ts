@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { cookies } from "next/headers";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { verifySession } from "@/lib/admincenter-session";
 
 /**
  * Robustly verifies admin or delegated sub-admin access for API routes.
@@ -25,7 +26,7 @@ export async function verifyAdminAuth(req?: NextRequest): Promise<boolean> {
     }
   }
 
-  if (sessionCookie === "authenticated") {
+  if (verifySession(sessionCookie, "admin")) {
     return true;
   }
 

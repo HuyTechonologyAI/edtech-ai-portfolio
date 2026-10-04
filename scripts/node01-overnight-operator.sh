@@ -81,7 +81,7 @@ while true; do
   MEM_USAGE=$(free -m | awk "/Mem:/ { printf(\"%.2f%%\", \$3/\$2*100) }")
   DISK_DATA1=$(df -h /mnt/data1 | awk "NR==2 {print \$4}")
   TAILSCALE_PING=$(ping -c 1 100.86.115.15 >/dev/null 2>&1 && echo "CONNECTED" || echo "STANDALONE")
-  WEB_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://www.huycncdsai.io.vn/api/admincenter/telemetry || echo "000")
+  WEB_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -H "x-node01-worker-token: ${NODE01_WORKER_TOKEN:-}" https://www.huycncdsai.io.vn/api/admincenter/telemetry || echo "000")
   
   echo "[$NOW] CPU: ${CPU_USAGE}% | RAM: ${MEM_USAGE} | /mnt/data1 còn: ${DISK_DATA1} | Web Telemetry: ${WEB_STATUS}" >> /mnt/data1/HUY-AI/logs/overnight-telemetry.log
   

@@ -294,7 +294,7 @@ export function createInitialGraphState(nodeId: string = "HUYAI-N01"): RuntimeGr
       id: "L1-SUPERVISOR",
       name: "Autonomous Supervisor (HAIP Core)",
       provider: "Ollama Local",
-      model: "Qwen 2.5 Coder 32B",
+      model: "Qwen 2.5 Coder 7B-INT4",
       status: "ONLINE",
       elapsedSec: 0,
       heartbeatAgeSec: 0,

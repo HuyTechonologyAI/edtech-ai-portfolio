@@ -12,7 +12,7 @@ const DEFAULT: Partial<HomePageContent> = {
   contactEmail: "huytechnologyai2025@gmail.com",
   contactHotline: "096.136.4600",
   contactAddress: "K6A, Tổ 15D, Khu phố 30, Phường Tam Hiệp, Thành phố Đồng Nai",
-  contactCalendlyUrl: "",
+  contactCalendlyUrl: "https://calendly.com/huytechnologyai2025/30min",
   contactCalendlyLabel: "Mở lịch Calendly",
   contactFormTitle: "Gửi yêu cầu giải pháp",
   contactFormButtonText: "Gửi yêu cầu phân tích",

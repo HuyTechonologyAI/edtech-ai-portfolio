@@ -2001,7 +2001,7 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
             </div>
             <div className="min-w-0 rounded-xl border border-white/10 bg-white/2 p-3">
               <dt className="text-xs text-slate-400 mb-1 font-semibold">Hành động gần nhất</dt>
-              <dd className="text-slate-200 text-xs line-clamp-2">Node-01 Ollama Qwen 32B tiếp nhận và xử lý tác vụ theo V1.1 lifecycle</dd>
+              <dd className="text-slate-200 text-xs line-clamp-2">Node-01 Ollama Qwen 7B-INT4 tiếp nhận và xử lý tác vụ theo V1.1 lifecycle</dd>
             </div>
             <div className="min-w-0 rounded-xl border border-white/10 bg-white/2 p-3">
               <dt className="text-xs text-slate-400 mb-1 font-semibold">Hành động tiếp theo</dt>
@@ -4061,7 +4061,7 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
                 <span className="text-cyan-400">OLLAMA_HOST=0.0.0.0:11434 ollama serve</span>
               </div>
               <div className="bg-black/40 rounded-xl p-3 border border-white/5">
-                <span className="text-emerald-400"># 4. Load model Qwen 2.5 Coder 32B</span><br />
+                <span className="text-emerald-400"># 4. Load model Qwen 2.5 Coder 7B-INT4</span><br />
                 <span className="text-cyan-400">ollama pull</span> <span className="text-violet-300">qwen2.5-coder:32b</span>
               </div>
               <div className="bg-black/40 rounded-xl p-3 border border-white/5">
@@ -4216,7 +4216,7 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
                     Node-01 Ollama
                   </div>
                   <p className="text-[11px] text-slate-400 mt-1">
-                    Toàn bộ build, test & code synthesis chạy 100% trên Qwen 2.5 Coder 32B (Dell M4800).
+                    Toàn bộ build, test & code synthesis chạy 100% trên Qwen 2.5 Coder 7B-INT4 (Dell M4800).
                   </p>
                 </div>
 
@@ -4455,7 +4455,7 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
                 <span className="text-cyan-400">OLLAMA_HOST=0.0.0.0:11434 ollama serve &</span><br />
                 <span className="text-cyan-400">ollama pull qwen2.5-coder:32b</span><br /><br />
                 <span className="text-amber-300">SUPERVISOR_URL=https://www.huycncdsai.io.vn \</span><br />
-                <span className="text-amber-300">WORKER_ID=NODE01-QWEN32B \</span><br />
+                <span className="text-amber-300">WORKER_ID=NODE01-QWEN7B-INT4 \</span><br />
                 <span className="text-amber-300">OLLAMA_MODEL=qwen2.5-coder:32b \</span><br />
                 <span className="text-amber-300">nohup bash scripts/node01-worker-v1.1.sh &gt; /mnt/data1/HUY-AI/worker.log 2&gt;&amp;1 &</span>
               </div>

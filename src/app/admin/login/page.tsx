@@ -114,16 +114,19 @@ export default function AdminLogin() {
         {mode === "assistant_account" ? (
           <form onSubmit={handleAssistantAccountLogin} className="space-y-4">
             <div className="space-y-1">
-              <label className="text-xs text-foreground/70 font-medium">Email Trợ Lý</label>
+              <label htmlFor="assistantEmail" className="text-xs text-foreground/70 font-medium">Email Trợ Lý</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                   <Mail className="h-4 w-4 text-foreground/40" />
                 </div>
                 <input
+                  id="assistantEmail"
+                  name="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="assistant@company.com"
+                  autoComplete="email"
                   className="w-full bg-surface/50 border border-border rounded-xl py-2.5 pl-10 pr-4 text-xs text-foreground placeholder:text-foreground/30 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/50 transition-all"
                   required
                 />
@@ -131,16 +134,19 @@ export default function AdminLogin() {
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs text-foreground/70 font-medium">Mật khẩu</label>
+              <label htmlFor="assistantPassword" className="text-xs text-foreground/70 font-medium">Mật khẩu</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                   <Lock className="h-4 w-4 text-foreground/40" />
                 </div>
                 <input
+                  id="assistantPassword"
+                  name="password"
                   type="password"
                   value={assistantPassword}
                   onChange={(e) => setAssistantPassword(e.target.value)}
                   placeholder="••••••••"
+                  autoComplete="current-password"
                   className="w-full bg-surface/50 border border-border rounded-xl py-2.5 pl-10 pr-4 text-xs text-foreground placeholder:text-foreground/30 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/50 transition-all"
                   required
                 />
@@ -162,16 +168,19 @@ export default function AdminLogin() {
           /* Super Admin Master Password Form */
           <form onSubmit={handleAdminPasswordLogin} className="space-y-4">
             <div className="space-y-1">
-              <label className="text-xs text-foreground/70 font-medium">Mật khẩu Master Admin</label>
+              <label htmlFor="masterPassword" className="text-xs text-foreground/70 font-medium">Mật khẩu Master Admin</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                   <Lock className="h-4 w-4 text-foreground/40" />
                 </div>
                 <input
+                  id="masterPassword"
+                  name="password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Nhập mật khẩu quản trị viên..."
+                  autoComplete="current-password"
                   className="w-full bg-surface/50 border border-border rounded-xl py-2.5 pl-10 pr-4 text-xs text-foreground placeholder:text-foreground/30 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500/50 transition-all"
                   required
                 />

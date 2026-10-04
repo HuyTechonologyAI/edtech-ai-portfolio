@@ -955,7 +955,7 @@ export async function POST(req: Request) {
       if (!existing) {
         supervisor.dagTasks.push({
           taskId: injectedTaskId,
-          workerId: taskPayload.workerId || "NODE01-QWEN32B",
+          workerId: taskPayload.workerId || "NODE01-QWEN7B-INT4",
           worktreeId: taskPayload.worktreeId || `antigravity/${injectedTaskId}`,
           capability: taskPayload.capability || "code_generation",
           priority: taskPayload.priority || "P1",

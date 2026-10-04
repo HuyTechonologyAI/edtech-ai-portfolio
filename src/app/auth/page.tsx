@@ -100,36 +100,49 @@ export default function AuthPage() {
         <form onSubmit={handleEmailSubmit} className="space-y-4">
           {mode === "register" && (
             <div className="relative">
+              <label htmlFor="fullName" className="sr-only">Họ và tên</label>
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                 <User className="h-4 w-4 text-foreground/40" />
               </div>
               <input
+                id="fullName"
+                name="fullName"
                 type="text" value={fullName} onChange={(e) => setFullName(e.target.value)}
                 placeholder="Họ và tên"
+                autoComplete="name"
                 className="w-full bg-surface/50 border border-white/10 rounded-xl py-3 pl-11 pr-4 text-foreground placeholder:text-foreground/30 focus:outline-none focus:border-secondary/50 focus:ring-1 focus:ring-secondary/30 transition-all text-sm"
               />
             </div>
           )}
           <div className="relative">
+            <label htmlFor="email" className="sr-only">Email</label>
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
               <Mail className="h-4 w-4 text-foreground/40" />
             </div>
             <input
+              id="email"
+              name="email"
               type="email" value={email} onChange={(e) => setEmail(e.target.value)}
               placeholder="Email" required
+              autoComplete="email"
               className="w-full bg-surface/50 border border-white/10 rounded-xl py-3 pl-11 pr-4 text-foreground placeholder:text-foreground/30 focus:outline-none focus:border-secondary/50 focus:ring-1 focus:ring-secondary/30 transition-all text-sm"
             />
           </div>
           <div className="relative">
+            <label htmlFor="password" className="sr-only">Mật khẩu</label>
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
               <Lock className="h-4 w-4 text-foreground/40" />
             </div>
             <input
+              id="password"
+              name="password"
               type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)}
               placeholder="Mật khẩu" required minLength={6}
+              autoComplete={mode === "register" ? "new-password" : "current-password"}
               className="w-full bg-surface/50 border border-white/10 rounded-xl py-3 pl-11 pr-11 text-foreground placeholder:text-foreground/30 focus:outline-none focus:border-secondary/50 focus:ring-1 focus:ring-secondary/30 transition-all text-sm"
             />
             <button type="button" onClick={() => setShowPassword(!showPassword)}
+              aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
               className="absolute inset-y-0 right-0 pr-4 flex items-center text-foreground/30 hover:text-foreground/60 transition-colors">
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
