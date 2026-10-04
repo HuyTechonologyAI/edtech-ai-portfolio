@@ -30,7 +30,15 @@ function fromLegacyFile(): StoredCredentials | null {
     if (!existsSync(FILE)) return null;
     const j = JSON.parse(readFileSync(FILE, "utf8"));
     if (j.isInitialDefault) return null;
-    if (j.record) return { username: j.username, record: j.record, isInitialDefault: false, updatedAt: j.updatedAt };
+    if (j.record) return { 
+      username: j.username, 
+      record: j.record, 
+      isInitialDefault: false, 
+      updatedAt: j.updatedAt,
+      mfaSecret: j.mfaSecret,
+      mfaEnabled: j.mfaEnabled,
+      lockedUntil: j.lockedUntil
+    };
     if (j.salt && j.hash) {
       return {
         username: j.username,
@@ -57,20 +65,27 @@ export async function loadCredentials(): Promise<StoredCredentials | null> {
   } catch (e) {
     console.error("[admincenter-credentials] load exception:", e);
   }
-  return null; // Strict Supabase mode
+  
+  // Fallback to local JSON file if Supabase is unconfigured or empty
+  return fromLegacyFile();
 }
 
-export async function saveCredentials(c: StoredCredentials): Promise<"supabase"> {
-  const { error } = await supabaseAdmin
-    .from("cms_settings")
-    .upsert({ key_name: KEY, setting_value: c, updated_at: new Date().toISOString() });
-  
-  if (error) {
-    throw new Error("CREDENTIAL_PERSIST_FAILED: " + error.message);
+export async function saveCredentials(c: StoredCredentials): Promise<"supabase" | "file"> {
+  try {
+    const { error } = await supabaseAdmin
+      .from("cms_settings")
+      .upsert({ key_name: KEY, setting_value: c, updated_at: new Date().toISOString() });
+    
+    if (!error) {
+      const check = await loadCredentials();
+      if (check && check.updatedAt === c.updatedAt) return "supabase";
+    }
+  } catch (e) {
+    console.warn("Supabase save failed, falling back to local file:", e);
   }
   
-  const check = await loadCredentials();
-  if (check && check.updatedAt === c.updatedAt) return "supabase";
-  
-  throw new Error("CREDENTIAL_PERSIST_FAILED: read-back verification failed");
+  // Fallback to local JSON if Supabase fails or is unconfigured
+  mkdirSync(join(process.cwd(), "src", "data"), { recursive: true });
+  writeFileSync(FILE, JSON.stringify(c, null, 2));
+  return "file";
 }
