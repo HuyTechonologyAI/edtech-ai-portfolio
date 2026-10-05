@@ -118,7 +118,7 @@ Show on /admincenter Node-01 tab.`,
 ];
 
 // ─── Idempotency & State Synchronization ──────────────────────────────────────
-const globalForSupervisor = globalThis as unknown as { __HUY_SUPERVISOR__?: unknown };
+const globalForSupervisor = globalThis as unknown as { __HUY_SUPERVISOR__?: { dagTasks?: { taskId: string; status: string }[] } };
 const globalForA2A = globalThis as unknown as { __HUY_A2A_QUEUE__?: A2ATask[], __A2A_LEASES__?: Record<string, number> };
 
 function syncA2AWithSupervisor() {
