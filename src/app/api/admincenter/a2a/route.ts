@@ -118,7 +118,7 @@ Show on /admincenter Node-01 tab.`,
 ];
 
 // ─── Idempotency & State Synchronization ──────────────────────────────────────
-const globalForSupervisor = globalThis as unknown as { __HUY_SUPERVISOR__?: any };
+const globalForSupervisor = globalThis as unknown as { __HUY_SUPERVISOR__?: unknown };
 const globalForA2A = globalThis as unknown as { __HUY_A2A_QUEUE__?: A2ATask[], __A2A_LEASES__?: Record<string, number> };
 
 function syncA2AWithSupervisor() {
@@ -145,7 +145,7 @@ function syncA2AWithSupervisor() {
   // Sync state from supervisor (single source of truth for high-level status)
   const a2aQueue = globalForA2A.__HUY_A2A_QUEUE__!;
   for (const a2aTask of a2aQueue) {
-    const supTask = supervisorTasks.find((t: any) => t.taskId === a2aTask.taskId);
+    const supTask = supervisorTasks.find((t: { taskId: string; status: string }) => t.taskId === a2aTask.taskId);
     if (supTask) {
       if (supTask.status === "VERIFIED_PASS" || supTask.status === "GREEN" || supTask.status === "INTEGRATED") {
         a2aTask.state = "COMPLETED";
