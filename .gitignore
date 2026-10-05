@@ -47,3 +47,5 @@ scripts/sync.sh
 scripts/ingest.sh
 scripts/migrate-eduviet-sync-tables.mjs
 
+# admincenter auth data
+src/data/admincenter-auth.json

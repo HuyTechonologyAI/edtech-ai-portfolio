@@ -1,70 +1,68 @@
-
+import { authenticator } from 'otplib';
+import QRCode from 'qrcode';
 import { getErrorMessage } from "@/lib/error-message";
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { createHash, randomBytes } from "node:crypto";
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
-import { join } from "node:path";
+import { createHash, timingSafeEqual } from "node:crypto";
+import {
+  signSession,
+  verifySession,
+  checkLoginThrottle,
+  recordLoginFailure,
+  resetLoginThrottle,
+  hashPassword,
+  verifyPassword,
+  clientIp,
+} from "@/lib/admincenter-session";
+import { loadCredentials, saveCredentials } from "@/lib/admincenter-credentials";
 
-interface StoredAuth {
-  username: string;
-  salt: string;
-  hash: string;
-  isInitialDefault: boolean;
-  updatedAt: string;
-}
-
-const AUTH_FILE_PATH = join(process.cwd(), "src", "data", "admincenter-auth.json");
 const DEFAULT_USERNAME = "SuperAdmin";
-const INITIAL_DEFAULT_PASSWORD = "admin2026";
+const SESSION_TTL_SEC = 60 * 60 * 12; // 12h (was 7 days with a forgeable static cookie)
+const GLOBAL_THROTTLE_KEY = "account:" + DEFAULT_USERNAME.toLowerCase();
 
-function hashPassword(password: string, salt: string): string {
-  return createHash("sha256").update(password + salt + "huy-ai-center-salt-2026").digest("hex");
+function initialPassword(): string {
+  return process.env.ADMINCENTER_INITIAL_PASSWORD || "admin2026";
 }
 
-function getStoredAuth(): StoredAuth | null {
-  try {
-    if (existsSync(AUTH_FILE_PATH)) {
-      const data = readFileSync(AUTH_FILE_PATH, "utf8");
-      return JSON.parse(data);
-    }
-  } catch (err) {
-    console.error("Error reading auth file:", err);
-  }
-  return null;
+function safeEqual(a: string, b: string): boolean {
+  const ha = createHash("sha256").update(a).digest();
+  const hb = createHash("sha256").update(b).digest();
+  return timingSafeEqual(ha, hb);
 }
 
-function saveStoredAuth(auth: StoredAuth) {
-  try {
-    const dir = join(process.cwd(), "src", "data");
-    if (!existsSync(dir)) {
-      mkdirSync(dir, { recursive: true });
-    }
-    writeFileSync(AUTH_FILE_PATH, JSON.stringify(auth, null, 2), "utf8");
-  } catch (err) {
-    console.error("Error saving auth file:", err);
+function setSessionCookies(res: NextResponse, mustChange: boolean) {
+  const base = {
+    path: "/",
+    maxAge: SESSION_TTL_SEC,
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict" as const,
+  };
+  res.cookies.set("admincenter_session", signSession("admincenter", SESSION_TTL_SEC), base);
+  // UI hint only; authorization never depends on this cookie.
+  res.cookies.set("admincenter_must_change", mustChange ? "true" : "false", base);
+}
+
+function clearSessionCookies(res: NextResponse) {
+  for (const name of ["admincenter_session", "admincenter_must_change"]) {
+    res.cookies.set(name, "", { path: "/", maxAge: 0, httpOnly: true, sameSite: "strict" });
   }
 }
 
 // GET /api/admincenter/auth - Check current session
 export async function GET() {
   const cookieStore = await cookies();
-  const sessionCookie = cookieStore.get("admincenter_session")?.value;
-  const mustChangeCookie = cookieStore.get("admincenter_must_change")?.value;
+  const token = cookieStore.get("admincenter_session")?.value;
 
-  if (sessionCookie === "authenticated") {
+  if (verifySession(token, "admincenter")) {
+    const stored = await loadCredentials();
     return NextResponse.json({
       authenticated: true,
       user: DEFAULT_USERNAME,
-      mustChangePassword: mustChangeCookie === "true",
+      mustChangePassword: !stored || stored.isInitialDefault,
     });
   }
-
-  return NextResponse.json({
-    authenticated: false,
-    user: null,
-    mustChangePassword: false,
-  });
+  return NextResponse.json({ authenticated: false, user: null, mustChangePassword: false });
 }
 
 // POST /api/admincenter/auth - Login / Change Password / Logout
@@ -72,166 +70,208 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const action = body.action || "login";
+    const ip = clientIp(req);
 
-    // 1. LOGOUT ACTION
     if (action === "logout") {
-      const response = NextResponse.json({ success: true, message: "Đăng xuất thành công" });
-      response.cookies.set("admincenter_session", "", {
-        path: "/",
-        maxAge: 0,
-        httpOnly: true,
-        sameSite: "lax",
-      });
-      response.cookies.set("admincenter_must_change", "", {
-        path: "/",
-        maxAge: 0,
-        httpOnly: true,
-        sameSite: "lax",
-      });
-      return response;
+      const res = NextResponse.json({ success: true, message: "Đăng xuất thành công" });
+      clearSessionCookies(res);
+      return res;
     }
 
-    // 2. CHANGE PASSWORD ACTION
+    // Brute-force protection: per-IP and per-account lockout
+    for (const key of [ip, GLOBAL_THROTTLE_KEY]) {
+      const t = checkLoginThrottle(key);
+      if (!t.allowed) {
+        return NextResponse.json(
+          { error: `Quá nhiều lần thử sai. Vui lòng thử lại sau ${Math.ceil(t.retryAfterSec / 60)} phút.` },
+          { status: 429, headers: { "Retry-After": String(t.retryAfterSec) } },
+        );
+      }
+    }
+
+    const stored = await loadCredentials();
+    const usingInitial = !stored || stored.isInitialDefault;
+
+    // Persistent lockout check
+    if (stored?.lockedUntil && Date.now() < stored.lockedUntil) {
+      return NextResponse.json(
+        { error: `Tài khoản đã bị khóa tạm thời để bảo vệ. Vui lòng thử lại sau ${Math.ceil((stored.lockedUntil - Date.now()) / 60000)} phút.` },
+        { status: 429, headers: { "Retry-After": String(Math.ceil((stored.lockedUntil - Date.now()) / 1000)) } },
+      );
+    }
+
+    const passwordOk = (pw: unknown): boolean => {
+      if (typeof pw !== "string" || !pw) return false;
+      return usingInitial ? safeEqual(pw, initialPassword()) : verifyPassword(pw, stored!.record);
+    };
+
     if (action === "change_password") {
+      const cookieStore = await cookies();
+      if (!verifySession(cookieStore.get("admincenter_session")?.value, "admincenter")) {
+        return NextResponse.json({ error: "Phiên đăng nhập không hợp lệ" }, { status: 401 });
+      }
       const { currentPassword, newPassword } = body;
-
-      if (!newPassword || newPassword.length < 8) {
+      if (typeof newPassword !== "string" || newPassword.length < 8 || !/[A-Za-z]/.test(newPassword) || !/\d/.test(newPassword)) {
+        return NextResponse.json({ error: "Mật khẩu mới phải có tối thiểu 8 ký tự bao gồm chữ và số" }, { status: 400 });
+      }
+      if (!passwordOk(currentPassword)) {
+        recordLoginFailure(ip);
+        recordLoginFailure(GLOBAL_THROTTLE_KEY);
+        return NextResponse.json({ error: "Mật khẩu hiện tại không chính xác" }, { status: 400 });
+      }
+      if (safeEqual(newPassword, initialPassword())) {
+        return NextResponse.json({ error: "Không được dùng lại mật khẩu mặc định" }, { status: 400 });
+      }
+      try {
+        const storage = await saveCredentials({
+          username: DEFAULT_USERNAME,
+          record: hashPassword(newPassword),
+          isInitialDefault: false,
+          updatedAt: new Date().toISOString(),
+        });
+        const res = NextResponse.json({
+          success: true,
+          message: `Đã đổi mật khẩu và lưu bền vững (${storage}).`,
+          mustChangePassword: false,
+        });
+        setSessionCookies(res, false);
+        return res;
+      } catch (e) {
+        console.error("change_password persist failed:", e);
+        // Honest failure: never claim success when the credential was not stored.
         return NextResponse.json(
-          { error: "Mật khẩu mới phải có tối thiểu 8 ký tự bao gồm chữ và số" },
-          { status: 400 }
+          { error: "KHÔNG lưu được mật khẩu mới (lỗi kho lưu trữ). Mật khẩu cũ vẫn còn hiệu lực. Chi tiết: " + getErrorMessage(e) },
+          { status: 503 },
         );
       }
-
-      const stored = getStoredAuth();
-      let isCurrentValid = false;
-
-      if (stored && !stored.isInitialDefault) {
-        const verifyHash = hashPassword(currentPassword, stored.salt);
-        isCurrentValid = verifyHash === stored.hash;
-      } else {
-        // Initial setup validation
-        isCurrentValid = currentPassword === INITIAL_DEFAULT_PASSWORD;
-      }
-
-      if (!isCurrentValid) {
-        return NextResponse.json(
-          { error: "Mật khẩu hiện tại không chính xác" },
-          { status: 400 }
-        );
-      }
-
-      // Generate new salt and hash
-      const newSalt = randomBytes(16).toString("hex");
-      const newHash = hashPassword(newPassword, newSalt);
-
-      const updatedAuth: StoredAuth = {
-        username: DEFAULT_USERNAME,
-        salt: newSalt,
-        hash: newHash,
-        isInitialDefault: false,
-        updatedAt: new Date().toISOString(),
-      };
-
-      saveStoredAuth(updatedAuth);
-
-      const response = NextResponse.json({
-        success: true,
-        message: "Thiết lập mật khẩu mới thành công! Hệ thống đã ghi nhận.",
-        mustChangePassword: false,
-      });
-
-      // Update cookies
-      response.cookies.set("admincenter_session", "authenticated", {
-        path: "/",
-        maxAge: 60 * 60 * 24 * 7, // 7 days
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-      });
-      response.cookies.set("admincenter_must_change", "false", {
-        path: "/",
-        maxAge: 60 * 60 * 24 * 7,
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-      });
-
-      return response;
     }
 
-    // 3. LOGIN ACTION
     if (action === "login") {
       const { username, password } = body;
-
       if (!username || !password) {
-        return NextResponse.json(
-          { error: "Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu" },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: "Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu" }, { status: 400 });
+      }
+      const userOk = typeof username === "string" && safeEqual(username.trim().toLowerCase(), DEFAULT_USERNAME.toLowerCase());
+      const pwOk = passwordOk(password);
+      if (!userOk || !pwOk) {
+        const lockedIp = recordLoginFailure(ip);
+        const lockedGlobal = recordLoginFailure(GLOBAL_THROTTLE_KEY);
+        
+        if ((lockedIp || lockedGlobal) && stored) {
+           // Save persistent lockout for 30 minutes
+           try {
+             await saveCredentials({
+               ...stored,
+               lockedUntil: Date.now() + 30 * 60 * 1000,
+               updatedAt: new Date().toISOString()
+             });
+           } catch (e) {
+             console.error("Failed to persist lockout", e);
+           }
+        }
+        
+        // Same message for bad user / bad password (no account enumeration)
+        return NextResponse.json({ error: "Tên đăng nhập hoặc mật khẩu không chính xác" }, { status: 401 });
+      }
+      resetLoginThrottle(ip);
+      resetLoginThrottle(GLOBAL_THROTTLE_KEY);
+      
+      // Clear persistent lockout if any
+      if (stored?.lockedUntil) {
+         try {
+           // eslint-disable-next-line @typescript-eslint/no-unused-vars
+           const { lockedUntil: _l, ...rest } = stored;
+           await saveCredentials({ ...rest, updatedAt: new Date().toISOString() } as import("@/lib/admincenter-credentials").StoredCredentials);
+         } catch(e) {
+           console.error("Failed to clear persistent lockout", e);
+         }
       }
 
-      if (username.trim().toLowerCase() !== DEFAULT_USERNAME.toLowerCase()) {
-        return NextResponse.json(
-          { error: "Tên đăng nhập không hợp lệ" },
-          { status: 401 }
-        );
-      }
-
-      const stored = getStoredAuth();
-      let isValid = false;
-      let mustChange = false;
-
-      if (stored && !stored.isInitialDefault) {
-        const inputHash = hashPassword(password, stored.salt);
-        isValid = inputHash === stored.hash;
-        mustChange = false;
-      } else {
-        // Fallback or Initial state
-        if (password === INITIAL_DEFAULT_PASSWORD) {
-          isValid = true;
-          mustChange = true;
+      // Transparent upgrade of legacy sha256 hash to scrypt
+      if (!usingInitial && stored!.record.algo === "sha256-legacy") {
+        try {
+          await saveCredentials({ ...stored!, record: hashPassword(password), updatedAt: new Date().toISOString() });
+        } catch {
+          /* non-fatal */
         }
       }
 
-      if (!isValid) {
-        return NextResponse.json(
-          { error: "Mật khẩu không chính xác" },
-          { status: 401 }
-        );
+      // Check if MFA is enabled
+      if (stored?.mfaEnabled && stored?.mfaSecret) {
+        const { totp } = body;
+        if (!totp) {
+          // If no TOTP provided, tell client it is required
+          return NextResponse.json({ success: true, mfaRequired: true });
+        }
+        
+        // Verify TOTP
+        const isValid = authenticator.verify({ token: totp, secret: stored.mfaSecret });
+        if (!isValid) {
+          recordLoginFailure(ip);
+          recordLoginFailure(GLOBAL_THROTTLE_KEY);
+          return NextResponse.json({ error: "Mã Authenticator (TOTP) không chính xác" }, { status: 401 });
+        }
       }
 
-      const response = NextResponse.json({
+      const res = NextResponse.json({
         success: true,
         message: "Đăng nhập thành công!",
         user: DEFAULT_USERNAME,
-        mustChangePassword: mustChange,
+        mustChangePassword: usingInitial,
       });
+      setSessionCookies(res, usingInitial);
+      return res;
+    }
 
-      response.cookies.set("admincenter_session", "authenticated", {
-        path: "/",
-        maxAge: 60 * 60 * 24 * 7,
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
+    if (action === "enroll_mfa") {
+      const cookieStore = await cookies();
+      if (!verifySession(cookieStore.get("admincenter_session")?.value, "admincenter")) {
+        return NextResponse.json({ error: "Phiên đăng nhập không hợp lệ" }, { status: 401 });
+      }
+      
+      const secret = authenticator.generateSecret();
+      const otpauthUrl = authenticator.keyuri(DEFAULT_USERNAME, "AdminCenter Node-01", secret);
+      const qrCode = await QRCode.toDataURL(otpauthUrl);
+      
+      // Save secret but don't enable yet
+      const stored = await loadCredentials();
+      await saveCredentials({
+        ...stored!,
+        mfaSecret: secret,
+        mfaEnabled: false,
+        updatedAt: new Date().toISOString()
       });
+      
+      return NextResponse.json({ success: true, qrCode, secret });
+    }
 
-      response.cookies.set("admincenter_must_change", mustChange ? "true" : "false", {
-        path: "/",
-        maxAge: 60 * 60 * 24 * 7,
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
+    if (action === "verify_mfa_enrollment") {
+      const cookieStore = await cookies();
+      if (!verifySession(cookieStore.get("admincenter_session")?.value, "admincenter")) {
+        return NextResponse.json({ error: "Phiên đăng nhập không hợp lệ" }, { status: 401 });
+      }
+      
+      const { totp } = body;
+      const stored = await loadCredentials();
+      if (!stored?.mfaSecret) return NextResponse.json({ error: "Chưa khởi tạo MFA" }, { status: 400 });
+      
+      const isValid = authenticator.verify({ token: totp, secret: stored.mfaSecret });
+      if (!isValid) {
+        return NextResponse.json({ error: "Mã TOTP không chính xác" }, { status: 400 });
+      }
+      
+      await saveCredentials({
+        ...stored,
+        mfaEnabled: true,
+        updatedAt: new Date().toISOString()
       });
-
-      return response;
+      
+      return NextResponse.json({ success: true, message: "Đã bật MFA thành công!" });
     }
 
     return NextResponse.json({ error: "Thao tác không được hỗ trợ" }, { status: 400 });
   } catch (err: unknown) {
     console.error("Auth endpoint error:", err);
-    return NextResponse.json(
-      { error: "Lỗi xử lý xác thực: " + (getErrorMessage(err) || "Unknown") },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Lỗi xử lý xác thực: " + (getErrorMessage(err) || "Unknown") }, { status: 500 });
   }
 }

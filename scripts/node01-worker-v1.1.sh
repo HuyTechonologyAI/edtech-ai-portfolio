@@ -67,6 +67,7 @@ report_checkpoint() {
     --arg error "$error" \
     '{action:$action, taskId:$taskId, workerId:$workerId, checkpoint:$checkpoint, lifecycle:$lifecycle, error:$error}')
   curl -sf -X POST "${SUPERVISOR_URL}/api/admincenter/supervisor" \
+    -H "x-node01-worker-token: ${NODE01_WORKER_TOKEN:-}" \
     -H "Content-Type: application/json" \
     -d "$payload" > /dev/null 2>&1 || log_warn "Checkpoint report failed (non-fatal)"
 }
@@ -76,6 +77,7 @@ report_failure() {
   local task_id="$1" lifecycle="$2" error="$3" attempt="$4"
   local response
   response=$(curl -sf -X POST "${SUPERVISOR_URL}/api/admincenter/supervisor" \
+    -H "x-node01-worker-token: ${NODE01_WORKER_TOKEN:-}" \
     -H "Content-Type: application/json" \
     -d "$(jq -n --arg action "report_failure" --arg taskId "$task_id" \
          --arg workerId "$WORKER_ID" --arg lifecycle "$lifecycle" \
@@ -115,6 +117,7 @@ report_verified_pass() {
       securityResult:$securityResult,acceptanceResult:$acceptanceResult,
       verifiedCommit:$verifiedCommit,timestamp:$timestamp}')
   curl -sf -X POST "${SUPERVISOR_URL}/api/admincenter/supervisor" \
+    -H "x-node01-worker-token: ${NODE01_WORKER_TOKEN:-}" \
     -H "Content-Type: application/json" \
     -d "$(jq -n --arg action "task_verified_pass" --arg taskId "$task_id" \
          --arg workerId "$WORKER_ID" --argjson evidence "$evidence" \
@@ -308,7 +311,7 @@ main() {
     local task_json
     if task_json=$(curl -sf \
       "${SUPERVISOR_URL}/api/admincenter/supervisor?action=next_task&worker_id=${WORKER_ID}&capabilities=${CAPABILITIES}" \
-      -H "Accept: application/json" 2>/dev/null); then
+      -H "Accept: application/json" -H "x-node01-worker-token: ${NODE01_WORKER_TOKEN:-}" 2>/dev/null); then
 
       local task_id
       task_id=$(echo "$task_json" | jq -r '.task.taskId // "null"')

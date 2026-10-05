@@ -47,6 +47,8 @@ const DEFAULT_SETTINGS = {
   }
 };
 
+const SECRET_PREFIX = "_secret.";
+
 export async function GET() {
   try {
     const { data, error } = await supabaseAdmin.from("cms_settings").select("*");
@@ -59,6 +61,8 @@ export async function GET() {
 
     if (!error && data) {
       data.forEach(row => {
+        // Never expose credential / secret rows through this public endpoint
+        if (typeof row.key_name === "string" && row.key_name.startsWith(SECRET_PREFIX)) return;
         settingsMap[row.key_name] = row.setting_value;
       });
     }
@@ -87,6 +91,9 @@ export async function POST(req: NextRequest) {
     if (!key_name || !setting_value) {
       return NextResponse.json({ error: "Missing key_name or setting_value" }, { status: 400 });
     }
+    if (key_name.startsWith(SECRET_PREFIX)) {
+      return NextResponse.json({ error: "Reserved key" }, { status: 403 });
+    }
 
     // Luôn cập nhật vào bộ đệm Node.js toàn cục trước để phản hồi tức thì cho mọi thiết bị
     globalMemorySettings[key_name] = setting_value;
@@ -101,14 +108,15 @@ export async function POST(req: NextRequest) {
 
     if (error) throw error;
 
-    return NextResponse.json({ success: true, updatedKey: key_name });
+    return NextResponse.json({ success: true, updatedKey: key_name, persisted: true });
   } catch {
-    // Trả về thành công để client nạp liền mạch từ đệm Node.js
+    // Honest result: memory cache is NOT durable on serverless; report that the DB write failed.
     return NextResponse.json({ 
-      success: true, 
-      updatedKey: payload?.key_name || "fallback", 
-      mockSaved: true,
-      memoryCached: true 
-    });
+      success: false,
+      persisted: false,
+      memoryCached: true,
+      updatedKey: payload?.key_name || "unknown",
+      error: "Không lưu được vào cơ sở dữ liệu; thay đổi chỉ tồn tại tạm thời trong bộ nhớ máy chủ."
+    }, { status: 503 });
   }
 }

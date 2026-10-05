@@ -1,12 +1,17 @@
 "use client";
 
-import { createClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
 // Browser-side Supabase client for user authentication
-// This is separate from the server-side client in supabase.ts
+// Uses a singleton to prevent "Multiple GoTrueClient instances" warnings (F07)
+let browserSupabaseInstance: SupabaseClient | undefined;
+
 export function createBrowserSupabase() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  if (!browserSupabaseInstance) {
+    browserSupabaseInstance = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+  }
+  return browserSupabaseInstance;
 }

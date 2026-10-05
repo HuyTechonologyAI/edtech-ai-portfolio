@@ -83,7 +83,7 @@ export function LocalAIAgentTreeControlPlane({
           "worker-code": {
             ...state.agents["worker-code"],
             status: "RUNNING",
-            currentAction: "Đang sinh mã nguồn với mô hình Qwen 2.5 Coder 32B trên Node-01...",
+            currentAction: "Đang sinh mã nguồn với mô hình Qwen 2.5 Coder 7B-INT4 trên Node-01...",
           },
         },
       };
@@ -314,7 +314,7 @@ export function LocalAIAgentTreeControlPlane({
                       <span className="text-xs font-mono font-bold text-cyan-200">AUTONOMOUS SUPERVISOR</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <span className="text-[10px] font-mono text-slate-400">Qwen 2.5 Coder 32B</span>
+                      <span className="text-[10px] font-mono text-slate-400">Qwen 2.5 Coder 7B-INT4</span>
                       <span
                         className={`px-1.5 py-0.5 rounded text-[9px] font-mono font-bold ${
                           isGenerating || graphState.supervisor.status === "RUNNING"
@@ -492,7 +492,7 @@ export function LocalAIAgentTreeControlPlane({
                   <div className="bg-black/30 p-2 rounded border border-white/5">
                     <span className="text-slate-500 block text-[10px]">MÔ HÌNH SUY LUẬN</span>
                     <span className="text-cyan-300 block truncate">
-                      {"model" in inspectedNode.data ? inspectedNode.data.model : "Qwen 2.5 Coder 32B"}
+                      {"model" in inspectedNode.data ? inspectedNode.data.model : "Qwen 2.5 Coder 7B-INT4"}
                     </span>
                   </div>
                   <div className="bg-black/30 p-2 rounded border border-white/5">

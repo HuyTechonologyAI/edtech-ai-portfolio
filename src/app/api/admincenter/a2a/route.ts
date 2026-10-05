@@ -43,10 +43,10 @@ export interface A2ATask {
 
 // ─── Agent Capability Registry ────────────────────────────────────────────────
 const CAPABILITY_REGISTRY: Record<string, { agentId: string; agentName: string; tier: string; backend: A2ATask["executionBackend"] }[]> = {
-  "code_generation":    [{ agentId: "L2-NODE01-CODER", agentName: "Qwen Coder 32B (Node-01)", tier: "L2", backend: "OLLAMA_LOCAL" }],
+  "code_generation":    [{ agentId: "L2-NODE01-CODER", agentName: "Qwen Coder 7B-INT4 (Node-01)", tier: "L2", backend: "OLLAMA_LOCAL" }],
   "code_review":        [{ agentId: "L2-NODE01-REVIEWER", agentName: "Qwen Reviewer (Node-01)", tier: "L2", backend: "OLLAMA_LOCAL" }],
   "test_design":        [{ agentId: "L2-NODE01-TDD", agentName: "TDD Agent (Node-01)", tier: "L2", backend: "OLLAMA_LOCAL" }],
-  "api_gateway":        [{ agentId: "L2-NODE01-CODER", agentName: "Qwen Coder 32B (Node-01)", tier: "L2", backend: "OLLAMA_LOCAL" }],
+  "api_gateway":        [{ agentId: "L2-NODE01-CODER", agentName: "Qwen Coder 7B-INT4 (Node-01)", tier: "L2", backend: "OLLAMA_LOCAL" }],
   "architecture":       [{ agentId: "L1-P01", agentName: "HAIP Dispatcher Core", tier: "L1", backend: "OLLAMA_LOCAL" }],
   "security_audit":     [{ agentId: "L1-S01", agentName: "Security Sentinel Prime", tier: "L1", backend: "OLLAMA_LOCAL" }],
   "data_pipeline":      [{ agentId: "L3-DP01", agentName: "Data Pipeline Specialist", tier: "L3", backend: "OLLAMA_LOCAL" }],
@@ -117,27 +117,53 @@ Show on /admincenter Node-01 tab.`,
   },
 ];
 
-// ─── In-memory A2A Task Queue ─────────────────────────────────────────────────
-const globalForA2A = globalThis as unknown as { __HUY_A2A_QUEUE__?: A2ATask[] };
-if (!globalForA2A.__HUY_A2A_QUEUE__) {
-  // Pre-populate with planned tasks from V1.1 architecture
-  globalForA2A.__HUY_A2A_QUEUE__ = PLANNED_TASKS.map((pt) => ({
-    taskId: pt.taskId,
-    fromAgentId: "L0-OWNER",
-    fromAgentName: "SuperAdmin / Architecture Plan V1.1",
-    toAgentId: CAPABILITY_REGISTRY[pt.capability]?.[0]?.agentId || "L2-NODE01-CODER",
-    toAgentName: CAPABILITY_REGISTRY[pt.capability]?.[0]?.agentName || "Qwen Coder 32B (Node-01)",
-    capability: pt.capability,
-    prompt: pt.prompt,
-    priority: pt.priority,
-    state: "QUEUED" as const,
-    createdAt: new Date().toISOString(),
-    executionBackend: CAPABILITY_REGISTRY[pt.capability]?.[0]?.backend || "OLLAMA_LOCAL",
-    worktreeRef: `.agent-worktrees/${pt.taskId}`,
-  }));
+// ─── Idempotency & State Synchronization ──────────────────────────────────────
+const globalForSupervisor = globalThis as unknown as { __HUY_SUPERVISOR__?: { dagTasks?: { taskId: string; status: string }[] } };
+const globalForA2A = globalThis as unknown as { __HUY_A2A_QUEUE__?: A2ATask[], __A2A_LEASES__?: Record<string, number> };
+
+function syncA2AWithSupervisor() {
+  const supervisorTasks = globalForSupervisor.__HUY_SUPERVISOR__?.dagTasks || [];
+  
+  if (!globalForA2A.__HUY_A2A_QUEUE__) {
+    // Pre-populate with planned tasks from V1.1 architecture
+    globalForA2A.__HUY_A2A_QUEUE__ = PLANNED_TASKS.map((pt) => ({
+      taskId: pt.taskId,
+      fromAgentId: "L0-OWNER",
+      fromAgentName: "SuperAdmin / Architecture Plan V1.1",
+      toAgentId: CAPABILITY_REGISTRY[pt.capability]?.[0]?.agentId || "L2-NODE01-CODER",
+      toAgentName: CAPABILITY_REGISTRY[pt.capability]?.[0]?.agentName || "Qwen Coder 7B-INT4 (Node-01)",
+      capability: pt.capability,
+      prompt: pt.prompt,
+      priority: pt.priority,
+      state: "QUEUED" as const,
+      createdAt: new Date().toISOString(),
+      executionBackend: CAPABILITY_REGISTRY[pt.capability]?.[0]?.backend || "OLLAMA_LOCAL",
+      worktreeRef: `.agent-worktrees/${pt.taskId}`,
+    }));
+  }
+
+  // Sync state from supervisor (single source of truth for high-level status)
+  const a2aQueue = globalForA2A.__HUY_A2A_QUEUE__!;
+  for (const a2aTask of a2aQueue) {
+    const supTask = supervisorTasks.find((t: { taskId: string; status: string }) => t.taskId === a2aTask.taskId);
+    if (supTask) {
+      if (supTask.status === "VERIFIED_PASS" || supTask.status === "GREEN" || supTask.status === "INTEGRATED") {
+        a2aTask.state = "COMPLETED";
+      } else if (supTask.status === "IN_PROGRESS" || supTask.status === "DISPATCHED") {
+        if (a2aTask.state === "QUEUED") a2aTask.state = "IN_PROGRESS";
+      } else if (supTask.status === "FAILED") {
+        a2aTask.state = "FAILED";
+      }
+    }
+  }
+  return a2aQueue;
 }
 
-const a2aQueue = globalForA2A.__HUY_A2A_QUEUE__!;
+if (!globalForA2A.__A2A_LEASES__) {
+  globalForA2A.__A2A_LEASES__ = {};
+}
+const activeLeases = globalForA2A.__A2A_LEASES__!;
+const a2aQueue = syncA2AWithSupervisor();
 
 // ─── SwarmState ref ───────────────────────────────────────────────────────────
 interface SwarmEventAppend {
@@ -264,8 +290,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true, task });
   }
 
-  // ── execute: run next QUEUED task against Ollama ─────────────────────────
+  // ─── execute: run next QUEUED task against Ollama ─────────────────────────
   if (action === "execute_next") {
+    // Sync state before checking queue
+    const a2aQueue = syncA2AWithSupervisor();
+    
     const nextTask = a2aQueue
       .filter(t => t.state === "QUEUED" && t.executionBackend === "OLLAMA_LOCAL")
       .sort((a, b) => {
@@ -276,6 +305,15 @@ export async function POST(req: Request) {
     if (!nextTask) {
       return NextResponse.json({ success: true, message: "No QUEUED tasks with OLLAMA_LOCAL backend", queued: 0 });
     }
+
+    // Idempotency / Lease check
+    const nowMs = Date.now();
+    const leaseExpiry = activeLeases[nextTask.taskId];
+    if (leaseExpiry && nowMs < leaseExpiry) {
+      return NextResponse.json({ success: false, message: `Task ${nextTask.taskId} is already executing (lease active)` }, { status: 409 });
+    }
+    // Grant lease for 2 minutes
+    activeLeases[nextTask.taskId] = nowMs + 120000;
 
     nextTask.state = "IN_PROGRESS";
     nextTask.startedAt = new Date().toISOString();
@@ -348,6 +386,7 @@ export async function POST(req: Request) {
 
   // ── task_result: agent pushes result back ─────────────────────────────────
   if (action === "task_result") {
+    const a2aQueue = syncA2AWithSupervisor();
     const { taskId, result, error } = body as { taskId: string; result?: string; error?: string };
     const idx = a2aQueue.findIndex(t => t.taskId === taskId);
     if (idx < 0) return NextResponse.json({ error: "Task not found" }, { status: 404 });
@@ -356,6 +395,8 @@ export async function POST(req: Request) {
     a2aQueue[idx].result = result;
     a2aQueue[idx].error = error;
     a2aQueue[idx].completedAt = new Date().toISOString();
+    
+    delete activeLeases[taskId];
 
     appendSwarmEvent({
       id: `EVT-A2A-RESULT-${Date.now()}`,

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { signSession } from "@/lib/admincenter-session";
 
 // ── In-memory rate limiter ──────────────────────────────────────────────────
 // SEC-02: Brute force protection — max 5 attempts per IP per 15 minutes
@@ -69,12 +70,12 @@ export async function POST(req: Request) {
       clearRateLimit(ip);
 
       const cookieStore = await cookies();
-      cookieStore.set("admin_session", "authenticated", {
+      cookieStore.set("admin_session", signSession("admin", 60 * 60 * 12), {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
+        sameSite: "strict",
         path: "/",
-        maxAge: 60 * 60 * 24 * 7, // 7 days
+        maxAge: 60 * 60 * 12, // 12 hours
       });
 
       return NextResponse.json({ success: true });

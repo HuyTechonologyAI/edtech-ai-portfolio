@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { readSignedHeartbeatMetadata } from "@/lib/node01-telemetry-auth";
 import { cookies } from "next/headers";
 import { buildAdminCenterSystemStatus } from "@/lib/admincenter-runtime";
+import { verifySession } from "@/lib/admincenter-session";
 
 function telemetryResponse(
   system: ReturnType<typeof buildAdminCenterSystemStatus>,
@@ -87,7 +88,7 @@ function telemetryResponse(
 
 export async function GET() {
   const sessionCookie = (await cookies()).get("admincenter_session")?.value;
-  if (sessionCookie !== "authenticated") {
+  if (!verifySession(sessionCookie, "admincenter")) {
     return NextResponse.json(
       { error: "UNAUTHORIZED" },
       { status: 401, headers: { "Cache-Control": "no-store" } },

@@ -163,6 +163,8 @@ export default function AdminCenterPage() {
   // Login form state
   const [loginUsername, setLoginUsername] = useState<string>("SuperAdmin");
   const [loginPassword, setLoginPassword] = useState<string>("");
+  const [mfaToken, setMfaToken] = useState<string>("");
+  const [showMfaInput, setShowMfaInput] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [loginError, setLoginError] = useState<string>("");
   const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false);
@@ -1104,10 +1106,16 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
           action: "login",
           username: loginUsername,
           password: loginPassword,
+          totp: mfaToken,
         }),
       });
 
       const data = await res.json();
+
+      if (res.ok && data.mfaRequired) {
+        setShowMfaInput(true);
+        return;
+      }
 
       if (res.ok && data.success) {
         setIsAuthenticated(true);
@@ -1117,6 +1125,8 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
           setShowChangePasswordModal(true);
         }
         setLoginPassword("");
+        setMfaToken("");
+        setShowMfaInput(false);
         fetchTelemetry();
         fetchSystemStatus();
       } else {
@@ -1667,64 +1677,110 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
           )}
 
           <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
-                Tên đăng nhập
-              </label>
-              <div className="relative">
-                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <input
-                  type="text"
-                  required
-                  value={loginUsername}
-                  onChange={(e) => setLoginUsername(e.target.value)}
-                  placeholder="SuperAdmin"
-                  className="w-full bg-[#070B14] border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
-                Mật khẩu
-              </label>
-              <div className="relative">
-                <Key className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <input
-                  type={showPassword ? "text" : "password"}
-                  required
-                  value={loginPassword}
-                  onChange={(e) => setLoginPassword(e.target.value)}
-                  placeholder="Nhập mật khẩu..."
-                  className="w-full bg-[#070B14] border border-white/10 rounded-xl py-2.5 pl-10 pr-10 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all font-mono"
-                />
+            {showMfaInput ? (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2 text-center text-cyan-400">
+                  Xác thực 2 bước (Google Authenticator)
+                </label>
+                <div className="relative mb-4">
+                  <Key className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <input
+                    type="text"
+                    required
+                    value={mfaToken}
+                    onChange={(e) => setMfaToken(e.target.value.replace(/\D/g, '').slice(0,6))}
+                    placeholder="Nhập mã 6 số..."
+                    className="w-full bg-[#070B14] border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-center tracking-[0.5em] text-lg text-white placeholder-slate-600 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all font-mono"
+                  />
+                </div>
+                
+                <button
+                  type="submit"
+                  disabled={isLoggingIn || mfaToken.length !== 6}
+                  className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white font-bold text-sm shadow-lg shadow-emerald-500/25 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {isLoggingIn ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      <span>Đang xác minh...</span>
+                    </>
+                  ) : (
+                    <>
+                      <ShieldCheck className="w-4 h-4" />
+                      <span>Xác nhận TOTP</span>
+                    </>
+                  )}
+                </button>
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors"
+                  onClick={() => setShowMfaInput(false)}
+                  className="w-full mt-3 py-2 text-xs text-slate-400 hover:text-white transition-colors"
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  Quay lại
                 </button>
               </div>
-            </div>
+            ) : (
+              <>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                    Tên đăng nhập
+                  </label>
+                  <div className="relative">
+                    <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input
+                      type="text"
+                      required
+                      value={loginUsername}
+                      onChange={(e) => setLoginUsername(e.target.value)}
+                      placeholder="SuperAdmin"
+                      className="w-full bg-[#070B14] border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all"
+                    />
+                  </div>
+                </div>
 
-            <button
-              type="submit"
-              disabled={isLoggingIn}
-              className="w-full mt-2 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-sm shadow-lg shadow-cyan-500/25 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-            >
-              {isLoggingIn ? (
-                <>
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                  <span>Đang xác thực...</span>
-                </>
-              ) : (
-                <>
-                  <ShieldCheck className="w-4 h-4" />
-                  <span>Đăng Nhập SuperAdmin</span>
-                </>
-              )}
-            </button>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                    Mật khẩu
+                  </label>
+                  <div className="relative">
+                    <Key className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      required
+                      value={loginPassword}
+                      onChange={(e) => setLoginPassword(e.target.value)}
+                      placeholder="Nhập mật khẩu..."
+                      className="w-full bg-[#070B14] border border-white/10 rounded-xl py-2.5 pl-10 pr-10 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all font-mono"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isLoggingIn}
+                  className="w-full mt-2 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-sm shadow-lg shadow-cyan-500/25 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {isLoggingIn ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      <span>Đang xác thực...</span>
+                    </>
+                  ) : (
+                    <>
+                      <ShieldCheck className="w-4 h-4" />
+                      <span>Đăng Nhập SuperAdmin</span>
+                    </>
+                  )}
+                </button>
+              </>
+            )}
           </form>
 
           <div className="mt-8 pt-6 border-t border-white/5 space-y-3">
@@ -2001,7 +2057,7 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
             </div>
             <div className="min-w-0 rounded-xl border border-white/10 bg-white/2 p-3">
               <dt className="text-xs text-slate-400 mb-1 font-semibold">Hành động gần nhất</dt>
-              <dd className="text-slate-200 text-xs line-clamp-2">Node-01 Ollama Qwen 32B tiếp nhận và xử lý tác vụ theo V1.1 lifecycle</dd>
+              <dd className="text-slate-200 text-xs line-clamp-2">Node-01 Ollama Qwen 7B-INT4 tiếp nhận và xử lý tác vụ theo V1.1 lifecycle</dd>
             </div>
             <div className="min-w-0 rounded-xl border border-white/10 bg-white/2 p-3">
               <dt className="text-xs text-slate-400 mb-1 font-semibold">Hành động tiếp theo</dt>
@@ -4061,7 +4117,7 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
                 <span className="text-cyan-400">OLLAMA_HOST=0.0.0.0:11434 ollama serve</span>
               </div>
               <div className="bg-black/40 rounded-xl p-3 border border-white/5">
-                <span className="text-emerald-400"># 4. Load model Qwen 2.5 Coder 32B</span><br />
+                <span className="text-emerald-400"># 4. Load model Qwen 2.5 Coder 7B-INT4</span><br />
                 <span className="text-cyan-400">ollama pull</span> <span className="text-violet-300">qwen2.5-coder:32b</span>
               </div>
               <div className="bg-black/40 rounded-xl p-3 border border-white/5">
@@ -4216,7 +4272,7 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
                     Node-01 Ollama
                   </div>
                   <p className="text-[11px] text-slate-400 mt-1">
-                    Toàn bộ build, test & code synthesis chạy 100% trên Qwen 2.5 Coder 32B (Dell M4800).
+                    Toàn bộ build, test & code synthesis chạy 100% trên Qwen 2.5 Coder 7B-INT4 (Dell M4800).
                   </p>
                 </div>
 
@@ -4455,7 +4511,7 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
                 <span className="text-cyan-400">OLLAMA_HOST=0.0.0.0:11434 ollama serve &</span><br />
                 <span className="text-cyan-400">ollama pull qwen2.5-coder:32b</span><br /><br />
                 <span className="text-amber-300">SUPERVISOR_URL=https://www.huycncdsai.io.vn \</span><br />
-                <span className="text-amber-300">WORKER_ID=NODE01-QWEN32B \</span><br />
+                <span className="text-amber-300">WORKER_ID=NODE01-QWEN7B-INT4 \</span><br />
                 <span className="text-amber-300">OLLAMA_MODEL=qwen2.5-coder:32b \</span><br />
                 <span className="text-amber-300">nohup bash scripts/node01-worker-v1.1.sh &gt; /mnt/data1/HUY-AI/worker.log 2&gt;&amp;1 &</span>
               </div>

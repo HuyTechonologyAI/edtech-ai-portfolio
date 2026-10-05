@@ -307,64 +307,8 @@ const INITIAL_CHANNELS: ChannelConnection[] = [
   },
 ];
 
-// Khởi tạo bài viết mẫu đã được thẩm định pháp lý tự động
-const INITIAL_POSTS: PublishedPost[] = [
-  {
-    id: "POST-20261002-01",
-    workflowId: "WF-SOC-01",
-    title: "5 Cách Ứng Dụng AI Soạn Giáo Án Nhanh Gấp 10 Lần Cho Giáo Viên Việt Nam",
-    platform: "Facebook",
-    channelName: "Facebook Fanpage (Chờ Token API)",
-    accountRef: "fb_page_official",
-    status: "AWAITING_API_CREDENTIALS",
-    publishedAt: "2026-10-02T12:30:00.000Z",
-    summary: "Nội dung bài viết hoàn chỉnh do Ollama qwen2.5 trên Dell M4800 biên soạn: Hướng dẫn 5 bước ứng dụng AI thiết kế giáo án tương tác, phân hóa học sinh theo Công văn 5512/BGDĐT. Bản thảo đã qua kiểm duyệt tuân thủ pháp luật Việt Nam.",
-    executionNode: "HUYAI-N01 (Dell Precision M4800 @ 192.168.1.43)",
-    diagnostics: "🛡️ ĐÃ KIỂM DUYỆT ĐẠT CHUẨN PHÁP LUẬT VIỆT NAM (Luật ANM 2018 Điều 8, 16; Thông tư 06/2019/TT-BGDĐT). Sẵn sàng tự động bắn lên Facebook ngay khi có Meta Page Token.",
-    compliance: auditContentCompliance({
-      title: "5 Cách Ứng Dụng AI Soạn Giáo Án Nhanh Gấp 10 Lần Cho Giáo Viên Việt Nam",
-      content: "Nội dung giáo án sư phạm chuẩn hóa theo Công văn 5512/BGDĐT, ứng dụng AI hỗ trợ giáo viên tích cực.",
-      platform: "Facebook",
-    }),
-  },
-  {
-    id: "POST-20261002-02",
-    workflowId: "WF-SOC-02",
-    title: "Kịch Bản Video 60s: Hướng Dẫn Giáo Viên Tạo Đề Thi Tự Động Bằng AI",
-    platform: "TikTok",
-    channelName: "Kênh TikTok Giáo Dục (Chờ Token API)",
-    accountRef: "tt_channel_official",
-    status: "AWAITING_API_CREDENTIALS",
-    publishedAt: "2026-10-02T13:00:00.000Z",
-    summary: "Kịch bản video ngắn TikTok 3 phân cảnh (0-15s Nỗi đau soạn đề, 15-45s Demo 1 click trên Note-01 sinh 40 câu hỏi trắc nghiệm, 45-60s Kêu gọi tham gia nhóm giáo viên AI). Đạt chuẩn an toàn nội dung giáo dục.",
-    executionNode: "HUYAI-N01 (Dell Precision M4800 @ 192.168.1.43)",
-    diagnostics: "🛡️ ĐÃ KIỂM DUYỆT ĐẠT CHUẨN PHÁP LUẬT & TIKTOK POLICY: Tỉ lệ 9:16, không chứa nội dung nguy hiểm, an toàn cho trẻ vị thành niên.",
-    compliance: auditContentCompliance({
-      title: "Kịch Bản Video 60s: Hướng Dẫn Giáo Viên Tạo Đề Thi Tự Động Bằng AI",
-      content: "Kịch bản video ngắn TikTok hướng dẫn quý thầy cô ứng dụng AI đổi mới phương pháp giảng dạy.",
-      platform: "TikTok",
-    }),
-  },
-  {
-    id: "POST-20261002-03",
-    workflowId: "WF-EDU-01",
-    title: "Cổng Đăng Ký Trực Tuyến & Cấp Chứng Nhận Giáo Viên 4.0",
-    platform: "Website Hub",
-    channelName: "Cổng Phễu Giáo Viên AI (gvcncdsai.io.vn)",
-    accountRef: "web_official_gvcncdsai",
-    status: "PUBLISHED_LIVE",
-    publishedAt: "2026-10-02T10:15:00.000Z",
-    url: "https://www.gvcncdsai.io.vn",
-    summary: "Trang đích tuyển sinh khóa học AI 39K hoạt động thực tế trên tên miền gvcncdsai.io.vn, tích hợp đồng bộ Webhook SePay và kích hoạt học liệu tức thì.",
-    executionNode: "Vercel Edge & Supabase Production",
-    diagnostics: "✅ Trang đích đã triển khai thực tế và hoạt động 100% trên Internet.",
-    compliance: auditContentCompliance({
-      title: "Cổng Đăng Ký Trực Tuyến & Cấp Chứng Nhận Giáo Viên 4.0",
-      content: "Chương trình bồi dưỡng nâng cao năng lực ứng dụng trí tuệ nhân tạo dành cho cán bộ quản lý và giáo viên.",
-      platform: "Website Hub",
-    }),
-  },
-];
+// No seeded posts: every entry must come from a real run (draft/publish) with provider evidence.
+const INITIAL_POSTS: PublishedPost[] = [];
 
 const globalN8nState = globalThis as unknown as {
   __N8N_WORKFLOWS__?: N8nWorkflow[];
@@ -374,7 +318,7 @@ const globalN8nState = globalThis as unknown as {
 };
 
 if (!globalN8nState.__N8N_WORKFLOWS__) {
-  globalN8nState.__N8N_WORKFLOWS__ = INITIAL_WORKFLOWS;
+  globalN8nState.__N8N_WORKFLOWS__ = INITIAL_WORKFLOWS.map((w) => ({ ...w, lastExecutionAt: "", lastStatus: "PENDING" as const, executionDurationMs: 0, metrics: { totalRuns: 0, successRatePct: 0, itemsPublished: 0 } }));
 }
 
 if (!globalN8nState.__N8N_CHANNELS__) {
@@ -382,26 +326,7 @@ if (!globalN8nState.__N8N_CHANNELS__) {
 }
 
 if (!globalN8nState.__N8N_LOGS__) {
-  globalN8nState.__N8N_LOGS__ = [
-    {
-      id: "EXEC-101",
-      workflowId: "WF-OPS-01",
-      workflowName: "Giám Sát Phần Cứng & Tự Động Phục Hồi Note-01",
-      timestamp: new Date().toISOString(),
-      status: "SUCCESS",
-      durationMs: 290,
-      details: "Heartbeat xác thực thành công: IP 192.168.1.43, CPU 0.3%, RAM 32GB (Trống 29.6GB). Bảo vệ Kernel soft lockup: OK.",
-    },
-    {
-      id: "EXEC-102",
-      workflowId: "WF-SOC-01",
-      workflowName: "Soạn Bài & Đăng Tải MXH (Facebook, Threads)",
-      timestamp: "2026-10-02T12:30:00.000Z",
-      status: "SUCCESS",
-      durationMs: 1420,
-      details: "AI Local Note-01 đã hoàn thành soạn thảo bài viết. Đã qua bộ lọc kiểm duyệt pháp luật (Luật ANM 2018 Điều 8, 16): ĐẠT CHUẨN 100%.",
-    },
-  ];
+  globalN8nState.__N8N_LOGS__ = []; // real executions only; no pre-seeded history
 }
 
 if (!globalN8nState.__N8N_POSTS__) {
@@ -409,22 +334,50 @@ if (!globalN8nState.__N8N_POSTS__) {
 }
 
 export async function GET() {
-  const workflows = globalN8nState.__N8N_WORKFLOWS__ || INITIAL_WORKFLOWS;
-  const logs = (globalN8nState.__N8N_LOGS__ || []).slice(-20).reverse();
+  const baseWorkflows = globalN8nState.__N8N_WORKFLOWS__ || INITIAL_WORKFLOWS;
+  const allLogs = globalN8nState.__N8N_LOGS__ || [];
+  const logs = allLogs.slice(-20).reverse();
   const channels = globalN8nState.__N8N_CHANNELS__ || INITIAL_CHANNELS;
   const publishedPosts = globalN8nState.__N8N_POSTS__ || INITIAL_POSTS;
+
+  // Metrics are computed from recorded executions only (in-memory, since last server start).
+  const workflows = baseWorkflows.map((w) => {
+    const runs = allLogs.filter((l) => l.workflowId === w.id && l.status !== "RUNNING");
+    const ok = runs.filter((l) => l.status === "SUCCESS").length;
+    const last = runs[runs.length - 1];
+    return {
+      ...w,
+      lastExecutionAt: last?.timestamp ?? "",
+      lastStatus: (last ? last.status : "PENDING") as N8nWorkflow["lastStatus"],
+      executionDurationMs: last?.durationMs ?? 0,
+      metrics: {
+        totalRuns: runs.length,
+        successRatePct: runs.length ? Number(((ok / runs.length) * 100).toFixed(1)) : 0,
+        itemsPublished: publishedPosts.filter((p) => p.workflowId === w.id && p.status === "PUBLISHED_LIVE").length,
+      },
+    };
+  });
+
+  const readyChannels = channels.filter((c) => c.status === "CONNECTED" || c.status === "API_ACTIVE").length;
 
   return NextResponse.json({
     engine: {
       name: "n8n Automation Engine",
-      version: "1.60.1",
+      version: null,
       nodeHost: "HUYAI-N01 (Dell M4800)",
-      lanIP: "192.168.1.43:5678",
+      lanIP: "192.168.1.43",
+      lanPort: 5678,
+      lanNote: "Địa chỉ LAN: chỉ truy cập được khi cùng mạng nội bộ với Node-01.",
       wanAccess: "https://ops.huycncdsai.io.vn/n8n",
-      status: "ONLINE",
+      // Not probed from this server (Vercel cannot reach the LAN): never claim ONLINE without evidence.
+      status: "UNVERIFIED",
+      statusEvidence: "Chưa có probe/heartbeat n8n từ máy chủ web; không khẳng định ONLINE.",
       activeWorkflowsCount: workflows.filter((w) => w.status === "ACTIVE").length,
       totalWorkflowsCount: workflows.length,
-      nextScheduledRun: "19:30:00 (WF-SOC-01)",
+      readyToPublishChannels: readyChannels,
+      totalChannels: channels.length,
+      nextScheduledRun: null,
+      metricsSource: "execution log in server memory since last start (not durable)",
       complianceGuardActive: true,
     },
     channels,
