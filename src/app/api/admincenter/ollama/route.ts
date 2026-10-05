@@ -195,8 +195,8 @@ export async function POST(req: Request) {
     if (action === "benchmark") {
       let durationMs = 1280;
       let tokensGenerated = 280;
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      let latencyMs = 110;
+      
+      
       let reportContent = `[BÁO CÁO KIỂM THỬ TÍNH TOÁN HIỆU NĂNG NOTE-01]\n- Thiết bị tính toán: Dell Precision M4800 (huy-ai-node-01)\n- Địa chỉ IP LAN: 192.168.1.43 (DHCP Reserved: 0C:8B:FD:CE:65:9E)\n- Model kiểm thử: ${model}\n- Thời gian trễ phản hồi (First-token Latency): 110ms\n- Tốc độ sinh Token thực tế: 218.7 tokens/giây\n- Trạng thái cấp phát RAM: 32.000 MB (Trống: 29.600 MB - 100% An toàn)\n- Bảo vệ phân mảnh bộ nhớ: vm.compaction_proactiveness=0 (PASS - Không soft lockup)\n- Đánh giá tổng thể: PHẦN CỨNG SẴN SÀNG CHO SUITE ĐĂNG BÀI VÀ PHỄU 24/7.`;
       
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -232,7 +232,7 @@ export async function POST(req: Request) {
                tokensGenerated = taskOutput.tokens || 150;
                // Node-01 worker uses latencyMs which is total duration
                durationMs = taskOutput.latencyMs || 5000;
-               latencyMs = 120; // estimate first token
+
                reportContent = `[BÁO CÁO KIỂM THỬ THỰC TẾ NODE-01]\n- Thiết bị tính toán: Dell Precision M4800 (huy-ai-node-01)\n- Model: ${taskOutput.model || model}\n- Thời gian hoàn thành: ${durationMs}ms\n- Tổng Tokens: ${tokensGenerated}\n- Tốc độ sinh Token: ${(tokensGenerated / (durationMs / 1000)).toFixed(1)} tokens/giây\n- Đánh giá tổng thể: Node-01 (192.168.1.43) đã xử lý thành công!`;
             }
           }
