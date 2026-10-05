@@ -179,6 +179,7 @@ export async function POST(req: NextRequest) {
       // Clear persistent lockout if any
       if (stored?.lockedUntil) {
          try {
+           // eslint-disable-next-line @typescript-eslint/no-unused-vars
            const { lockedUntil: _l, ...rest } = stored;
            await saveCredentials({ ...rest, updatedAt: new Date().toISOString() } as import("@/lib/admincenter-credentials").StoredCredentials);
          } catch(e) {
