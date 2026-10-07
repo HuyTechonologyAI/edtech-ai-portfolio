@@ -8,9 +8,12 @@ export function FinalCTA() {
   const [intent, setIntent] = useState("automation");
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (loading) return;
+    setError("");
     setLoading(true);
     try {
       const formData = new FormData(e.currentTarget);
@@ -22,14 +25,18 @@ export function FinalCTA() {
 
       const contactData = new FormData();
       contactData.set("name", fullName || "Khách hàng Doanh nghiệp");
-      contactData.set("email", email || "contact@huycncdsai.io.vn");
+      contactData.set("email", email);
       contactData.set("company", company || `Lĩnh vực: ${intent}`);
       contactData.set("message", `SĐT/Zalo: ${phone} | Nhu cầu: ${intent} | Nội dung: ${message || "Đăng ký tư vấn giải pháp AI"}`);
 
-      await submitContact(contactData);
-      setSubmitted(true);
+      const result = await submitContact(contactData);
+      if (result.success) {
+        setSubmitted(true);
+      } else {
+        setError(result.error || "Chưa gửi được yêu cầu. Vui lòng thử lại.");
+      }
     } catch {
-      setSubmitted(true);
+      setError("Kết nối bị gián đoạn. Vui lòng thử lại hoặc liên hệ qua Zalo.");
     } finally {
       setLoading(false);
     }
@@ -119,7 +126,8 @@ export function FinalCTA() {
                   </button>
                 </div>
               ) : (
-                <form onSubmit={handleSubmit} className="space-y-4 text-left">
+                <form onSubmit={handleSubmit} className="space-y-4 text-left" aria-busy={loading}>
+                  {error && <p role="alert" className="text-sm text-red-300">{error}</p>}
                   {/* Intent Selection */}
                   <div className="space-y-1.5">
                     <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300 block">
@@ -136,6 +144,7 @@ export function FinalCTA() {
                           key={item.id}
                           type="button"
                           onClick={() => setIntent(item.id)}
+                          aria-pressed={intent === item.id}
                           className={`py-2 px-3 rounded-xl border text-left font-semibold transition-all ${
                             intent === item.id
                               ? "bg-[#00E5FF]/15 border-[#00E5FF] text-white"
@@ -151,11 +160,12 @@ export function FinalCTA() {
                   {/* Name & Org */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-slate-400">
+                      <label htmlFor="consultation-fullName" className="text-[11px] font-bold text-slate-400">
                         Họ và tên *
                       </label>
                       <input
                         type="text"
+                        id="consultation-fullName"
                         name="fullName"
                         required
                         placeholder="Nguyễn Văn A"
@@ -163,11 +173,12 @@ export function FinalCTA() {
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-slate-400">
+                      <label htmlFor="consultation-company" className="text-[11px] font-bold text-slate-400">
                         Đơn vị / Doanh nghiệp
                       </label>
                       <input
                         type="text"
+                        id="consultation-company"
                         name="company"
                         placeholder="Tên công ty hoặc trường học"
                         className="w-full px-4 py-2.5 rounded-xl bg-[#0F172A] border border-white/10 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-[#00E5FF]"
@@ -178,11 +189,12 @@ export function FinalCTA() {
                   {/* Contact Info */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-slate-400">
+                      <label htmlFor="consultation-phone" className="text-[11px] font-bold text-slate-400">
                         Số điện thoại / Zalo *
                       </label>
                       <input
                         type="tel"
+                        id="consultation-phone"
                         name="phone"
                         required
                         placeholder="0912 345 678"
@@ -190,11 +202,13 @@ export function FinalCTA() {
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-slate-400">
-                        Email liên hệ
+                      <label htmlFor="consultation-email" className="text-[11px] font-bold text-slate-400">
+                        Email liên hệ *
                       </label>
                       <input
                         type="email"
+                        required
+                        id="consultation-email"
                         name="email"
                         placeholder="email@doanhnghiep.com"
                         className="w-full px-4 py-2.5 rounded-xl bg-[#0F172A] border border-white/10 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-[#00E5FF]"
@@ -204,12 +218,13 @@ export function FinalCTA() {
 
                   {/* Message */}
                   <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-slate-400">
+                    <label htmlFor="consultation-message" className="text-[11px] font-bold text-slate-400">
                       Mô tả bài toán hoặc nhu cầu cần tối ưu
                     </label>
                     <textarea
                       rows={3}
-                      name="message"
+                      id="consultation-message"
+                        name="message"
                       placeholder="Mô tả quy trình bạn muốn ứng dụng AI hoặc tự động hóa..."
                       className="w-full px-4 py-2.5 rounded-xl bg-[#0F172A] border border-white/10 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-[#00E5FF] resize-none"
                     />

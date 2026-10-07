@@ -1,6 +1,5 @@
 "use server";
 
-import { getErrorMessage } from "@/lib/error-message";
 
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { supabase } from "@/lib/supabase";
@@ -29,8 +28,9 @@ export async function submitContact(formData: FormData) {
     }
 
     // 2. Tự động đồng bộ sang bảng leads để hiển thị ngay trong Quản lý Leads của Admin CMS
+    let leadSaved = false;
     try {
-      await client
+      const { error: leadError } = await client
         .from('leads')
         .insert([
           {
@@ -45,13 +45,18 @@ export async function submitContact(formData: FormData) {
             }
           }
         ]);
+      leadSaved = !leadError;
+      if (leadError) console.warn('Lead mirror insert failed.');
     } catch (leadErr) {
       console.warn('Lưu vào leads gặp cảnh báo:', leadErr);
     }
 
+    if (contactError && !leadSaved) {
+      return { success: false, error: 'Chưa lưu được yêu cầu. Vui lòng thử lại hoặc liên hệ qua Zalo.' };
+    }
     return { success: true };
   } catch (err: unknown) {
     console.error('Lỗi khi gửi liên hệ:', err);
-    return { success: false, error: getErrorMessage(err) || 'Lỗi hệ thống khi gửi thông tin liên hệ.' };
+    return { success: false, error: 'Chưa lưu được yêu cầu. Vui lòng thử lại hoặc liên hệ qua Zalo.' };
   }
 }

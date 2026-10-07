@@ -28,15 +28,15 @@ export function AppFooter() {
             </p>
 
             <div className="space-y-1 text-xs text-slate-400 pt-2">
-              <p>�x� Trụ s�x: Tam Hi�!p, TP. Biên Hòa, T�0nh Đ�ng Nai</p>
-              <p>�x~ Hotline: 096.136.4600 | �S0️ huytechnologyai2025@gmail.com</p>
+              <p>Trụ sở: Tam Hiệp, TP. Biên Hòa, Đồng Nai</p>
+              <p>Hotline: 096.136.4600 | Email: huytechnologyai2025@gmail.com</p>
             </div>
           </div>
 
           {/* Ecosystem Links */}
           <div className="space-y-3">
             <h4 className="text-xs font-bold text-white uppercase tracking-wider">
-              6 Đơn V�9 Chuyên Môn
+              6 Đơn Vị Chuyên Môn
             </h4>
             <ul className="space-y-2 text-xs">
               {PUBLIC_ECOSYSTEM.map((org) => (
@@ -61,27 +61,27 @@ export function AppFooter() {
             </h4>
             <ul className="space-y-2 text-xs">
               <li>
-                <Link href="#solutions" className="hover:text-[#00E5FF] transition-colors">
+                <Link href="/#solutions" className="hover:text-[#00E5FF] transition-colors">
                   Tự Đ�"ng Hóa n8n / Make
                 </Link>
               </li>
               <li>
-                <Link href="#solutions" className="hover:text-[#00E5FF] transition-colors">
+                <Link href="/#solutions" className="hover:text-[#00E5FF] transition-colors">
                   Hạ Tầng AI N�"i B�" (Private AI)
                 </Link>
               </li>
               <li>
-                <Link href="#solutions" className="hover:text-[#00E5FF] transition-colors">
+                <Link href="/#solutions" className="hover:text-[#00E5FF] transition-colors">
                   Giáo Án AI Chuẩn CV 5512
                 </Link>
               </li>
               <li>
-                <Link href="#solutions" className="hover:text-[#00E5FF] transition-colors">
+                <Link href="/#solutions" className="hover:text-[#00E5FF] transition-colors">
                   Kê Khai Thuế & Bóc Tách OCR
                 </Link>
               </li>
               <li>
-                <Link href="#solutions" className="hover:text-[#00E5FF] transition-colors">
+                <Link href="/#solutions" className="hover:text-[#00E5FF] transition-colors">
                   Mô Hình AI Agency as a Service
                 </Link>
               </li>
@@ -96,21 +96,21 @@ export function AppFooter() {
             <ul className="space-y-2 text-xs">
               <li>
                 <Link href="https://gvcncdsai.io.vn" target="_blank" rel="noopener noreferrer" className="hover:text-[#00E5FF] transition-colors">
-                  Smart Teacher Schedule AI � 
+                  Smart Teacher Schedule AI ↗
                 </Link>
               </li>
               <li>
                 <Link href="https://smarttax-ai.vercel.app" target="_blank" rel="noopener noreferrer" className="hover:text-[#00E5FF] transition-colors">
-                  SmartTax AI Assistant � 
+                  SmartTax AI Assistant ↗
                 </Link>
               </li>
               <li>
                 <Link href="/resources" className="hover:text-[#00E5FF] transition-colors">
-                  Thư Vi�!n Tài Li�!u Kỹ Thuật
+                  Thư Viện Tài Liệu Kỹ Thuật
                 </Link>
               </li>
               <li>
-                <Link href="#leadership" className="hover:text-[#00E5FF] transition-colors">
+                <Link href="/#leadership" className="hover:text-[#00E5FF] transition-colors">
                   Sáng Lập & Lãnh Đạo
                 </Link>
               </li>
@@ -122,9 +122,9 @@ export function AppFooter() {
         <div className="pt-8 mt-12 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-slate-500">
           <p>© 2026 HUY TECHNOLOGY AI GROUP. Bảo lưu mọi quyền.</p>
           <div className="flex items-center gap-6">
-            <Link href="/privacy" className="hover:text-slate-300">Ch�nh s�ch b�o m�t</Link>
-            <Link href="/terms" className="hover:text-slate-300">i�u kho�n d�ch v�</Link>
-            <Link href="/security" className="hover:text-slate-300">Cam k�t b�o m�t d� li�u</Link>
+            <Link href="/privacy" className="hover:text-slate-300">Chính sách bảo mật</Link>
+            <Link href="/terms" className="hover:text-slate-300">Điều khoản dịch vụ</Link>
+            <Link href="/security" className="hover:text-slate-300">Cam kết bảo mật dữ liệu</Link>
           </div>
         </div>
       </div>
