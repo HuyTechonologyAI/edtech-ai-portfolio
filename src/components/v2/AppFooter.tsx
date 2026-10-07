@@ -1,4 +1,4 @@
-/* eslint-disable react/no-unescaped-entities */
+﻿/* eslint-disable react/no-unescaped-entities */
 "use client";
 
 import Link from "next/link";
@@ -24,7 +24,7 @@ export function AppFooter() {
             </div>
 
             <p className="text-xs text-slate-400 leading-relaxed max-w-sm">
-              H�! sinh thái công ngh�! AI và giải pháp tự ��"ng hóa quy trình nghi�!p vụ, kết n�i công ngh�! lõi, giáo dục s�, h� trợ kê khai kế toán và truyền thông chuyên �ề.
+              Hệ sinh thái công nghệ AI và giải pháp tự động hóa quy trình nghiệp vụ, kết nối công nghệ lõi, giáo dục số, hỗ trợ kê khai kế toán và truyền thông chuyên đề.
             </p>
 
             <div className="space-y-1 text-xs text-slate-400 pt-2">
@@ -62,12 +62,12 @@ export function AppFooter() {
             <ul className="space-y-2 text-xs">
               <li>
                 <Link href="/#solutions" className="hover:text-[#00E5FF] transition-colors">
-                  Tự Đ�"ng Hóa n8n / Make
+                  Tự Động Hóa n8n / Make
                 </Link>
               </li>
               <li>
                 <Link href="/#solutions" className="hover:text-[#00E5FF] transition-colors">
-                  Hạ Tầng AI N�"i B�" (Private AI)
+                  Hạ Tầng AI Nội Bộ (Private AI)
                 </Link>
               </li>
               <li>
