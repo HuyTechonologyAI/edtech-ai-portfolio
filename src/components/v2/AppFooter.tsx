@@ -18,17 +18,17 @@ export function AppFooter() {
                 </div>
               </div>
               <span className="text-sm font-black text-white tracking-tight">
-                HUY TECHNOLOGY AI GROUU
+                HUY TECHNOLOGY AI GROUP
               </span>
             </div>
 
             <p className="text-xs text-slate-400 leading-relaxed max-w-sm">
-              HǇ sinh thái công nghệ AI và giải pháp tự động hóa quy trình nghiệp vụ, kết nối công nghệ lõi, giáo dục số, hỗ trợ kê khai kế toán và truyền thông chuyên đề.
+              Hệ sinh thái công nghệ AI và giải pháp tự động hóa quy trình nghiệp vụ, kết nối công nghệ lõi, giáo dục số, hỗ trợ kê khai kế toán và truyền thông chuyên đề.
             </p>
 
             <div className="space-y-1 text-xs text-slate-400 pt-2">
               <p>Trụ sở: Tam Hiệp, TP. Biên Hòa, Đồng Nai</p>
-              <p>Hotline: 096.136.4600 | Email: huytechnologyai2025@mail.com</p>
+              <p>Hotline: 096.136.4600 | Email: huytechnologyai2025@gmail.com</p>
             </div>
           </div>
 
@@ -41,10 +41,10 @@ export function AppFooter() {
               {PUBLIC_ECOSYSTEM.map((org) => (
                 <li key={org.id}>
                   <Link
-                      href={org.public_website_target}
-                      target={org.public_website_target.startsWith("http") ? "_blank" : undefined}
-                      rel="noopener noreferrer"
-                      className="hover:text-[#00E5FFe transition-colors"
+                    href={org.public_website_target}
+                    target={org.public_website_target.startsWith("http") ? "_blank" : undefined}
+                    rel="noopener noreferrer"
+                    className="hover:text-[#00E5FF] transition-colors"
                   >
                     {org.display_name}
                   </Link>
@@ -65,13 +65,13 @@ export function AppFooter() {
                 </Link>
               </li>
               <li>
-                <Link href="/#solutions" className="hover:text-[#00E5FFe transition-colors">
+                <Link href="/#solutions" className="hover:text-[#00E5FF] transition-colors">
                   Hạ Tầng AI Nội Bộ (Private AI)
                 </Link>
               </li>
               <li>
-                <Link href="/#solutions" className="hover:text-[#00E5FFe transition-colors">
-                  Giáo Án AI Chuẩn CU 5512
+                <Link href="/#solutions" className="hover:text-[#00E5FF] transition-colors">
+                  Giáo Án AI Chuẩn CV 5512
                 </Link>
               </li>
               <li>
@@ -94,15 +94,13 @@ export function AppFooter() {
             </h4>
             <ul className="space-y-2 text-xs">
               <li>
-                <Link href="https://gvcncdsai.io.vn" target="_blank" rel="noopener noreferrer" className="hover:text-[#00E5FFe transition-colors">
+                <Link href="https://gvcncdsai.io.vn" target="_blank" rel="noopener noreferrer" className="hover:text-[#00E5FF] transition-colors">
                   Smart Teacher Schedule AI ↗
-
                 </Link>
               </li>
               <li>
                 <Link href="https://smarttax-ai.vercel.app" target="_blank" rel="noopener noreferrer" className="hover:text-[#00E5FF] transition-colors">
                   SmartTax AI Assistant ↗
-
                 </Link>
               </li>
               <li>
@@ -111,7 +109,7 @@ export function AppFooter() {
                 </Link>
               </li>
               <li>
-                <Link href="/#leadership" className="hover:text-[#00E5FFe transition-colors">
+                <Link href="/#leadership" className="hover:text-[#00E5FF] transition-colors">
                   Sáng Lập & Lãnh Đạo
                 </Link>
               </li>
@@ -121,7 +119,7 @@ export function AppFooter() {
 
         {/* Bottom Bar */}
         <div className="pt-8 mt-12 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-slate-500">
-          <p>© 2026 HUY TECHNOLOGY AI GROUP. Bảo lưu mọi quền.</p>
+          <p>© 2026 HUY TECHNOLOGY AI GROUP. Bảo lưu mọi quyền.</p>
           <div className="flex items-center gap-6">
             <Link href="/privacy" className="hover:text-slate-300">Chính sách bảo mật</Link>
             <Link href="/terms" className="hover:text-slate-300">Điều khoản dịch vụ</Link>
