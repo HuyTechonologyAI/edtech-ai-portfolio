@@ -1,4 +1,3 @@
-﻿/* eslint-disable react/no-unescaped-entities */
 "use client";
 
 import Link from "next/link";
@@ -24,11 +23,11 @@ export function AppFooter() {
             </div>
 
             <p className="text-xs text-slate-400 leading-relaxed max-w-sm">
-              Hệ sinh thái công nghệ AI và giải pháp tự động hóa quy trình nghiệp vụ, kết nối công nghệ lõi, giáo dục số, hỗ trợ kê khai kế toán và truyền thông chuyên đề.
+              H? sinh th�i c�ng ngh? AI v� gi?i ph�p t? d?ng h�a quy tr�nh nghi?p v?, k?t n?i c�ng ngh? l�i, gi�o d?c s?, h? tr? k� khai k? to�n v� truy?n th�ng chuy�n d?.
             </p>
 
             <div className="space-y-1 text-xs text-slate-400 pt-2">
-              <p>Trụ sở: Tam Hiệp, TP. Biên Hòa, Đồng Nai</p>
+              <p>Tr? s?: Tam Hi?p, TP. Bi�n H�a, �?ng Nai</p>
               <p>Hotline: 096.136.4600 | Email: huytechnologyai2025@gmail.com</p>
             </div>
           </div>
@@ -36,7 +35,7 @@ export function AppFooter() {
           {/* Ecosystem Links */}
           <div className="space-y-3">
             <h4 className="text-xs font-bold text-white uppercase tracking-wider">
-              6 Đơn Vị Chuyên Môn
+              6 �on V? Chuy�n M�n
             </h4>
             <ul className="space-y-2 text-xs">
               {PUBLIC_ECOSYSTEM.map((org) => (
@@ -57,32 +56,32 @@ export function AppFooter() {
           {/* Solutions Links */}
           <div className="space-y-3">
             <h4 className="text-xs font-bold text-white uppercase tracking-wider">
-              Giải Pháp Trọng Tâm
+              Gi?i Ph�p Tr?ng T�m
             </h4>
             <ul className="space-y-2 text-xs">
               <li>
                 <Link href="/#solutions" className="hover:text-[#00E5FF] transition-colors">
-                  Tự Động Hóa n8n / Make
+                  T? �?ng H�a n8n / Make
                 </Link>
               </li>
               <li>
                 <Link href="/#solutions" className="hover:text-[#00E5FF] transition-colors">
-                  Hạ Tầng AI Nội Bộ (Private AI)
+                  H? T?ng AI N?i B? (Private AI)
                 </Link>
               </li>
               <li>
                 <Link href="/#solutions" className="hover:text-[#00E5FF] transition-colors">
-                  Giáo Án AI Chuẩn CV 5512
+                  Gi�o �n AI Chu?n CV 5512
                 </Link>
               </li>
               <li>
                 <Link href="/#solutions" className="hover:text-[#00E5FF] transition-colors">
-                  Kê Khai Thuế & Bóc Tách OCR
+                  K� Khai Thu? & B�c T�ch OCR
                 </Link>
               </li>
               <li>
                 <Link href="/#solutions" className="hover:text-[#00E5FF] transition-colors">
-                  Mô Hình AI Agency as a Service
+                  M� H�nh AI Agency as a Service
                 </Link>
               </li>
             </ul>
@@ -91,27 +90,27 @@ export function AppFooter() {
           {/* Platforms & Governance Links */}
           <div className="space-y-3">
             <h4 className="text-xs font-bold text-white uppercase tracking-wider">
-              Nền Tảng & Vận Hành
+              N?n T?ng & V?n H�nh
             </h4>
             <ul className="space-y-2 text-xs">
               <li>
                 <Link href="https://gvcncdsai.io.vn" target="_blank" rel="noopener noreferrer" className="hover:text-[#00E5FF] transition-colors">
-                  Smart Teacher Schedule AI ↗
+                  Smart Teacher Schedule AI ?
                 </Link>
               </li>
               <li>
                 <Link href="https://smarttax-ai.vercel.app" target="_blank" rel="noopener noreferrer" className="hover:text-[#00E5FF] transition-colors">
-                  SmartTax AI Assistant ↗
+                  SmartTax AI Assistant ?
                 </Link>
               </li>
               <li>
                 <Link href="/resources" className="hover:text-[#00E5FF] transition-colors">
-                  Thư Viện Tài Liệu Kỹ Thuật
+                  Thu Vi?n T�i Li?u K? Thu?t
                 </Link>
               </li>
               <li>
                 <Link href="/#leadership" className="hover:text-[#00E5FF] transition-colors">
-                  Sáng Lập & Lãnh Đạo
+                  S�ng L?p & L�nh �?o
                 </Link>
               </li>
             </ul>
@@ -120,11 +119,11 @@ export function AppFooter() {
 
         {/* Bottom Bar */}
         <div className="pt-8 mt-12 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-slate-500">
-          <p>© 2026 HUY TECHNOLOGY AI GROUP. Bảo lưu mọi quyền.</p>
+          <p>� 2026 HUY TECHNOLOGY AI GROUP. B?o luu m?i quy?n.</p>
           <div className="flex items-center gap-6">
-            <Link href="/privacy" className="hover:text-slate-300">Chính sách bảo mật</Link>
-            <Link href="/terms" className="hover:text-slate-300">Điều khoản dịch vụ</Link>
-            <Link href="/security" className="hover:text-slate-300">Cam kết bảo mật dữ liệu</Link>
+            <Link href="/privacy" className="hover:text-slate-300">Ch�nh s�ch b?o m?t</Link>
+            <Link href="/terms" className="hover:text-slate-300">�i?u kho?n d?ch v?</Link>
+            <Link href="/security" className="hover:text-slate-300">Cam k?t b?o m?t d? li?u</Link>
           </div>
         </div>
       </div>
