@@ -1,8 +1,9 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import React, { useState } from "react";
 import { AI_WORKFORCE_63, ADMINCENTER_DEPARTMENTS, AIEmployee } from "../../../data/ai-workforce-63";
-import { ArrowLeft, User, CheckCircle2, Sparkles, Briefcase, Filter, ShieldCheck, Cpu } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Sparkles, Briefcase, Filter, ShieldCheck, Cpu } from "lucide-react";
 import Link from "next/link";
 
 export default function Workforce63GalleryPage() {

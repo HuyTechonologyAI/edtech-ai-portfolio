@@ -45,6 +45,7 @@ import {
   Archive,
   ExternalLink,
   Settings,
+  Globe,
 } from "lucide-react";
 
 import type { ComplianceAuditResult } from "@/lib/compliance-guard";

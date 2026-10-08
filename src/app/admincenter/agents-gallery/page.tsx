@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { AI_AGENTS, AGENT_CATEGORIES, AgentState, AIAgent } from "../../../data/agents";
 import { AgentAvatar } from "../../../components/admin/AgentAvatar";
-import { ArrowLeft, User, CheckCircle2, Sparkles, Shield, Briefcase } from "lucide-react";
+import { ArrowLeft, User, CheckCircle2, Sparkles, Briefcase } from "lucide-react";
 import Link from "next/link";
 
 export default function AgentsGalleryPage() {
