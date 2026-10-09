@@ -35,7 +35,7 @@ export function CorporateFloatingWidgets() {
   return (
     <aside
       aria-label="Kênh hỗ trợ nhanh"
-      className="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] right-4 md:right-6 z-40 flex flex-col items-end gap-2.5 pointer-events-none"
+      className="fixed bottom-[calc(5.75rem+env(safe-area-inset-bottom))] right-4 md:right-6 z-40 flex flex-col items-end gap-2.5 pointer-events-none"
     >
       {/* Scroll to Top */}
       {showScrollTop && (
