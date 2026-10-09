@@ -37,7 +37,7 @@ export const AI_WORKFORCE_63: AIEmployee[] = [
     role: "Chief Strategy AI Officer (CSAO) - Giám đốc Chiến lược & Điều phối",
     roleShort: "Tổng điều phối CSAO",
     color: "#4F46E5",
-    avatarPath: "/assets/agents/01_supervisor.jpg",
+    avatarPath: "/assets/workforce/emp_01.jpg",
     description: "Chỉ huy toàn bộ lộ trình DAG Roadmap, phân công nhiệm vụ cho 6 Business Units và kết nối chuỗi mắt xích AI Agency."
   },
   {
@@ -50,7 +50,7 @@ export const AI_WORKFORCE_63: AIEmployee[] = [
     role: "Chief Resource & Quota AI Officer (CRO) - Quản trị Tài nguyên & Quota",
     roleShort: "Quản trị Tài nguyên CRO",
     color: "#0F766E",
-    avatarPath: "/assets/agents/04_knowledge.jpg",
+    avatarPath: "/assets/workforce/emp_02.jpg",
     description: "Giám sát định mức 10M tokens trên 6 domain, cân đối chi phí API Claude, OpenAI, Vertex và phân bổ GPU Node-01."
   },
   {
@@ -63,7 +63,7 @@ export const AI_WORKFORCE_63: AIEmployee[] = [
     role: "Chief Compliance Officer (CCO) - Kiểm soát Tuân thủ & Bản quyền",
     roleShort: "Kiểm soát Tuân thủ CCO",
     color: "#64748B",
-    avatarPath: "/assets/agents/05_approval.jpg",
+    avatarPath: "/assets/workforce/emp_03.jpg",
     description: "Rà soát tính tuân thủ pháp lý, giấy phép phần mềm mã nguồn mở MIT/Apache và kiểm duyệt nội dung xuất bản."
   },
   {
@@ -145,7 +145,7 @@ export const AI_WORKFORCE_63: AIEmployee[] = [
     role: "Chief Technology AI Officer (CTO) - Giám đốc Công nghệ & Kiến trúc",
     roleShort: "Giám đốc Công nghệ CTO",
     color: "#2563EB",
-    avatarPath: "/assets/agents/02_research.jpg",
+    avatarPath: "/assets/workforce/emp_09.jpg",
     description: "Thẩm định kiến trúc phần mềm HAIP Core, kiểm soát chất lượng kỹ thuật 4 domain dự án và điều hành nhóm cốt lõi."
   },
   {
@@ -158,7 +158,7 @@ export const AI_WORKFORCE_63: AIEmployee[] = [
     role: "CTO Dự án Public Website (huycncdsai.io.vn)",
     roleShort: "CTO Public Website",
     color: "#7C3AED",
-    avatarPath: "/assets/agents/03_planning.jpg",
+    avatarPath: "/assets/workforce/emp_10.jpg",
     description: "Chịu trách nhiệm toàn diện về tính ổn định, tốc độ tải trang và trải nghiệm người dùng của cổng thông tin công cộng."
   },
   {
@@ -456,7 +456,7 @@ export const AI_WORKFORCE_63: AIEmployee[] = [
     role: "Content Outline & Storyboard Architect - Kiến trúc sư Dàn ý & Khung sườn",
     roleShort: "Xây dựng Dàn ý",
     color: "#9333EA",
-    avatarPath: "/assets/agents/06_outline.jpg",
+    avatarPath: "/assets/workforce/emp_32.jpg",
     description: "Thiết kế dàn ý logic, cấu trúc phân đoạn thu hút cho bài viết blog chuyên sâu và video viral triệu view."
   },
   {
@@ -469,7 +469,7 @@ export const AI_WORKFORCE_63: AIEmployee[] = [
     role: "Multichannel Copywriter - Chuyên gia Sáng tạo Nội dung Đa kênh",
     roleShort: "Viết Nội dung Đa kênh",
     color: "#DB2777",
-    avatarPath: "/assets/agents/07_content.jpg",
+    avatarPath: "/assets/workforce/emp_33.jpg",
     description: "Soạn thảo bài viết quảng cáo, bài PR báo chí, thông điệp mạng xã hội với văn phong hấp dẫn, chuyển đổi cao."
   },
   {
