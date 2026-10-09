@@ -57,8 +57,6 @@ import {
   AgentCard,
 } from "@/data/ai-agency-canonical";
 import {
-  AI_WORKFORCE_63,
-  ADMINCENTER_DEPARTMENTS,
   HUMAN_ROOT_OWNER,
   CANONICAL_63_WORKFORCE_CARDS,
 } from "@/data/ai-workforce-63";
