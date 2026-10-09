@@ -3,8 +3,9 @@
 
 import React, { useState } from "react";
 import { AI_WORKFORCE_63, ADMINCENTER_DEPARTMENTS, AIEmployee } from "../../../data/ai-workforce-63";
-import { ArrowLeft, CheckCircle2, Sparkles, Briefcase, Filter, ShieldCheck, Cpu } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Sparkles, Briefcase, Filter, ShieldCheck, Cpu, Volume2 } from "lucide-react";
 import Link from "next/link";
+import { AiVoiceCardPlayer, stopAnyActiveVoice } from "@/components/v2/AiVoiceCardPlayer";
 
 export default function Workforce63GalleryPage() {
   const [selectedDept, setSelectedDept] = useState<string>("ALL");
@@ -112,7 +113,10 @@ export default function Workforce63GalleryPage() {
               return (
                 <div
                   key={emp.id}
-                  onClick={() => setSelectedEmployee(emp)}
+                  onClick={() => {
+                    stopAnyActiveVoice();
+                    setSelectedEmployee(emp);
+                  }}
                   className={`group relative flex flex-col items-center p-4 rounded-2xl cursor-pointer transition-all duration-300 border ${
                     isSelected 
                       ? "bg-slate-800/80 border-indigo-500 shadow-lg shadow-indigo-500/20 scale-102" 
@@ -163,6 +167,23 @@ export default function Workforce63GalleryPage() {
                       <span className="text-[10px] text-slate-500 px-2 py-0.5 rounded-full bg-slate-950 border border-slate-800">
                         {emp.gender} • {emp.age}t
                       </span>
+                    </div>
+
+                    {/* Voice Card Action Button */}
+                    <div className="mt-2.5 pt-2 border-t border-slate-800/80 w-full flex items-center justify-center">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          stopAnyActiveVoice();
+                          setSelectedEmployee(emp);
+                        }}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[10px] font-semibold transition-colors cursor-pointer"
+                        title={`Nghe lời giới thiệu của ${emp.name}`}
+                      >
+                        <Volume2 className="w-2.5 h-2.5 text-indigo-400" />
+                        <span>Nghe giới thiệu</span>
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -243,6 +264,17 @@ export default function Workforce63GalleryPage() {
                       <div className="w-4 h-4 rounded border border-slate-700" style={{ backgroundColor: selectedEmployee.color }}></div>
                       <span className="font-mono text-xs text-slate-300">{selectedEmployee.color}</span>
                     </div>
+                  </div>
+
+                  {/* Voice Introduction Player (Directive AG-VOICE-CARD-003) */}
+                  <div>
+                    <div className="text-[11px] text-slate-500 mb-1">Giọng giới thiệu nhân sự AI</div>
+                    <AiVoiceCardPlayer
+                      key={selectedEmployee.id}
+                      agentId={selectedEmployee.id}
+                      displayName={selectedEmployee.name}
+                      autoPlay={false}
+                    />
                   </div>
 
                   <div>

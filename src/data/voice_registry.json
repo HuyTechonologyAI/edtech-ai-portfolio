@@ -36,7 +36,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:16Z",
       "sample_sha256": "cdd562da7eeed214407eb3ac98f44b71f5b3fedd63ede6195dd9000ab6774ae6",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_01",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Mai Anh, nhân sự AI phụ trách điều phối chiến lược. Tôi giúp chuyển mục tiêu thành kế hoạch rõ ràng, kết nối đúng chuyên môn và theo dõi tiến độ để công việc có người chịu trách nhiệm.",
+        "sample_path": "/voices/cards/emp_01_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_01_card.mp3",
+        "sample_sha256": "a15242688fda41d720ff822aefb403ec6a4492957a6dab0131dd06a8d8f0bf65",
+        "file_size_bytes": 71856,
+        "estimated_duration_sec": 11.6,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_02": {
       "agent_id": "emp_02",
@@ -63,7 +77,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:31Z",
       "sample_sha256": "dc0637214f91f3de4c1aaf0e7d21f65db10c65d04e05ef482a132431828bea34",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_02",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Hữu Hùng, nhân sự AI phụ trách quản trị tài nguyên. Tôi hỗ trợ phân bổ nguồn lực, theo dõi ngân sách và phối hợp các bộ phận để công việc được triển khai phù hợp với nhu cầu thực tế.",
+        "sample_path": "/voices/cards/emp_02_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_02_card.mp3",
+        "sample_sha256": "3c64bc64d6914cc80e0591f65f791b8578dd328d8cdfcb722dab7d4f352af3e2",
+        "file_size_bytes": 73728,
+        "estimated_duration_sec": 11.9,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_03": {
       "agent_id": "emp_03",
@@ -90,7 +118,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:31Z",
       "sample_sha256": "006f8273947816b0414b1486ceaa5b2065f28af185683ab51a7efb9117a49f26",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_03",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Thanh Trúc, nhân sự AI phụ trách kiểm soát tuân thủ. Tôi hỗ trợ rà soát nội dung, quyền sử dụng và quy trình dữ liệu, giúp các bộ phận làm việc đúng phạm vi đã được phê duyệt.",
+        "sample_path": "/voices/cards/emp_03_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_03_card.mp3",
+        "sample_sha256": "296080890757bdf1449b789b82af614910155797ea5b3748fe891725677ed4e0",
+        "file_size_bytes": 72000,
+        "estimated_duration_sec": 11.6,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_04": {
       "agent_id": "emp_04",
@@ -117,7 +159,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:31Z",
       "sample_sha256": "9caf2c09d8a4326f044ee0a9aefaf0d4317e4e4b61ea2d76bcf7409a178aaba4",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_04",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Quang Minh, nhân sự AI phụ trách dự phòng chiến lược. Tôi hỗ trợ chuẩn bị kế hoạch tiếp nối và phối hợp điều hành khi được phân công, giúp các công việc quan trọng giữ được tiến độ.",
+        "sample_path": "/voices/cards/emp_04_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_04_card.mp3",
+        "sample_sha256": "febb698dfa1bf52af7cc6e38e10a76f934b4a1669d13df8a0c7344fbf33c0aad",
+        "file_size_bytes": 73008,
+        "estimated_duration_sec": 11.8,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_05": {
       "agent_id": "emp_05",
@@ -144,7 +200,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:31Z",
       "sample_sha256": "cb52392618164b161bbd9dd927c545e082d3eb1b3cfd29451783a53ea2be2d7c",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_05",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Thu Trang, nhân sự AI phụ trách dự phòng tài nguyên. Tôi hỗ trợ theo dõi mức sử dụng, nhận diện nhu cầu bổ sung và chuẩn bị phương án phân bổ nguồn lực khi được giao nhiệm vụ.",
+        "sample_path": "/voices/cards/emp_05_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_05_card.mp3",
+        "sample_sha256": "88950be8b9900486a920bbc6fb1a0682df64a2c50ce3fd05a5dd934ef4b21314",
+        "file_size_bytes": 75024,
+        "estimated_duration_sec": 12.1,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_06": {
       "agent_id": "emp_06",
@@ -171,7 +241,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:31Z",
       "sample_sha256": "594cd76f05d973daaa68f1a5657170888ec809560d71b63e7392288f859cff50",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_06",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Thanh Tùng, nhân sự AI phụ trách dự phòng tuân thủ. Tôi hỗ trợ đối chiếu quy trình và rà soát những thay đổi cần lưu ý, giúp việc bàn giao giữa các bộ phận có căn cứ rõ ràng.",
+        "sample_path": "/voices/cards/emp_06_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_06_card.mp3",
+        "sample_sha256": "daf23d2c04479764452ef1c41d0c9abe11be1aa27a9524bc099116463151c6ff",
+        "file_size_bytes": 73296,
+        "estimated_duration_sec": 11.8,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_07": {
       "agent_id": "emp_07",
@@ -198,7 +282,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:31Z",
       "sample_sha256": "faa21b04caa9b81db07c1fd8a8eaa65ca2ad9c1c53d7d8f94056f95523f6f6f6",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_07",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Gia Hân, nhân sự AI phụ trách phối hợp các trợ lý. Tôi hỗ trợ chuyển giao nhiệm vụ và kết nối thông tin giữa các nhân sự AI, để yêu cầu của bạn được đưa tới đúng bộ phận.",
+        "sample_path": "/voices/cards/emp_07_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_07_card.mp3",
+        "sample_sha256": "b70e47f3383d222dc802df92287bf1c0348173004b45c96bd6961cf6a6c60913",
+        "file_size_bytes": 72288,
+        "estimated_duration_sec": 11.7,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_08": {
       "agent_id": "emp_08",
@@ -225,7 +323,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:31Z",
       "sample_sha256": "df360fa8c961b1b59973067bf5b19eb7e54e3746870889b4ece2efd5e622308e",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_08",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Hải Đăng, nhân sự AI phụ trách giám sát nhiệm vụ. Tôi hỗ trợ kiểm tra điều kiện thực hiện, theo dõi các bước xác nhận và tổng hợp những vấn đề cần người có thẩm quyền xem xét.",
+        "sample_path": "/voices/cards/emp_08_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_08_card.mp3",
+        "sample_sha256": "419c6206870b8665ae64365279bd97ed46704927b2ca348415fbd1283f22ae3c",
+        "file_size_bytes": 70416,
+        "estimated_duration_sec": 11.4,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_09": {
       "agent_id": "emp_09",
@@ -252,7 +364,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:31Z",
       "sample_sha256": "d4d3f45681432ccb895c92e37003933351a1b471120fa9b07f0da12916fd44d6",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_09",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Quang Huy, nhân sự AI phụ trách định hướng công nghệ. Tôi hỗ trợ thiết kế giải pháp, kết nối các thành phần kỹ thuật và xem xét thay đổi để sản phẩm phù hợp với mục tiêu sử dụng.",
+        "sample_path": "/voices/cards/emp_09_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_09_card.mp3",
+        "sample_sha256": "fab7a72b466ba60203d0d3bc46ff30c59b460ec4cd60a9cde97de518a7e61675",
+        "file_size_bytes": 71136,
+        "estimated_duration_sec": 11.5,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_10": {
       "agent_id": "emp_10",
@@ -279,7 +405,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:31Z",
       "sample_sha256": "9d95e9a758d2a43167d11f25c7053085c0543e3cac703a457bb8fcb3392a1e0c",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_10",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Như Hoa, nhân sự AI phụ trách website công khai. Tôi hỗ trợ cải thiện giao diện, nội dung và trải nghiệm truy cập, giúp bạn dễ tìm thông tin về dịch vụ và đội ngũ của chúng tôi.",
+        "sample_path": "/voices/cards/emp_10_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_10_card.mp3",
+        "sample_sha256": "066b5a4ef92d4f2cffa87cf8f8f0ee15f98020aa0a4e9d1be322893fa487c17f",
+        "file_size_bytes": 74016,
+        "estimated_duration_sec": 11.9,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_11": {
       "agent_id": "emp_11",
@@ -306,7 +446,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:35Z",
       "sample_sha256": "3edc155fcb9485afdbc7b0045eb1e572b51b392cbc017b7c8656837ca2c0dcea",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_11",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Thành Đạt, nhân sự AI phụ trách trang quản lý. Tôi hỗ trợ xây dựng giao diện điều hành và trình bày thông tin rõ ràng, giúp người quản lý theo dõi nhân sự, nhiệm vụ và kết quả.",
+        "sample_path": "/voices/cards/emp_11_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_11_card.mp3",
+        "sample_sha256": "2afd3054bbadaee1280d26d59a875e1962cdcaf7f41927a3c046663b0f9f402a",
+        "file_size_bytes": 74448,
+        "estimated_duration_sec": 12.0,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_12": {
       "agent_id": "emp_12",
@@ -333,7 +487,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:38Z",
       "sample_sha256": "c0bc77ec98ef84cd916618e4ec9f071046474bcc91b4532e25d9be372a2cdb3f",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_12",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Thành Công, nhân sự AI phụ trách phát triển ứng dụng. Tôi hỗ trợ kết nối giao diện với các chức năng xử lý và dữ liệu, để yêu cầu sản phẩm trở thành tính năng có thể sử dụng và kiểm tra.",
+        "sample_path": "/voices/cards/emp_12_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_12_card.mp3",
+        "sample_sha256": "710c202749fdda097c80e56e2bce4eac91e9468367c1dceaba1c3f0d95684b5a",
+        "file_size_bytes": 74592,
+        "estimated_duration_sec": 12.0,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_13": {
       "agent_id": "emp_13",
@@ -360,7 +528,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
       "sample_sha256": "994043ab1e25e8ce2ccd5dee4b78f9a5cca493a14b4e479e2f2e400f58d648aa",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_13",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Lan Chi, nhân sự AI phụ trách chuẩn hóa dữ liệu. Tôi hỗ trợ kiểm tra cấu trúc thông tin và cách các ứng dụng trao đổi dữ liệu, giúp việc tích hợp nhất quán và giảm nhầm lẫn.",
+        "sample_path": "/voices/cards/emp_13_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_13_card.mp3",
+        "sample_sha256": "57ad040a65ae8168d8c18c2861ec6e475d62325ee019057bdf774771deb5b6ed",
+        "file_size_bytes": 74448,
+        "estimated_duration_sec": 12.0,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_14": {
       "agent_id": "emp_14",
@@ -387,7 +569,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
       "sample_sha256": "fe60d9b22b4be233060d87010e56424f4674e94b98ef242b93bfc086c5c294a6",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_14",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Đức Huy, nhân sự AI phụ trách hiệu năng ứng dụng. Tôi hỗ trợ đo tốc độ xử lý, tìm điểm cần cải thiện và kiểm tra kết quả sau thay đổi, để trải nghiệm sử dụng thuận tiện hơn.",
+        "sample_path": "/voices/cards/emp_14_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_14_card.mp3",
+        "sample_sha256": "5f4b60cdf7c820835401f433cb9db92744679894fb212caed6531c85cdef4399",
+        "file_size_bytes": 77328,
+        "estimated_duration_sec": 12.5,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_15": {
       "agent_id": "emp_15",
@@ -414,7 +610,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
       "sample_sha256": "399aba0dde7e37444b2b4751ff08fe3c68cec11e9bb6da693c3cd1596c24acdc",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_15",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Ngọc Anh, nhân sự AI phụ trách nghiên cứu AI ứng dụng. Tôi hỗ trợ thử nghiệm phương pháp và đánh giá khả năng đáp ứng của giải pháp AI, dựa trên bài toán thực tế và kết quả kiểm tra.",
+        "sample_path": "/voices/cards/emp_15_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_15_card.mp3",
+        "sample_sha256": "bc4a34f37ef587136a0ac21e9ce1eca809ff17e4df6c2bfed1f874f5d8018cb6",
+        "file_size_bytes": 77616,
+        "estimated_duration_sec": 12.5,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_16": {
       "agent_id": "emp_16",
@@ -441,7 +651,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
       "sample_sha256": "c871d0748912dcdeddbd8e7a26d1b34a9dd118727d8be23cb9679e09d16b3e9c",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_16",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Nhật Huy, nhân sự AI phụ trách phối hợp mã nguồn. Tôi hỗ trợ quản lý các bản thay đổi, đối chiếu phần việc của từng nhóm và chuẩn bị bàn giao kỹ thuật theo đúng phạm vi được giao.",
+        "sample_path": "/voices/cards/emp_16_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_16_card.mp3",
+        "sample_sha256": "9daa1cf50b6711d3ee5f5f22b9a4aedb9e1b40a483902d439f491432b73fcbc7",
+        "file_size_bytes": 73584,
+        "estimated_duration_sec": 11.9,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_17": {
       "agent_id": "emp_17",
@@ -468,7 +692,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
       "sample_sha256": "1baf7019f451cb9d273145141d291198f15f4a3ad763da96961d8310e4853890",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_17",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Đức Thành, nhân sự AI phụ trách giải pháp giáo dục SmartTeacher. Tôi hỗ trợ phát triển công cụ cho giáo viên và nhà trường, tập trung vào nhu cầu giảng dạy, lịch học và trải nghiệm sử dụng.",
+        "sample_path": "/voices/cards/emp_17_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_17_card.mp3",
+        "sample_sha256": "bcda7852be3ccae81f5b3fd2aa58ff20f3a4c22076941d18cc6612c1268ad1f7",
+        "file_size_bytes": 74448,
+        "estimated_duration_sec": 12.0,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_18": {
       "agent_id": "emp_18",
@@ -495,7 +733,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
       "sample_sha256": "acfad4c6a4f534e0a7ae406219c5b21a0b52d90479563e895802a31b1beffbba",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_18",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Phương Linh, nhân sự AI phụ trách chuyên môn học thuật. Tôi hỗ trợ thiết kế chương trình học, xây dựng hoạt động thực hành và xác định cách đánh giá phù hợp với mục tiêu của người học.",
+        "sample_path": "/voices/cards/emp_18_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_18_card.mp3",
+        "sample_sha256": "dc14de538e8e20933f6ed648451b9dbc1e38ce5d8e6dc8826caa64c5efcc3b4a",
+        "file_size_bytes": 69840,
+        "estimated_duration_sec": 11.3,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_19": {
       "agent_id": "emp_19",
@@ -522,7 +774,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
       "sample_sha256": "f2fd04566cb45f17f68c06224d1d5ad52d2187aca97f88c4b932d9282e3e0d08",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_19",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Anh Khoa, nhân sự AI phụ trách xây dựng giáo án. Tôi hỗ trợ chuẩn bị kế hoạch bài dạy, tổ chức hoạt động học tập và đối chiếu học liệu để giáo viên xem xét, điều chỉnh trước khi sử dụng.",
+        "sample_path": "/voices/cards/emp_19_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_19_card.mp3",
+        "sample_sha256": "775facd5caf3fa806030e73f4ffd4863d86f878a62ae489b268f37d40075960f",
+        "file_size_bytes": 75456,
+        "estimated_duration_sec": 12.2,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_20": {
       "agent_id": "emp_20",
@@ -549,7 +815,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
       "sample_sha256": "c5e3740d67227d028c1cb04edd566498d6524ea84a4a5d27d124cdebddd32384",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_20",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Diệu My, nhân sự AI phụ trách thời khóa biểu. Tôi hỗ trợ sắp xếp lịch học theo điều kiện của nhà trường, đối chiếu các ràng buộc và trình bày phương án để người phụ trách kiểm tra.",
+        "sample_path": "/voices/cards/emp_20_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_20_card.mp3",
+        "sample_sha256": "be391d23487020b21d9ded897b6efb702b1573071429865dc5a1c29dd01362a4",
+        "file_size_bytes": 72144,
+        "estimated_duration_sec": 11.6,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_21": {
       "agent_id": "emp_21",
@@ -576,7 +856,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
       "sample_sha256": "4499aa0c6abebfef49218723100a3b3e79c8c894309971585c8bf8135e7ffbde",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_21",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Minh Quân, nhân sự AI phụ trách hỗ trợ học tập. Tôi giúp giải thích nội dung bài học, gợi ý cách luyện tập và đồng hành cùng học viên theo trình độ, để việc học dễ tiếp cận hơn.",
+        "sample_path": "/voices/cards/emp_21_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_21_card.mp3",
+        "sample_sha256": "f77d880d374681bfee5b13ec6c07e5ff56f661a2534ba2a8a920df99fb37777b",
+        "file_size_bytes": 73296,
+        "estimated_duration_sec": 11.8,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_22": {
       "agent_id": "emp_22",
@@ -603,7 +897,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
       "sample_sha256": "73bf9055c8ee2c4ff5db0db05872ccb45b8e19bfc60973468de6c64ba2299072",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_22",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Kim Oanh, nhân sự AI phụ trách dự phòng học thuật. Tôi hỗ trợ tiếp nối công việc chương trình và học liệu khi được phân công, đồng thời phối hợp đáp ứng nhu cầu hỗ trợ học tập tăng thêm.",
+        "sample_path": "/voices/cards/emp_22_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_22_card.mp3",
+        "sample_sha256": "9e9c850fa0207104230bcca12fbccc7f0447bc7af7e249b5cb3d3a83686c4926",
+        "file_size_bytes": 74592,
+        "estimated_duration_sec": 12.0,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_23": {
       "agent_id": "emp_23",
@@ -630,7 +938,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
       "sample_sha256": "f65e9361f0ef6d221f56c3db08416a3ee2f7543b480440a7a053ece2af88fd87",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_23",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Khôi Nguyên, nhân sự AI phụ trách kiểm thử giáo dục. Tôi hỗ trợ kiểm tra luồng sử dụng và nội dung học tập, ghi nhận những điểm cần sửa để nhóm giáo dục tiếp tục hoàn thiện sản phẩm.",
+        "sample_path": "/voices/cards/emp_23_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_23_card.mp3",
+        "sample_sha256": "c5bddda6b21ed35988c43750a65904fcf1ea4bbe752ab50e3db570a2bc2f1ca0",
+        "file_size_bytes": 75600,
+        "estimated_duration_sec": 12.2,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_24": {
       "agent_id": "emp_24",
@@ -657,7 +979,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
       "sample_sha256": "39abef2b8fdf19f2178325324c2dab178b59e20a8d9827a11af7f4140c51623c",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_24",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Quốc Bảo, nhân sự AI phụ trách nền tảng SmartTax. Tôi hỗ trợ phát triển công cụ tổ chức dữ liệu thuế và kế toán, giúp người dùng đối chiếu thông tin và chuẩn bị hồ sơ cho chuyên gia kiểm tra.",
+        "sample_path": "/voices/cards/emp_24_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_24_card.mp3",
+        "sample_sha256": "7af2b0dbda8b2e0f7ce04e99844bf85318da046d23309fbdc2ce519158a794a5",
+        "file_size_bytes": 78480,
+        "estimated_duration_sec": 12.7,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_25": {
       "agent_id": "emp_25",
@@ -684,7 +1020,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
       "sample_sha256": "b00f51d4aabe8a24998e193410dba70e276911a6a65d0d6a95e9b0e8008fb697",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_25",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Kim Ngân, nhân sự AI phụ trách điều phối tài chính. Tôi hỗ trợ tổng hợp, đối chiếu số liệu và chuẩn bị thông tin tài chính, để người có thẩm quyền xem xét và đưa ra quyết định.",
+        "sample_path": "/voices/cards/emp_25_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_25_card.mp3",
+        "sample_sha256": "f25626e47b3873c367b181a60d30c3f027650f3449b7312347c00dcb35efc0ac",
+        "file_size_bytes": 74160,
+        "estimated_duration_sec": 12.0,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_26": {
       "agent_id": "emp_26",
@@ -711,7 +1061,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
       "sample_sha256": "e3e47fc0b36d36c9123e68d88d3cdc99b5477e5e62fb979a54e5f6951217a634",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_26",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Tuấn Anh, nhân sự AI phụ trách đối soát hóa đơn. Tôi hỗ trợ đối chiếu chứng từ và thông tin thuế giá trị gia tăng, ghi nhận sai lệch cần chuyên gia kiểm tra trước khi hoàn thiện hồ sơ.",
+        "sample_path": "/voices/cards/emp_26_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_26_card.mp3",
+        "sample_sha256": "49e1bccbd58fec8c08765cc176c40420e320569d606adc6ad7104ae0121c93cf",
+        "file_size_bytes": 72144,
+        "estimated_duration_sec": 11.6,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_27": {
       "agent_id": "emp_27",
@@ -738,7 +1102,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
       "sample_sha256": "3d756fdb27416c4aa99c375c362b64439803a39ef5b843424f60cee3e84a1d46",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_27",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Tú Uyên, nhân sự AI phụ trách phân loại chi phí. Tôi hỗ trợ sắp xếp chứng từ và phân nhóm khoản chi, trình bày căn cứ để bộ phận kế toán đối chiếu và xem xét cách xử lý.",
+        "sample_path": "/voices/cards/emp_27_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_27_card.mp3",
+        "sample_sha256": "aca09fde4a6ff83cbf86e8e21095b9466c026fcfae66d31a4fee5f0497a63d34",
+        "file_size_bytes": 73296,
+        "estimated_duration_sec": 11.8,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_28": {
       "agent_id": "emp_28",
@@ -765,7 +1143,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
       "sample_sha256": "7f68f764cb292e603e83fc2b22e0714adaa15a96322ae1ecffc6cf8f4505a92d",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_28",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Công Thành, nhân sự AI phụ trách dự phòng tài chính. Tôi hỗ trợ tiếp nối công việc đối soát và tổng hợp hồ sơ khi được giao, giúp bộ phận tài chính xử lý nhu cầu tăng thêm theo đúng phân công.",
+        "sample_path": "/voices/cards/emp_28_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_28_card.mp3",
+        "sample_sha256": "1486c88313ff8d595b219540eeb2d63325a5111cb56c2804f6dd928a54803850",
+        "file_size_bytes": 74736,
+        "estimated_duration_sec": 12.1,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_29": {
       "agent_id": "emp_29",
@@ -792,7 +1184,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
       "sample_sha256": "f0e7aefc1941e6be67cbd94a4c01f1758ec6b03de339a0d3a9a7f4f864ef7259",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_29",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Bảo Châu, nhân sự AI phụ trách cảnh báo rủi ro thuế. Tôi hỗ trợ nhận diện thông tin bất thường và sắp xếp những vấn đề cần kiểm tra, để chuyên gia có thêm căn cứ khi rà soát hồ sơ.",
+        "sample_path": "/voices/cards/emp_29_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_29_card.mp3",
+        "sample_sha256": "9070177c50a9d2ab5107f72f306d82884285c60a72590e0482af36ed3279d6fd",
+        "file_size_bytes": 77040,
+        "estimated_duration_sec": 12.4,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_30": {
       "agent_id": "emp_30",
@@ -819,7 +1225,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
       "sample_sha256": "ac9443b151db93590710c01feaa05f8e0de538c80f61d9bf4ecf292d278f7d57",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_30",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Trọng Nhân, nhân sự AI phụ trách đối soát công nợ. Tôi hỗ trợ đối chiếu khoản phải thu, khoản phải trả và chứng từ liên quan, chuẩn bị thông tin để người phụ trách xem xét việc quyết toán.",
+        "sample_path": "/voices/cards/emp_30_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_30_card.mp3",
+        "sample_sha256": "79def8ad2c79539e4a517cd9a1f692d549e1e77c0ba6a488cd602ee0ef838ba0",
+        "file_size_bytes": 74448,
+        "estimated_duration_sec": 12.0,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_31": {
       "agent_id": "emp_31",
@@ -846,7 +1266,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
       "sample_sha256": "4434d684101718c1836b168d3f5ddb76a51b6561f6a53b1d2f5e22fd04454e55",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_31",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Hoàng Nam, nhân sự AI phụ trách điều phối truyền thông. Tôi hỗ trợ tổ chức kế hoạch nội dung, phối hợp các nhóm sáng tạo và theo dõi sản phẩm bàn giao, để thông điệp đến đúng đối tượng.",
+        "sample_path": "/voices/cards/emp_31_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_31_card.mp3",
+        "sample_sha256": "426dc09e7b967d96ea347d9480856baae76e30e49c0b5defcbdc4b98927f596e",
+        "file_size_bytes": 78192,
+        "estimated_duration_sec": 12.6,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_32": {
       "agent_id": "emp_32",
@@ -873,7 +1307,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
       "sample_sha256": "eb486b67cdcb7a3f2d6cde8f1fb7508200f375c23d6e1863880e772f5518eef4",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_32",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Minh Triết, nhân sự AI phụ trách xây dựng dàn ý. Tôi hỗ trợ sắp xếp ý tưởng, xác định cấu trúc và làm rõ thông điệp, giúp nhóm nội dung có định hướng phù hợp trước khi triển khai.",
+        "sample_path": "/voices/cards/emp_32_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_32_card.mp3",
+        "sample_sha256": "e809630cc64bb2e6c9cc04b2bdd37ab1710dc93345d7b21e85d661d3b6915346",
+        "file_size_bytes": 72144,
+        "estimated_duration_sec": 11.6,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_33": {
       "agent_id": "emp_33",
@@ -900,7 +1348,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
       "sample_sha256": "d227503574931c21cb07bc78881879f99087dbf74cb3cf1d982c2db53f8772cc",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_33",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Bảo Ngọc, nhân sự AI phụ trách nội dung đa kênh. Tôi hỗ trợ viết và biên tập nội dung theo thông tin đã được duyệt, giúp thông điệp rõ ràng và phù hợp với từng kênh truyền thông.",
+        "sample_path": "/voices/cards/emp_33_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_33_card.mp3",
+        "sample_sha256": "0d2ecdcf354cec80137ac199bcbaae66aedbb7d51033496ed87d309886e60166",
+        "file_size_bytes": 72576,
+        "estimated_duration_sec": 11.7,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_34": {
       "agent_id": "emp_34",
@@ -927,7 +1389,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
       "sample_sha256": "9350abf98d4dd9701e0197f7b8b915a9b8cf5b6a211e4a6645f5b20aa2333186",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_34",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Đức Anh, nhân sự AI phụ trách thiết kế đồ họa. Tôi hỗ trợ xây dựng hình ảnh, banner và đồ họa thông tin, chú trọng nhận diện thương hiệu và cách trình bày dễ đọc, dễ hiểu.",
+        "sample_path": "/voices/cards/emp_34_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_34_card.mp3",
+        "sample_sha256": "94c04cbaba3d6b7a8ef3f3dd5171c4dc26f57e7e607f28059dfb1b341fc17062",
+        "file_size_bytes": 76752,
+        "estimated_duration_sec": 12.4,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_35": {
       "agent_id": "emp_35",
@@ -954,7 +1430,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
       "sample_sha256": "8cc954c795f4fd339aae36e9f03720da88d71980df3c7ebe4610843db2590a24",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_35",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Khánh Linh, nhân sự AI phụ trách hình ảnh AI. Tôi hỗ trợ tạo minh họa và hình ảnh theo yêu cầu sáng tạo, đối chiếu phong cách và quyền sử dụng trước khi bàn giao cho nhóm nội dung.",
+        "sample_path": "/voices/cards/emp_35_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_35_card.mp3",
+        "sample_sha256": "472f96dc31f8aec7d80b3c48a9fe3272c0441e74f4b428535cfca312e5cc74f8",
+        "file_size_bytes": 73728,
+        "estimated_duration_sec": 11.9,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_36": {
       "agent_id": "emp_36",
@@ -981,7 +1471,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
       "sample_sha256": "56093953ea1e44ffde13cdff0e42e2a61d3e4cbf578ae4a5b66ec6569c5b9685",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_36",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Tuấn Kiệt, nhân sự AI phụ trách sản xuất video AI. Tôi hỗ trợ chuyển kịch bản thành phương án video, phối hợp hình ảnh, âm thanh và nhịp kể chuyện phù hợp với mục tiêu truyền thông.",
+        "sample_path": "/voices/cards/emp_36_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_36_card.mp3",
+        "sample_sha256": "a6e0e0d5f39205bf4016f1ba573c3ea1295bbd4152ffc4f7100fa92e09cef2a5",
+        "file_size_bytes": 74880,
+        "estimated_duration_sec": 12.1,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_37": {
       "agent_id": "emp_37",
@@ -1008,7 +1512,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
       "sample_sha256": "3a91b70c38981dc2d432ea4bb04500db65105d05911ff5efe54a67e76a104238",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_37",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Hải Yến, nhân sự AI phụ trách quy trình xuất bản. Tôi hỗ trợ tổ chức lịch và luồng đăng nội dung đã được duyệt, đồng thời theo dõi kết quả để hạn chế bỏ sót hoặc đăng trùng.",
+        "sample_path": "/voices/cards/emp_37_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_37_card.mp3",
+        "sample_sha256": "1fc13f4187aef11acc030fff48922ccbe70cb0582773d8113559b6e80caf6d17",
+        "file_size_bytes": 70704,
+        "estimated_duration_sec": 11.4,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_38": {
       "agent_id": "emp_38",
@@ -1035,7 +1553,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
       "sample_sha256": "8212429f9814fb9f0baf9b3cb0b660d52d256cb4248acf7d83ba60d6c0d671ec",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_38",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Hoài Thương, nhân sự AI phụ trách kịch bản phân cảnh. Tôi hỗ trợ chia nội dung thành từng cảnh, mô tả hình ảnh và lời dẫn, giúp nhóm sản xuất hình dung rõ cách triển khai video.",
+        "sample_path": "/voices/cards/emp_38_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_38_card.mp3",
+        "sample_sha256": "00506a44447735627dec29ae93bb07b4a30e32d0713fef00b4d1754ed166f19c",
+        "file_size_bytes": 75168,
+        "estimated_duration_sec": 12.1,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_39": {
       "agent_id": "emp_39",
@@ -1062,7 +1594,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
       "sample_sha256": "b9eeaf26be287174d53f95bbdd8f1cb42fadc855bc6a21ef78058b5b3ba509c7",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_39",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Minh Khang, nhân sự AI phụ trách đồ họa chuyển động. Tôi hỗ trợ tạo chuyển động cho hình ảnh và thông tin, giúp nội dung giải thích sinh động, dễ theo dõi và phù hợp với thương hiệu.",
+        "sample_path": "/voices/cards/emp_39_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_39_card.mp3",
+        "sample_sha256": "a3597ca63fc06783f30f7e2b4c88b05b25801270f4c57cc36149b9295ffa0686",
+        "file_size_bytes": 71136,
+        "estimated_duration_sec": 11.5,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_40": {
       "agent_id": "emp_40",
@@ -1089,7 +1635,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
       "sample_sha256": "a269f5589e805e1cf7cea1cbdac69848182bafd160d5d7498c4fcda6179ab853",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_40",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Mỹ Duyên, nhân sự AI phụ trách dẫn chương trình và giọng đọc. Tôi hỗ trợ thể hiện lời dẫn, kiểm tra phát âm và phối hợp âm thanh, để thông điệp được truyền tải rõ ràng và tự nhiên.",
+        "sample_path": "/voices/cards/emp_40_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_40_card.mp3",
+        "sample_sha256": "dbe06d6ba386c6c05fbf3922acb2a7d67bc76491d5f0880c2bf132c4ac78647f",
+        "file_size_bytes": 75744,
+        "estimated_duration_sec": 12.2,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_41": {
       "agent_id": "emp_41",
@@ -1116,7 +1676,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:42Z",
       "sample_sha256": "2c936e8c24020bfd99b432e125512e18cb92b3c2523fc4490f9860de61435db1",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_41",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Phương Thảo, nhân sự AI phụ trách tư vấn nhu cầu khách hàng. Tôi hỗ trợ tìm hiểu mục tiêu của bạn, giới thiệu thông tin dịch vụ đã được duyệt và kết nối với bộ phận phù hợp khi bạn cần trao đổi thêm.",
+        "sample_path": "/voices/cards/emp_41_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_41_card.mp3",
+        "sample_sha256": "9b1b0375f4384ee56272e831f40bcb2fa850434183b7e25fc0a255fd223cbbae",
+        "file_size_bytes": 80352,
+        "estimated_duration_sec": 13.0,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_42": {
       "agent_id": "emp_42",
@@ -1143,7 +1717,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:42Z",
       "sample_sha256": "50d742c0767bc80246f0c8b75122ff69f2addcf1855ec7611ecd7dbdc3290c05",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_42",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Thùy Dung, nhân sự AI phụ trách thông tin khách hàng. Tôi hỗ trợ sắp xếp hồ sơ và theo dõi lịch sử trao đổi trong phạm vi được phép, giúp các bộ phận chăm sóc khách hàng nhất quán hơn.",
+        "sample_path": "/voices/cards/emp_42_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_42_card.mp3",
+        "sample_sha256": "4f4d5d091c6f19db76304008db482a8dacfd0de303ba4d098102d54ee915c7b3",
+        "file_size_bytes": 72720,
+        "estimated_duration_sec": 11.7,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_43": {
       "agent_id": "emp_43",
@@ -1170,7 +1758,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:42Z",
       "sample_sha256": "1ff30578d11e1d8461c3d3252aeead8848a6c3534e5482566dba8419bf41133d",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_43",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Trọng Nghĩa, nhân sự AI phụ trách hỗ trợ khách hàng. Tôi hỗ trợ giải đáp thông tin về dịch vụ và cách sử dụng, đồng thời chuyển yêu cầu tới bộ phận phù hợp khi cần xử lý thêm.",
+        "sample_path": "/voices/cards/emp_43_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_43_card.mp3",
+        "sample_sha256": "0175036729f67ee7459e24f6d4fdc4b913ee548792e62adf939f5d04686260c8",
+        "file_size_bytes": 74304,
+        "estimated_duration_sec": 12.0,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_44": {
       "agent_id": "emp_44",
@@ -1197,7 +1799,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:42Z",
       "sample_sha256": "f185964736cd7f5d3a9052675c4d5047672b8412018d620857636b3377cbe548",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_44",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Phúc An, nhân sự AI phụ trách phân tích quảng cáo. Tôi hỗ trợ xem xét kết quả chiến dịch và đề xuất điều chỉnh theo dữ liệu, mục tiêu cùng ngân sách đã được phê duyệt.",
+        "sample_path": "/voices/cards/emp_44_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_44_card.mp3",
+        "sample_sha256": "a6e19057079e127ed19128ee611f90ded19d970f20143327720d84c06877c7d6",
+        "file_size_bytes": 68688,
+        "estimated_duration_sec": 11.1,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_45": {
       "agent_id": "emp_45",
@@ -1224,7 +1840,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:42Z",
       "sample_sha256": "a9e7e8476dacaea174d0beed5fd8a67967fdad7c1ab228f1d2297a58a7bdeceb",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_45",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Quỳnh Anh, nhân sự AI phụ trách tương tác cộng đồng. Tôi hỗ trợ tiếp nhận bình luận, tổng hợp phản hồi và phối hợp chăm sóc cộng đồng, để các trao đổi trên mạng xã hội rõ ràng và phù hợp.",
+        "sample_path": "/voices/cards/emp_45_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_45_card.mp3",
+        "sample_sha256": "bd032fc8ed04ab422d933851fcbaeb2109d3dc496cd9781b2b88d22e52441579",
+        "file_size_bytes": 76320,
+        "estimated_duration_sec": 12.3,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_46": {
       "agent_id": "emp_46",
@@ -1251,7 +1881,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:42Z",
       "sample_sha256": "1ddfe799073da90f252b56251eacd29013c65d897aa63f0fc440761c8d5c8263",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_46",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Hồng Phúc, nhân sự AI phụ trách tối ưu tìm kiếm. Tôi hỗ trợ rà soát cấu trúc và thông tin kỹ thuật của website, giúp nội dung dễ được tiếp cận và phù hợp với nhu cầu tìm kiếm.",
+        "sample_path": "/voices/cards/emp_46_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_46_card.mp3",
+        "sample_sha256": "1928a2a1a7c1d096e67dd52736db52e2a8be7c0d94cfe8ebc1cfd0eb0d6e545d",
+        "file_size_bytes": 74880,
+        "estimated_duration_sec": 12.1,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_47": {
       "agent_id": "emp_47",
@@ -1278,7 +1922,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:42Z",
       "sample_sha256": "0d9d3272c7d93469eee253394c06ac28fe246d09c02061ad17afa41747111f89",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_47",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Bích Ngọc, nhân sự AI phụ trách chăm sóc khách hàng trọng điểm. Tôi hỗ trợ theo dõi nhu cầu và phối hợp các bộ phận phục vụ tài khoản được giao, dựa trên thông tin cùng phạm vi cam kết đã xác nhận.",
+        "sample_path": "/voices/cards/emp_47_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_47_card.mp3",
+        "sample_sha256": "3dfb026a346a780038d32e7f060b9aa6feb7b9c4c472c903084b57a9166e94e6",
+        "file_size_bytes": 78048,
+        "estimated_duration_sec": 12.6,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_48": {
       "agent_id": "emp_48",
@@ -1305,7 +1963,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:42Z",
       "sample_sha256": "66d59450f7457e90c0af57e26656997faa1bf420abef610a212e3c76853f0666",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_48",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Minh Tâm, nhân sự AI phụ trách hỗ trợ hợp tác. Tôi hỗ trợ chuẩn bị thông tin, tổng hợp nhu cầu và xây dựng phương án trao đổi với đối tác, để người có thẩm quyền xem xét trước khi quyết định.",
+        "sample_path": "/voices/cards/emp_48_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_48_card.mp3",
+        "sample_sha256": "1729ed9cf11019f439d0c69603b76d936697027afe4d3ac59d91f0b014c8caae",
+        "file_size_bytes": 76176,
+        "estimated_duration_sec": 12.3,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_49": {
       "agent_id": "emp_49",
@@ -1332,7 +2004,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:42Z",
       "sample_sha256": "6e2641c26977db5dd2536e036e205abfdcc4c2208e253bda6f4edcc1e3515a20",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_49",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Hoàng Phúc, nhân sự AI phụ trách vận hành hạ tầng. Tôi hỗ trợ theo dõi dịch vụ, chuẩn bị phương án phục hồi và phối hợp xử lý sự cố kỹ thuật theo nhiệm vụ được giao.",
+        "sample_path": "/voices/cards/emp_49_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_49_card.mp3",
+        "sample_sha256": "f8912edc606d91fb29406695a6f5ef4f78a7aa3f7c9acab43108bc2716c01c98",
+        "file_size_bytes": 69264,
+        "estimated_duration_sec": 11.2,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_50": {
       "agent_id": "emp_50",
@@ -1359,7 +2045,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:43Z",
       "sample_sha256": "7835a903665b8409f1ae7c40f283080b8f59b2603fecac7076f695d48116ff7d",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_50",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Như Quỳnh, nhân sự AI phụ trách theo dõi khả dụng dịch vụ. Tôi hỗ trợ kiểm tra tình trạng truy cập, ghi nhận dấu hiệu gián đoạn và chuyển cảnh báo tới bộ phận phù hợp để xem xét.",
+        "sample_path": "/voices/cards/emp_50_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_50_card.mp3",
+        "sample_sha256": "e7ffc43a087c8c9b67e3974c4923406bc32f34eaa5e96780e5a303aa7e6aaf46",
+        "file_size_bytes": 74736,
+        "estimated_duration_sec": 12.1,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_51": {
       "agent_id": "emp_51",
@@ -1386,7 +2086,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:43Z",
       "sample_sha256": "c05d5ed86b4da29d2517d7d6a1e70b3b4872cf68ee1197dd319e6c9116013bd7",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_51",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Gia Bảo, nhân sự AI phụ trách bảo dưỡng hệ thống. Tôi hỗ trợ thực hiện các công việc bảo trì theo kế hoạch, ghi nhận thay đổi và chuẩn bị phương án khôi phục khi cần thiết.",
+        "sample_path": "/voices/cards/emp_51_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_51_card.mp3",
+        "sample_sha256": "104de32b90b2fb4c3ad16e769945433fe5136260ec88b3425c0ce007566f8cff",
+        "file_size_bytes": 68976,
+        "estimated_duration_sec": 11.1,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_52": {
       "agent_id": "emp_52",
@@ -1413,7 +2127,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:43Z",
       "sample_sha256": "82964a2f991e9e6e5c055aae2a9228956a8b95c7c86ac0af59e796de4bf255d8",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_52",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Mai Linh, nhân sự AI phụ trách quản trị dữ liệu. Tôi hỗ trợ tổ chức lưu trữ, kiểm tra thay đổi và chuẩn bị phục hồi dữ liệu theo quyền được giao, giúp thông tin được quản lý có căn cứ.",
+        "sample_path": "/voices/cards/emp_52_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_52_card.mp3",
+        "sample_sha256": "e8291bf40eea9c754d59a1d2e1aa3fb99f3f9ca10d1254d2e37ef79e3c11041a",
+        "file_size_bytes": 77040,
+        "estimated_duration_sec": 12.4,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_53": {
       "agent_id": "emp_53",
@@ -1440,7 +2168,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:43Z",
       "sample_sha256": "60ea524251ad1d89043d1f9f8b53b26731559253ab7b34e96013205c2ad6d910",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_53",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Quốc Khánh, nhân sự AI phụ trách vận hành AI cục bộ. Tôi hỗ trợ theo dõi khả năng xử lý và phối hợp cấu hình phù hợp với tài nguyên thực tế, để các tác vụ AI được vận hành theo kế hoạch.",
+        "sample_path": "/voices/cards/emp_53_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_53_card.mp3",
+        "sample_sha256": "86622e73b9ec220eb03db84bd7455c54a426e4bacc711f8bcb7f517286c833fd",
+        "file_size_bytes": 76176,
+        "estimated_duration_sec": 12.3,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_54": {
       "agent_id": "emp_54",
@@ -1467,7 +2209,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:43Z",
       "sample_sha256": "d2e8f1721c82f4871800382dfbd2600d2e4a96de7f4fbf6388fee311526bf135",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_54",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Ngọc Ánh, nhân sự AI phụ trách phân tích số liệu vận hành. Tôi hỗ trợ tổng hợp các số đo có nguồn, làm rõ cách tính và trình bày những tín hiệu cần theo dõi để người quản lý xem xét.",
+        "sample_path": "/voices/cards/emp_54_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_54_card.mp3",
+        "sample_sha256": "7ac3a71c4669cf6a9e075d4b615303e77d5566e7397da663cc3657705a38e893",
+        "file_size_bytes": 74016,
+        "estimated_duration_sec": 11.9,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_55": {
       "agent_id": "emp_55",
@@ -1494,7 +2250,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:43Z",
       "sample_sha256": "58a82838860a3856d88bec3517e5b50c9c7d8159367b563dbad55381c8fbd5ed",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_55",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Gia Huy, nhân sự AI phụ trách báo cáo kết quả. Tôi hỗ trợ tổng hợp thông tin đã được kiểm chứng, trình bày tiến độ và dẫn tới minh chứng, giúp người quản lý theo dõi kết quả công việc.",
+        "sample_path": "/voices/cards/emp_55_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_55_card.mp3",
+        "sample_sha256": "ed32230193f8f04afa8434d810e4e23313eb18ca8349903232474615dc0aa57e",
+        "file_size_bytes": 75168,
+        "estimated_duration_sec": 12.1,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_56": {
       "agent_id": "emp_56",
@@ -1521,7 +2291,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:43Z",
       "sample_sha256": "20f31abd35a48ed3a646199cde10b20f26a138a83814616d6bc159533bb252f1",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_56",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Tuyết Nhi, nhân sự AI phụ trách kết nối các ứng dụng. Tôi hỗ trợ đối chiếu cách trao đổi dữ liệu và phối hợp xử lý khác biệt giữa các sản phẩm, giúp các bộ phận tích hợp đúng phạm vi.",
+        "sample_path": "/voices/cards/emp_56_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_56_card.mp3",
+        "sample_sha256": "356bcf1f9ea6a561a3e7b5d47de1e4c42209d6c080243e63cd318c705613b2ab",
+        "file_size_bytes": 74736,
+        "estimated_duration_sec": 12.1,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_57": {
       "agent_id": "emp_57",
@@ -1548,7 +2332,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:43Z",
       "sample_sha256": "92da83566e05b7c2b136fbbf0b2cbc114a9d706665e855acd6d013ec7894b94b",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_57",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Thiên Ân, nhân sự AI phụ trách điều phối an toàn hệ thống. Tôi hỗ trợ bảo vệ thông tin, phối hợp rà soát rủi ro và tổ chức xử lý sự cố theo phạm vi cùng thẩm quyền đã được giao.",
+        "sample_path": "/voices/cards/emp_57_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_57_card.mp3",
+        "sample_sha256": "db079ee6cb4412b1d5091a87b163b4b42f19f90f9e98ae00592a98eecf78270b",
+        "file_size_bytes": 73584,
+        "estimated_duration_sec": 11.9,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_58": {
       "agent_id": "emp_58",
@@ -1575,7 +2373,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:46Z",
       "sample_sha256": "9ec13b10c31b179a0cc7f1726c4f22837d588c2d1211041c10fa910bf09c6347",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_58",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Tường Vy, nhân sự AI phụ trách kiểm thử an toàn. Tôi hỗ trợ đánh giá khả năng phòng vệ trên các tài sản được cho phép, ghi nhận điểm cần cải thiện và bàn giao bằng chứng cho nhóm phụ trách.",
+        "sample_path": "/voices/cards/emp_58_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_58_card.mp3",
+        "sample_sha256": "a15fc1716fc5c2ef098117995ffae7e4a178f95d1d95cca143726025c78398c1",
+        "file_size_bytes": 76464,
+        "estimated_duration_sec": 12.3,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_59": {
       "agent_id": "emp_59",
@@ -1602,7 +2414,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:46Z",
       "sample_sha256": "521d8a3f2a5179aad7c13dfa5e742754f8180f1a113a9aabc31367f8cdc51f01",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_59",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Duy Khánh, nhân sự AI phụ trách bảo vệ kết nối. Tôi hỗ trợ theo dõi các biện pháp phòng vệ và phối hợp xử lý vấn đề về kết nối, giúp bộ phận kỹ thuật rà soát những thay đổi cần thiết.",
+        "sample_path": "/voices/cards/emp_59_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_59_card.mp3",
+        "sample_sha256": "988ab1140d2d971c111f612cdf812f7fca7a7e5b809a300506f032fd9ea81668",
+        "file_size_bytes": 76464,
+        "estimated_duration_sec": 12.3,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_60": {
       "agent_id": "emp_60",
@@ -1629,7 +2455,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:46Z",
       "sample_sha256": "80fce640ec69a14624b340ffbcea55611292aea68505021b20848283d21e0d74",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_60",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Mai Hoa, nhân sự AI phụ trách quản lý nhân sự AI. Tôi hỗ trợ tổ chức hồ sơ, theo dõi năng lực và phối hợp phân công theo chuyên môn, giúp mỗi nhân sự có nhiệm vụ cùng phạm vi rõ ràng.",
+        "sample_path": "/voices/cards/emp_60_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_60_card.mp3",
+        "sample_sha256": "66db3cdcd734182cec5124189b93d37f23d0f5224b8fe035fc300d4893f5110c",
+        "file_size_bytes": 80208,
+        "estimated_duration_sec": 12.9,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_61": {
       "agent_id": "emp_61",
@@ -1656,7 +2496,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:46Z",
       "sample_sha256": "0ea5769cda9754a2ec56b5df7d374ace2aa9e0f05962efb2e872fbee16835ee9",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_61",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Hữu Phúc, nhân sự AI phụ trách đánh giá năng lực AI. Tôi hỗ trợ xây dựng bài kiểm tra phù hợp vai trò, đối chiếu kết quả thực tế và trình bày căn cứ để người quản lý xem xét.",
+        "sample_path": "/voices/cards/emp_61_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_61_card.mp3",
+        "sample_sha256": "de6f2cad911595374f82abca0ef69972de35a8063cff1f8a09c9592f371558b4",
+        "file_size_bytes": 74448,
+        "estimated_duration_sec": 12.0,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_62": {
       "agent_id": "emp_62",
@@ -1683,7 +2537,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:46Z",
       "sample_sha256": "09f22b129d08ca53138083da2eb18623373fb62b2efcff07da56048bb721df1d",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_62",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Kiều Oanh, nhân sự AI phụ trách kiểm tra quyền sử dụng. Tôi hỗ trợ đối chiếu giấy phép của công cụ, dữ liệu và tài sản nội dung, làm rõ điều kiện cần đáp ứng trước khi sử dụng.",
+        "sample_path": "/voices/cards/emp_62_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_62_card.mp3",
+        "sample_sha256": "af46c6e2a1cbcf79d40201ec4c7c0b252695a9b31089b580e1ba72fe6388130c",
+        "file_size_bytes": 75600,
+        "estimated_duration_sec": 12.2,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     },
     "emp_63": {
       "agent_id": "emp_63",
@@ -1710,7 +2578,21 @@
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:46Z",
       "sample_sha256": "739865dae9c06edf9203ba9c2d84b594b197a2cc49a737b7efcfa895054c1a35",
-      "sample_status": "SYNTHESIZED_VERIFIED"
+      "sample_status": "SYNTHESIZED_VERIFIED",
+      "card_intro": {
+        "asset_id": "card_intro_emp_63",
+        "asset_version": "1.0.0",
+        "intro_text": "Xin chào, tôi là Gia Linh, nhân sự AI phụ trách lưu vết kiểm toán. Tôi hỗ trợ tổ chức lịch sử thay đổi và minh chứng công việc theo quyền được giao, giúp người có thẩm quyền truy xuất thông tin khi cần.",
+        "sample_path": "/voices/cards/emp_63_card.mp3",
+        "sample_ref": "/mnt/data1/HUY-AI/voices/cards/emp_63_card.mp3",
+        "sample_sha256": "df73114c34d8e977a46eb258cc5ae2106e87be861671c38a0da6982cc25af9bd",
+        "file_size_bytes": 71280,
+        "estimated_duration_sec": 11.5,
+        "mime_type": "audio/mpeg",
+        "approval_status": "APPROVED",
+        "human_gate_verdict": "VERIFIED_VALID",
+        "updated_at": "2026-10-09T21:25:00Z"
+      }
     }
   }
 }
