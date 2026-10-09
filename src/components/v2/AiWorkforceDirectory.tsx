@@ -12,7 +12,6 @@ import {
   Users,
   Building2,
   CheckCircle2,
-  ExternalLink,
   Layers,
   Cpu,
 } from "lucide-react";
