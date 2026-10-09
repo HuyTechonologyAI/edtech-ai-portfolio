@@ -4,6 +4,7 @@
 import type { BrowserSpeechRecognition } from "@/types/browser-speech";
 import { useHydrated } from "@/hooks/use-browser-state";
 import { useState, useRef, useEffect, useCallback } from "react";
+import { usePathname } from "next/navigation";
 import {
   X,
   Send,
@@ -125,10 +126,28 @@ function useSpeechRecognition(onTranscript: (text: string) => void) {
 }
 
 // ═══════════════════════════════════════════
+// QUICK SUGGESTIONS
+// ═══════════════════════════════════════════
+const QUICK_SUGGESTIONS = [
+  "Tư vấn 63 Nhân Sự AI",
+  "Giải pháp n8n & Tự động hóa",
+  "Đào tạo AI thực chiến",
+  "Báo giá giải pháp doanh nghiệp",
+];
+
+let globalMsgId = 0;
+function nextMessageId(prefix: string) {
+  globalMsgId += 1;
+  return `${prefix}_${globalMsgId}`;
+}
+
+// ═══════════════════════════════════════════
 // MAIN COMPONENT
 // ═══════════════════════════════════════════
 export function AIChatbot() {
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const [showTeaser, setShowTeaser] = useState(false);
   const [mode, setMode] = useState<RoleMode>("cskh");
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -141,6 +160,29 @@ export function AIChatbot() {
     },
   ]);
   const [input, setInput] = useState("");
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const dismissed = sessionStorage.getItem("ai_chat_auto_dismissed");
+    if (!dismissed) {
+      const timer = setTimeout(() => {
+        if (window.innerWidth >= 768) {
+          setIsOpen(true);
+        } else {
+          setShowTeaser(true);
+        }
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  const handleCloseChat = () => {
+    setIsOpen(false);
+    setShowTeaser(false);
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("ai_chat_auto_dismissed", "true");
+    }
+  };
   const [isLoading, setIsLoading] = useState(false);
   const [playingMsgId, setPlayingMsgId] = useState<string | null>(null);
 
@@ -235,17 +277,17 @@ export function AIChatbot() {
   };
 
   // Send message
-  const handleSend = async () => {
-    if (!input.trim() || isLoading) return;
+  const handleSendText = async (customText?: string) => {
+    const userText = (customText ?? input).trim();
+    if (!userText || isLoading) return;
 
-    const userText = input.trim();
     setInput("");
 
     const userMsg: Message = {
-      id: `usr_${Date.now()}`,
+      id: nextMessageId("usr"),
       role: "user",
       content: userText,
-      timestamp: new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
+      timestamp: "18:00",
     };
 
     setMessages((prev) => [...prev, userMsg]);
@@ -267,29 +309,33 @@ export function AIChatbot() {
       const data = await res.json();
 
       const aiMsg: Message = {
-        id: `ai_${Date.now()}`,
+        id: nextMessageId("ai"),
         role: "assistant",
         agent_id: currentAmbassador.agent_id,
         agent_name: currentAmbassador.name,
         content: data.reply || "Dạ, em đã nhận thông tin và sẽ phản hồi sớm nhất!",
-        timestamp: new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
+        timestamp: "18:00",
       };
 
       setMessages((prev) => [...prev, aiMsg]);
     } catch (err) {
       console.error("Public chat error:", err);
       const fallbackMsg: Message = {
-        id: `err_${Date.now()}`,
+        id: nextMessageId("err"),
         role: "assistant",
         agent_id: currentAmbassador.agent_id,
         agent_name: currentAmbassador.name,
         content: `Dạ, hiện hệ thống đang có lượng truy vấn cao. Quý khách vui lòng gọi Hotline kỹ thuật **0961 364 600** hoặc bấm nút "Gửi Yêu Cầu" để ${currentAmbassador.name} hỗ trợ ngay nhé!`,
-        timestamp: new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
+        timestamp: "18:00",
       };
       setMessages((prev) => [...prev, fallbackMsg]);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSend = () => {
+    handleSendText();
   };
 
   // Submit Ticket or Lead
@@ -334,29 +380,83 @@ export function AIChatbot() {
 
   const ambassador = AMBASSADORS[mode];
 
+  if (pathname?.startsWith("/admincenter") || pathname?.startsWith("/admin")) {
+    return null;
+  }
+
   return (
     <>
       <audio ref={audioRef} className="hidden" />
 
-      {/* Floating Action Trigger Button */}
-      <div className="fixed bottom-6 right-6 z-50">
+      {/* Floating Action Trigger Button & Proactive Greeting Bubble */}
+      <div className="fixed bottom-6 right-4 sm:right-6 z-50 flex flex-col items-end pointer-events-none">
+        {/* Proactive Greeting Teaser Bubble */}
+        <AnimatePresence>
+          {!isOpen && showTeaser && (
+            <motion.div
+              initial={{ opacity: 0, y: 12, scale: 0.92 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 12, scale: 0.92 }}
+              onClick={() => {
+                setIsOpen(true);
+                setShowTeaser(false);
+              }}
+              className="cursor-pointer mb-3 p-3.5 bg-slate-900/95 border border-emerald-500/40 rounded-2xl shadow-2xl backdrop-blur-md max-w-[280px] hover:border-emerald-400 transition-all text-left pointer-events-auto group"
+            >
+              <div className="flex items-center justify-between gap-2 mb-1.5">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                  <span className="text-[11px] font-bold text-emerald-300">
+                    {ambassador.name} • {mode === "cskh" ? "CSKH 24/7" : "Tư Vấn"}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowTeaser(false);
+                    if (typeof window !== "undefined") {
+                      sessionStorage.setItem("ai_chat_auto_dismissed", "true");
+                    }
+                  }}
+                  className="text-slate-400 hover:text-white p-0.5 rounded transition-colors"
+                  aria-label="Đóng lời chào"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <p className="text-xs text-slate-200 font-medium leading-relaxed">
+                👋 Xin chào! Em có thể tư vấn giải pháp AI hay tự động hóa gì cho Anh/Chị ngay bây giờ ạ?
+              </p>
+              <div className="mt-2 flex items-center gap-1 text-[10px] text-emerald-400 font-bold group-hover:underline">
+                <span>Bấm để trò chuyện ngay</span>
+                <span>→</span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="relative group p-3.5 rounded-full bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-950 font-bold shadow-2xl hover:scale-105 transition-all shadow-emerald-500/30 flex items-center gap-2"
+          onClick={() => {
+            setIsOpen(!isOpen);
+            setShowTeaser(false);
+          }}
+          className="relative group p-3 sm:px-4 sm:py-3 rounded-full bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-950 font-bold shadow-2xl hover:scale-105 transition-all shadow-emerald-500/30 flex items-center gap-2.5 pointer-events-auto"
           aria-label="Mở Trợ lý AI Huy Technology AI"
         >
-          <div className="relative w-7 h-7 rounded-full overflow-hidden border border-slate-900 bg-slate-900">
+          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-slate-900 bg-slate-900 shadow">
             <img
               src={ambassador.avatar}
               alt={ambassador.name}
               className="w-full h-full object-cover"
             />
           </div>
-          <span className="text-xs font-black tracking-wide hidden sm:inline">
-            Trợ Lý AI {ambassador.name}
-          </span>
+          <div className="text-left hidden sm:block">
+            <div className="text-[10px] uppercase font-bold text-slate-800 leading-tight">AI Trực Tuyến 24/7</div>
+            <div className="text-xs font-black tracking-tight text-slate-950 leading-tight">Trợ Lý {ambassador.name}</div>
+          </div>
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-300 animate-ping absolute -top-1 -right-1" />
-          <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 absolute -top-1 -right-1" />
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 absolute -top-1 -right-1 border border-slate-900" />
         </button>
       </div>
 
@@ -390,8 +490,9 @@ export function AIChatbot() {
                 </div>
 
                 <button
-                  onClick={() => setIsOpen(false)}
-                  className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-all"
+                  onClick={handleCloseChat}
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-all"
+                  aria-label="Đóng khung chat"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -505,6 +606,24 @@ export function AIChatbot() {
               )}
               <div ref={messagesEndRef} />
             </div>
+
+            {/* Quick Action Suggestions */}
+            {messages.length <= 3 && (
+              <div className="px-3 pt-2 pb-1 bg-slate-900/60 border-t border-white/5 flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+                <span className="text-[10px] text-slate-400 shrink-0 font-medium">Gợi ý:</span>
+                {QUICK_SUGGESTIONS.map((item, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => handleSendText(item)}
+                    disabled={isLoading}
+                    className="shrink-0 text-[11px] px-2.5 py-1 rounded-full bg-white/5 hover:bg-emerald-500/20 text-slate-300 hover:text-emerald-300 border border-white/10 hover:border-emerald-500/30 transition-all font-medium disabled:opacity-50"
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {/* Input Bar */}
             <div className="p-3 bg-slate-900/80 border-t border-white/10">

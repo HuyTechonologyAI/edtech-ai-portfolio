@@ -4,7 +4,6 @@ import { usePathname } from "next/navigation";
 import { EcosystemHeaderBar } from "@/components/EcosystemHeaderBar";
 import { EcosystemFooter } from "@/components/EcosystemFooter";
 import { MobileNavMenu } from "@/components/MobileNavMenu";
-import { AIChatbot } from "@/components/AIChatbot";
 import ZaloFloatingButton from "@/components/ZaloFloatingButton";
 import Link from "next/link";
 import { StreakWidget } from "@/components/StreakWidget";
@@ -74,7 +73,6 @@ export function LegacyShellWrapper({ children }: { children: React.ReactNode }) 
       <MobileNavMenu />
       {children}
       <EcosystemFooter />
-      <AIChatbot />
       <ZaloFloatingButton />
     </>
   );

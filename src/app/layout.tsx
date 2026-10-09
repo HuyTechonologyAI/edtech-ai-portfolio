@@ -13,6 +13,7 @@ import { AuthProvider } from "@/components/AuthProvider";
 
 import { ReferralTracker } from "@/components/ReferralTracker";
 import { LegacyShellWrapper } from "@/components/LegacyShellWrapper";
+import { AIChatbot } from "@/components/AIChatbot";
 import { GoogleTagManager } from "@next/third-parties/google";
 import ScrollProgressBar from "@/components/ScrollProgressBar";
 
@@ -151,6 +152,7 @@ export default function RootLayout({
             <LegacyShellWrapper>
               {children}
             </LegacyShellWrapper>
+            <AIChatbot />
           </AuthProvider>
         </ThemeProvider>
       </body>
