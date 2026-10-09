@@ -27,7 +27,6 @@ import {
   Search,
   CheckCircle2,
   Lock,
-  RefreshCw,
   ExternalLink,
   ChevronRight,
 } from "lucide-react";
@@ -95,12 +94,6 @@ export default function AIHRControlCenterPage() {
   // Computed summary
   const total = records.length;
   const activeCount = records.filter((r) => r.status === "active").length;
-  const probationCount = records.filter((r) => r.status === "probation").length;
-  const pendingCount = records.filter((r) => r.status === "pending_approval").length;
-  const suspendedCount = records.filter((r) => r.status === "suspended").length;
-  const quarantinedCount = records.filter((r) => r.status === "quarantined").length;
-  const retiredCount = records.filter((r) => r.status === "retired").length;
-  const improvementCount = records.filter((r) => r.status === "improvement_plan").length;
 
   const currentKPIScore = calculateWeightedKPIScore(
     {
@@ -134,12 +127,12 @@ export default function AIHRControlCenterPage() {
     e.preventDefault();
     if (!reqRole.trim()) return;
     const newReq = {
-      id: `REQ-${Date.now().toString().slice(-4)}`,
+      id: `REQ-${String(recruitmentRequests.length + 1).padStart(3, "0")}`,
       role: reqRole,
       dept: reqDept,
       requester: "emp_60 (Mai Hoa)",
       status: "SCREENING",
-      createdAt: new Date().toISOString().split("T")[0],
+      createdAt: "2026-10-09",
     };
     setRecruitmentRequests([newReq, ...recruitmentRequests]);
     setReqRole("");
@@ -158,7 +151,7 @@ export default function AIHRControlCenterPage() {
       )
     );
     const newInc = {
-      id: `INC-${Date.now().toString().slice(-4)}`,
+      id: `INC-${String(incidents.length + 1).padStart(4, "0")}`,
       agentId,
       agentName: records.find((r) => r.agentId === agentId)?.name || agentId,
       ruleId: "HR-RULE-01",
@@ -167,7 +160,7 @@ export default function AIHRControlCenterPage() {
       description: `Cách ly khẩn cấp bởi CISO: ${reason}`,
       status: "OPEN",
       reportedBy: "emp_57 (Thiên Ân)",
-      date: new Date().toISOString().split("T")[0],
+      date: "2026-10-09",
     };
     setIncidents([newInc, ...incidents]);
     alert(`Đã cách ly khẩn cấp nhân sự ${agentId}. Quyền truy cập bị thu hồi ngay lập tức!`);

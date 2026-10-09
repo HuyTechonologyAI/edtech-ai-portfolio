@@ -13,7 +13,7 @@ import {
 } from "@/data/ai-hr-lifecycle";
 
 // In-memory runtime storage fallback for demonstration & state sync
-let cachedRecords: AgentLifecycleRecord[] = generateInitialLifecycleRecords();
+const cachedRecords: AgentLifecycleRecord[] = generateInitialLifecycleRecords();
 const auditLogsStore: Array<{
   id: string;
   timestamp: string;

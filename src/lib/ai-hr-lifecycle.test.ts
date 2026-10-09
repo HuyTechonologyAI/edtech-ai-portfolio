@@ -4,7 +4,6 @@ import {
   ALL_LIFECYCLE_STATUSES,
   AI_HR_OFFICERS,
   HARD_RULES_CATALOG,
-  DEFAULT_KPI_WEIGHTS,
   calculateWeightedKPIScore,
   classifyKPIBand,
   validateLifecycleTransition,
