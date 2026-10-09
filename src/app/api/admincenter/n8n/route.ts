@@ -92,7 +92,7 @@ const INITIAL_WORKFLOWS: N8nWorkflow[] = [
     id: "WF-SOC-01",
     name: "Soạn Bài & Đăng Tải MXH (Facebook, Threads, LinkedIn)",
     code: "n8n-social-publisher-v1",
-    description: "Kích hoạt AI Local trên Note-01 soạn thảo bài viết sư phạm, tự động chạy qua Bộ Lọc Kiểm Duyệt Pháp Luật & Nền Tảng trước khi phát hành qua Meta Graph API & LinkedIn API.",
+    description: "Kích hoạt AI Local trên Node-01 soạn thảo bài viết sư phạm, tự động chạy qua Bộ Lọc Kiểm Duyệt Pháp Luật & Nền Tảng trước khi phát hành qua Meta Graph API & LinkedIn API.",
     category: "MARKETING",
     status: "ACTIVE",
     schedule: "11:30 & 19:30 (Mỗi ngày 2 lần)",
@@ -198,7 +198,7 @@ const INITIAL_WORKFLOWS: N8nWorkflow[] = [
   },
   {
     id: "WF-OPS-01",
-    name: "Giám Sát Phần Cứng & Tự Động Phục Hồi Note-01",
+    name: "Giám Sát Phần Cứng & Tự Động Phục Hồi Node-01",
     code: "n8n-node01-sentinel-v1",
     description: "Kiểm tra nhịp tim, nhiệt độ CPU, dung lượng RAM và trạng thái mạng LAN 192.168.1.43 của Dell Precision M4800, tự động cảnh báo khi có sự cố.",
     category: "OPERATIONS",
@@ -207,7 +207,7 @@ const INITIAL_WORKFLOWS: N8nWorkflow[] = [
     lastExecutionAt: new Date().toISOString(),
     lastStatus: "SUCCESS",
     executionDurationMs: 310,
-    platforms: ["Note-01 (192.168.1.43)", "Cloudflare Tunnel", "Supabase"],
+    platforms: ["Node-01 (192.168.1.43)", "Cloudflare Tunnel", "Supabase"],
     metrics: {
       totalRuns: 1440,
       successRatePct: 99.8,
@@ -454,7 +454,7 @@ export async function POST(req: Request) {
       const selectedPlatform = (platform as SupportedPlatform) || "Facebook";
       const channelInfo = channels.find((c) => c.platform === selectedPlatform) || channels[0];
       const postTitle = title || "Bài Viết Truyền Thông AI Mới Soạn Thảo";
-      const postContent = content || "Được sinh bởi AI Local Note-01 (Dell M4800).";
+      const postContent = content || "Được sinh bởi AI Local Node-01 (Dell M4800).";
       const nowIso = new Date().toISOString();
 
       // BƯỚC 1: KIỂM DUYỆT BẮT BUỘC QUA BỘ LỌC PHÁP LUẬT & NỀN TẢNG
@@ -597,14 +597,14 @@ export async function POST(req: Request) {
 
       if (targetWf.id === "WF-SOC-01") {
         const titlePost = "Ứng Dụng AI Trợ Giảng Thông Minh Cho Giáo Viên Việt Nam (Tự Động Sinh)";
-        const contentPost = "Nội dung bài viết mới vừa được AI Local Note-01 (qwen2.5) sinh tự động theo chuẩn công văn 5512/BGDĐT. Đã qua thẩm định pháp lý và quy chuẩn sư phạm.";
+        const contentPost = "Nội dung bài viết mới vừa được AI Local Node-01 (qwen2.5) sinh tự động theo chuẩn công văn 5512/BGDĐT. Đã qua thẩm định pháp lý và quy chuẩn sư phạm.";
         const compliance = auditContentCompliance({
           title: titlePost,
           content: contentPost,
           platform: "Facebook",
         });
 
-        details = `[AI LOCAL SOẠN BÀI] Note-01 đã hoàn thành soạn thảo. Kiểm duyệt pháp lý: ${compliance.overallStatus} (Mộc: ${compliance.digitalSeal}).`;
+        details = `[AI LOCAL SOẠN BÀI] Node-01 đã hoàn thành soạn thảo. Kiểm duyệt pháp lý: ${compliance.overallStatus} (Mộc: ${compliance.digitalSeal}).`;
         payloadOutput = {
           title: titlePost,
           platforms: ["Facebook", "Threads", "LinkedIn"],
@@ -634,7 +634,7 @@ export async function POST(req: Request) {
         globalN8nState.__N8N_POSTS__.unshift(newPost);
       } else if (targetWf.id === "WF-SOC-02") {
         const titleVideo = "Kịch Bản Video 60s: Demo Tạo Trò Chơi Giáo Dục Bằng AI Cho Học Sinh";
-        const contentVideo = "Kịch bản video ngắn TikTok/Shorts vừa được kết xuất kịch bản trên Note-01. An toàn nội dung cho học sinh phổ thông.";
+        const contentVideo = "Kịch bản video ngắn TikTok/Shorts vừa được kết xuất kịch bản trên Node-01. An toàn nội dung cho học sinh phổ thông.";
         const compliance = auditContentCompliance({
           title: titleVideo,
           content: contentVideo,
@@ -646,7 +646,7 @@ export async function POST(req: Request) {
           video_title: "Demo 60 Giây Tạo Trò Chơi Giáo Dục",
           duration: "58s",
           platforms: ["TikTok", "YouTube Shorts"],
-          render_engine: "Local Compute Note-01",
+          render_engine: "Local Compute Node-01",
           digitalSeal: compliance.digitalSeal,
         };
 
