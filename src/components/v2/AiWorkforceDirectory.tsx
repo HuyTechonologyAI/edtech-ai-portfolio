@@ -363,7 +363,7 @@ export function AiWorkforceDirectory() {
                             </div>
                           ) : (
                             <img
-                              src={emp.avatarPath}
+                              src={`${emp.avatarPath}?v=20261009-v2`}
                               alt={`${emp.name} - ${emp.role}`}
                               loading="lazy"
                               onError={() => handleImageError(emp.id)}
@@ -464,7 +464,7 @@ export function AiWorkforceDirectory() {
                     </div>
                   ) : (
                     <img
-                      src={selectedEmployee.avatarPath}
+                      src={`${selectedEmployee.avatarPath}?v=20261009-v2`}
                       alt={selectedEmployee.name}
                       className="w-full h-full object-cover"
                     />

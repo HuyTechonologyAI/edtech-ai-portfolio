@@ -132,7 +132,7 @@ export default function Workforce63GalleryPage() {
                     <div className="bg-slate-950 rounded-full p-[2px]">
                       <div className="w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden bg-slate-900 flex items-center justify-center relative">
                         <img 
-                          src={emp.avatarPath} 
+                          src={`${emp.avatarPath}?v=20261009-v2`} 
                           alt={emp.name}
                           className="w-full h-full object-cover"
                           onError={(e) => {
@@ -190,7 +190,7 @@ export default function Workforce63GalleryPage() {
                     <div className="bg-slate-950 rounded-full p-[3px]">
                       <div className="w-28 h-28 rounded-full overflow-hidden bg-slate-900">
                         <img 
-                          src={selectedEmployee.avatarPath} 
+                          src={`${selectedEmployee.avatarPath}?v=20261009-v2`} 
                           alt={selectedEmployee.name}
                           className="w-full h-full object-cover"
                           onError={(e) => {
