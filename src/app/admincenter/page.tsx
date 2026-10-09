@@ -137,7 +137,7 @@ interface ToastNotification {
 const CANONICAL_AUDIT_LOGS = [
   {
     id: "AUDIT-20261009-001",
-    timestamp: "2026-10-09T18:45:00.000Z",
+    timestamp: "2026-10-09T11:45:00.000Z",
     level: "HUMAN_GATE",
     actor: "Mr. Huy (Root of Trust / L0-OWNER)",
     event: "DIRECTIVE_ISSUED_AG_ADMIN_CLEANUP",
@@ -145,15 +145,15 @@ const CANONICAL_AUDIT_LOGS = [
   },
   {
     id: "AUDIT-20261009-002",
-    timestamp: "2026-10-09T18:30:00.000Z",
+    timestamp: "2026-10-09T11:30:00.000Z",
     level: "SECURITY",
-    actor: "Lan Chi (L1-CRO / Quản Trị Hệ Thống)",
+    actor: "Lan Chi (emp_13 / Chuẩn Hóa Schema & API)",
     event: "SECURITY_HARDENING_OLLAMA_BIND",
     details: "Khóa chặt cổng Ollama vào 127.0.0.1:11434 nội bộ và Tailscale ACL (100.79.240.108). Chấm dứt hoàn toàn cấu hình mở 0.0.0.0:11434 ra Internet.",
   },
   {
     id: "AUDIT-20261009-003",
-    timestamp: "2026-10-09T17:15:00.000Z",
+    timestamp: "2026-10-09T10:15:00.000Z",
     level: "AUTH",
     actor: "Quang Huy (L1-CTO / Kiến Trúc Cốt Lõi)",
     event: "HUMAN_GATE_ISOLATION_ENFORCED",
@@ -161,7 +161,7 @@ const CANONICAL_AUDIT_LOGS = [
   },
   {
     id: "AUDIT-20261009-004",
-    timestamp: "2026-10-09T16:00:00.000Z",
+    timestamp: "2026-10-09T09:00:00.000Z",
     level: "SYSTEM",
     actor: "Mai Anh (L1-CSAO / Tổng Điều Phối)",
     event: "FLEET_REGISTRY_SYNC_63_AI",
@@ -169,7 +169,7 @@ const CANONICAL_AUDIT_LOGS = [
   },
   {
     id: "AUDIT-20261009-005",
-    timestamp: "2026-10-09T15:20:00.000Z",
+    timestamp: "2026-10-09T08:20:00.000Z",
     level: "A2A",
     actor: "WORKER-L3-DEV-01 (Node-01 Ollama)",
     event: "DAG_TASK_DISPATCH_PASS",
@@ -177,7 +177,7 @@ const CANONICAL_AUDIT_LOGS = [
   },
   {
     id: "AUDIT-20261009-006",
-    timestamp: "2026-10-09T14:10:00.000Z",
+    timestamp: "2026-10-09T07:10:00.000Z",
     level: "SECURITY",
     actor: "Thanh Trúc (L1-CCO / Tuân Thủ)",
     event: "ZERO_BACKDOOR_AUDIT_PASS",
@@ -185,7 +185,7 @@ const CANONICAL_AUDIT_LOGS = [
   },
   {
     id: "AUDIT-20261009-007",
-    timestamp: "2026-10-09T12:00:00.000Z",
+    timestamp: "2026-10-09T05:00:00.000Z",
     level: "SYSTEM",
     actor: "Huy Technology AI (Authoritative Anchor)",
     event: "NODE01_STORAGE_PARTITION_SEALED",
@@ -1529,136 +1529,52 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
     }
   };
 
-  // Effective Agents List (combining telemetry with fallback)
+  // Effective Agents List (strictly 63 canonical AI agents emp_01 -> emp_63)
   const effectiveAgents: AgentLiveTelemetry[] = useMemo(() => {
     let baseList: AgentLiveTelemetry[] = [];
     if (telemetryAgents.length > 0) {
-      baseList = telemetryAgents.map((agent) => ({
+      const canonicalOnly = telemetryAgents.filter(
+        (a) => a.id.startsWith("emp_") || (!a.id.startsWith("WORKER-") && a.id !== "L0-OWNER" && a.tier !== "L0")
+      );
+      baseList = canonicalOnly.map((agent) => ({
         ...agent,
         state: agent.state,
         tokensPerSec: agent.tokensPerSec ?? (agent.state === "ACTIVE" ? 14 : 0),
       }));
-    } else {
-      baseList = CANONICAL_63_WORKFORCE_CARDS.map((c) => ({
-        ...c,
-        state: c.state,
-        currentThought: "Đang kết nối tới điểm neo Node-01 Dell M4800, sẵn sàng nhận nhiệm vụ thực tế từ SuperAdmin.",
-        targetPeer: null,
-        tokensPerSec: 0,
-        tokensUsed: 0,
-        latencyMs: 35,
-        progressPct: 0,
-        lastHeartbeat: "Standby",
-      }));
     }
 
-    const recruitedList = (supervisorStatus?.recruitedAgents && supervisorStatus.recruitedAgents.length > 0)
-      ? supervisorStatus.recruitedAgents
-      : [
-          {
-            id: "WORKER-L3-DEV-01",
-            name: "Local Fullstack AI Worker",
-            role: "Thực thi code TypeScript / Next.js trên Node-01",
-            model: "qwen2.5-coder:32b",
-            benchmarkScore: 94.8,
-            status: "ACTIVE",
-          },
-          {
-            id: "WORKER-L3-TEST-01",
-            name: "Local QA & Regression AI Worker",
-            role: "Tạo Predictive Unit Tests và chạy Test-First",
-            model: "qwen2.5-coder:32b",
-            benchmarkScore: 96.2,
-            status: "COLLABORATING",
-          },
-          {
-            id: "WORKER-L3-OPS-01",
-            name: "Local Worktree & Queue Worker",
-            role: "Quản lý .agent-worktrees/ & PGMQ queue isolation",
-            model: "qwen2.5-coder:32b",
-            benchmarkScore: 92.5,
-            status: "ACTIVE",
-          },
-        ];
-
-    const activeTask = supervisorStatus?.tasks?.find(t => t.status === "DISPATCHED" || t.status === "IN_PROGRESS");
-
-    const recruitedFormatted: AgentLiveTelemetry[] = recruitedList.map((w, idx) => {
-      const isCollab = idx === 1 || w.id.includes("TEST") || w.status === "COLLABORATING";
-      const agentState: AgentLiveTelemetry["state"] = isCollab ? "COLLABORATING" : "ACTIVE";
-      const peer = isCollab
-        ? { id: "WORKER-L3-DEV-01", name: "Worker L3 Dev (Local)" }
-        : { id: "HUY-SUPERVISOR-V1.1", name: "Autonomous Supervisor" };
-
-      return {
-        id: w.id,
-        name: w.name,
-        tier: "L3",
-        role: w.role,
-        businessUnit: "Hạ Tầng Node-01",
-        provider: "Node-01 Ollama",
-        model: w.model,
-        state: agentState,
-        currentTask: activeTask
-          ? (isCollab ? `[A2A TEST GATE] Kiểm định Unit Tests cho ${activeTask.taskId}` : `[V1.1] ${activeTask.taskId}`)
-          : (isCollab ? `[A2A BUS] Đồng bộ kịch bản kiểm thử dự báo với DEV-01` : `[24/7 AUTONOMOUS] Sẵn sàng thực thi Ollama trên Node-01`),
-        currentThought: activeTask
-          ? (isCollab ? `Chạy Unit Tests trong worktree · RED Gate check` : `Giai đoạn: ${activeTask.lifecycle} · Checkpoint: ${activeTask.checkpoint}`)
-          : (isCollab ? `Giám sát RED-to-GREEN lifecycle cho các commit tiếp theo` : `Đang kết nối localhost:11434, kiểm định sandbox benchmark ${w.benchmarkScore}/100`),
-        targetPeer: peer,
-        tokensPerSec: isCollab ? 18.4 : 26.5,
-        tokensUsed: 45000 + idx * 12500,
-        tokensLimit: "Unlimited",
-        latencyMs: 4.8,
-        healthScore: 100,
-        progressPct: activeTask?.status === "VERIFIED_PASS" ? 100 : (isCollab ? 85 : 65),
-        lastHeartbeat: "Trực tuyến 24/7 (Node-01)",
-        isLeader: false,
-      };
-    });
-
-    // Enrich baseList: make L1-P01, L1-P02, and L0-OWNER active/collaborating so canonical A2A agents are lively
-    const enrichedBaseList = baseList.map(a => {
-      if (a.id === "L1-P01") {
+    if (baseList.length < 63) {
+      baseList = CANONICAL_63_WORKFORCE_CARDS.map((c) => {
+        const found = baseList.find((b) => b.id === c.id);
+        if (found) return found;
         return {
-          ...a,
-          state: "COLLABORATING" as const,
-          currentTask: "Điều phối tác vụ V1.1 tới Node-01 Ollama qua A2A Protocol Bus",
-          currentThought: "Chuyển tiếp payload TaskContract sang worktree Node-01",
-          targetPeer: { id: "WORKER-L3-DEV-01", name: "Worker L3 Dev" },
-          tokensPerSec: 14.2,
-          tokensUsed: 15400,
-          progressPct: 75,
-        };
-      }
-      if (a.id === "L1-P02") {
-        return {
-          ...a,
-          state: "COLLABORATING" as const,
-          currentTask: "Định tuyến tin A2A và kiểm soát hàng đợi PGMQ Node-01",
-          currentThought: "Đảm bảo thông lượng gói tin A2A 0 nghẽn giữa các worktree",
-          targetPeer: { id: "WORKER-L3-TEST-01", name: "Worker L3 Test" },
-          tokensPerSec: 16.8,
-          tokensUsed: 18200,
-          progressPct: 82,
-        };
-      }
-      if (a.id === "L0-OWNER") {
-        return {
-          ...a,
-          state: "ACTIVE" as const,
-          currentTask: "Giám sát tối cao Human-on-Exception & Root of Trust",
-          currentThought: "Hệ thống vận hành tự động theo V1.1 Architecture",
+          ...c,
+          state: c.state,
+          currentThought: "Đang kết nối tới điểm neo Node-01 Dell M4800, sẵn sàng nhận nhiệm vụ thực tế từ SuperAdmin.",
+          targetPeer: null,
           tokensPerSec: 0,
-          tokensUsed: 2500,
-          progressPct: 100,
+          tokensUsed: 0,
+          latencyMs: 35,
+          progressPct: 0,
+          lastHeartbeat: "Standby",
         };
-      }
-      return a;
+      });
+    }
+
+    // Filter out any accidental human owner or non-canonical workers
+    const final63 = baseList.filter(
+      (a) => a.id !== "L0-OWNER" && a.tier !== "L0" && !a.id.startsWith("WORKER-")
+    );
+
+    // Sort strictly emp_01 -> emp_63
+    final63.sort((a, b) => {
+      const numA = parseInt(a.id.replace("emp_", ""), 10) || 999;
+      const numB = parseInt(b.id.replace("emp_", ""), 10) || 999;
+      return numA - numB;
     });
 
-    return [...recruitedFormatted, ...enrichedBaseList];
-  }, [telemetryAgents, supervisorStatus]);
+    return final63.slice(0, 63);
+  }, [telemetryAgents]);
 
   // Filtered Agents for Directory Tab
   const filteredAgents = useMemo(() => {
@@ -3789,7 +3705,7 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
                           id: "ART-01",
                           title: "5 Ứng Dụng AI Đột Phá Giúp Giáo Viên Soạn Giáo Án Nhanh Gấp 10 Lần",
                           category: "AI Sư Phạm 5512",
-                          author: "Ánh Dương (emp_23) & Thu Hà (emp_24)",
+                          author: "Khôi Nguyên (emp_23) & Quốc Bảo (emp_24)",
                           views: "12,420",
                           status: "PUBLISHED",
                         },
@@ -3797,7 +3713,7 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
                           id: "ART-02",
                           title: "Khóa Học Python Căn Bản Ứng Dụng Tự Động Hóa Dạy Học",
                           category: "Khóa Học EdTech",
-                          author: "Minh Quân (emp_25)",
+                          author: "Kim Ngân (emp_25)",
                           views: "5,840",
                           status: "PUBLISHED",
                         },
@@ -3805,7 +3721,7 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
                           id: "ART-03",
                           title: "Kỹ Thuật Thiết Kế Prompt Sư Phạm Chuẩn Khung Năng Lực GDPT 2018",
                           category: "Prompt Engineering",
-                          author: "Bảo Trâm (emp_26)",
+                          author: "Tuấn Anh (emp_26)",
                           views: "3,910",
                           status: "PUBLISHED",
                         },
@@ -3813,7 +3729,7 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
                           id: "ART-04",
                           title: "Tự Động Hóa Đăng Bài & Tương Tác Học Viên Với n8n Doanh Nghiệp",
                           category: "Hệ Thống n8n",
-                          author: "Khánh An (emp_33) & Tuấn Kiệt (emp_34)",
+                          author: "Bảo Ngọc (emp_33) & Đức Anh (emp_34)",
                           views: "2,180",
                           status: "REVIEWED",
                         },
@@ -5049,7 +4965,7 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
                 <span className="text-cyan-400">ollama pull qwen2.5-coder:7b-instruct-q4_K_M</span><br /><br />
                 <span className="text-amber-300">SUPERVISOR_URL=https://www.huycncdsai.io.vn \</span><br />
                 <span className="text-amber-300">WORKER_ID=NODE01-QWEN7B-INT4 \</span><br />
-                <span className="text-amber-300">OLLAMA_MODEL=qwen2.5-coder:32b \</span><br />
+                <span className="text-amber-300">OLLAMA_MODEL=qwen2.5-coder:7b-instruct-q4_K_M \</span><br />
                 <span className="text-amber-300">nohup bash scripts/node01-worker-v1.1.sh &gt; /mnt/data1/HUY-AI/worker.log 2&gt;&amp;1 &</span>
               </div>
               <p className="text-[11px] text-slate-500 px-1">
@@ -6075,7 +5991,7 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
                 <span className="text-indigo-400 font-mono">LOCAL LLM</span>
               </div>
               <p className="text-sm font-extrabold text-white">
-                {localAiStudioData?.defaultModel || "qwen2.5-coder:32b"}
+                {localAiStudioData?.defaultModel || "qwen2.5-coder:7b-instruct-q4_K_M"}
               </p>
               <p className="text-[11px] text-indigo-300 font-mono mt-0.5">Ollama Backend (Port 11434)</p>
             </div>

@@ -68,6 +68,10 @@ test('catalog commands remain available but never claim verified runtime activit
     require(name: string) {
       if (name === 'next/server') return { NextResponse: Response };
       if (name === '@/data/ai-agency-canonical') return { CANONICAL_59_AGENTS: [{ id: 'L1-test', name: 'Test', businessUnit: 'Test', state: 'ACTIVE' }] };
+      if (name === '@/data/ai-workforce-63') return {
+        CANONICAL_63_WORKFORCE_CARDS: [{ id: 'L1-test', name: 'Test', businessUnit: 'Test', state: 'ACTIVE', tier: 'L1', role: 'Tester' }],
+        HUMAN_ROOT_OWNER: { id: 'L0-OWNER', name: 'Human Owner', tier: 'L0' },
+      };
       throw new Error(name);
     },
   });

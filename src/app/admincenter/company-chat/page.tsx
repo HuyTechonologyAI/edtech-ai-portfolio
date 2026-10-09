@@ -61,10 +61,13 @@ const DEPARTMENTS = [
   { key: "dept_08", name: "🛡️ Khối An toàn & AI HR (#dept-08)" }
 ];
 
+import voiceRegistry from "@/data/voice_registry.json";
+
 export default function CompanyChatPage() {
-  const [agents, setAgents] = useState<Agent[]>([]);
+  const initialAgents = Object.values(voiceRegistry.voices) as Agent[];
+  const [agents, setAgents] = useState<Agent[]>(initialAgents);
   const [selectedChannel, setSelectedChannel] = useState<string>("all");
-  const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
+  const [selectedAgent, setSelectedAgent] = useState<Agent | null>(initialAgents[0] || null);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "msg_init",
@@ -94,24 +97,23 @@ export default function CompanyChatPage() {
 
   // Load voice registry & agent roster
   useEffect(() => {
-    fetch("/src/data/voice_registry.json")
+    fetch("/api/voice/registry")
       .then((res) => {
-        if (!res.ok) throw new Error("Fallback fetch");
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const ct = res.headers.get("content-type");
+        if (!ct || !ct.includes("application/json")) throw new Error("Not JSON");
         return res.json();
-      })
-      .catch(() => {
-        return fetch("/api/voice/registry").then((r) => r.json());
       })
       .then((data) => {
         if (data?.voices) {
           const list = Object.values(data.voices) as Agent[];
           setAgents(list);
           if (list.length > 0) {
-            setSelectedAgent(list[0]);
+            setSelectedAgent((prev) => prev || list[0]);
           }
         }
       })
-      .catch((err) => console.error("Error loading agent voices:", err));
+      .catch((err) => console.warn("Using bundled agent voices:", err));
   }, []);
 
   useEffect(() => {
@@ -313,7 +315,7 @@ export default function CompanyChatPage() {
               Kênh Trao Đổi
             </h2>
             <div className="space-y-1">
-              {DEPARTMENTS.slice(0, 3).map((dept) => (
+              {DEPARTMENTS.map((dept) => (
                 <button
                   key={dept.key}
                   onClick={() => {
