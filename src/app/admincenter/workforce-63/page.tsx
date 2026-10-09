@@ -43,12 +43,18 @@ export default function Workforce63GalleryPage() {
             </p>
           </div>
 
-          <div className="flex gap-4">
-            <div className="bg-slate-900/80 p-3 rounded-xl border border-slate-800 text-center min-w-[105px]">
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              href="/admincenter/workforce-63/avatar-audit"
+              className="bg-indigo-600/90 hover:bg-indigo-600 text-white font-semibold text-xs px-3.5 py-2.5 rounded-xl border border-indigo-500/30 flex items-center gap-1.5 shadow-lg shadow-indigo-600/20 transition-all shrink-0"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-300" /> Kiểm toán Avatar (Audit Mode)
+            </Link>
+            <div className="bg-slate-900/80 p-3 rounded-xl border border-slate-800 text-center min-w-[95px]">
               <div className="text-xs text-slate-400 mb-0.5">Tổng quy mô</div>
               <div className="text-2xl font-bold text-white">63 <span className="text-xs font-normal text-slate-400">Agents</span></div>
             </div>
-            <div className="bg-slate-900/80 p-3 rounded-xl border border-slate-800 text-center min-w-[115px]">
+            <div className="bg-slate-900/80 p-3 rounded-xl border border-slate-800 text-center min-w-[95px]">
               <div className="text-xs text-slate-400 mb-0.5">Khối nghiệp vụ</div>
               <div className="text-2xl font-bold text-indigo-400">8 <span className="text-xs font-normal text-slate-400">Khối</span></div>
             </div>
