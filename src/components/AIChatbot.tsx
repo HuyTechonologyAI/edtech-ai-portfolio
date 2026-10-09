@@ -1,67 +1,72 @@
 "use client";
 
 import Image from "next/image";
-
 import type { BrowserSpeechRecognition } from "@/types/browser-speech";
 import { useHydrated } from "@/hooks/use-browser-state";
 import { useState, useRef, useEffect, useCallback } from "react";
-import { X, Send, Bot, CheckCircle2, Mic, MicOff, ImagePlus, FileText, Sparkles, BookOpen, ChevronDown, Loader2, ExternalLink } from "lucide-react";
-import { submitContact } from "@/actions/contact";
+import {
+  X,
+  Send,
+  Bot,
+  CheckCircle2,
+  Mic,
+  MicOff,
+  Sparkles,
+  Volume2,
+  VolumeX,
+  Headphones,
+  TrendingUp,
+  FileText,
+  PhoneCall,
+  Loader2,
+  ShieldCheck,
+  Play,
+  Pause
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 // ═══════════════════════════════════════════
 // TYPES
 // ═══════════════════════════════════════════
-type Source = {
-  title: string;
-  type: string;
-  sourceId: number | null;
-  similarity: number;
-};
+type RoleMode = "cskh" | "marketing";
 
 type Message = {
   id: string;
-  role: "user" | "assistant";
+  role: "user" | "assistant" | "system";
   content: string;
-  imagePreview?: string;      // Base64 thumbnail for user-uploaded images
-  sources?: Source[];          // RAG citations from AI response
+  agent_id?: string;
+  agent_name?: string;
+  timestamp: string;
+  audio_url?: string;
 };
 
 // ═══════════════════════════════════════════
-// SIMPLE MARKDOWN RENDERER
+// AMBASSADOR PROFILES
 // ═══════════════════════════════════════════
-function renderMarkdown(text: string): string {
-  let html = text
-    // Code blocks (```)
-    .replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>')
-    // Inline code
-    .replace(/`([^`]+)`/g, '<code>$1</code>')
-    // Bold
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    // Italic
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    // Headers
-    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
-    .replace(/^# (.+)$/gm, '<h1>$1</h1>')
-    // Unordered lists
-    .replace(/^[*-] (.+)$/gm, '<li>$1</li>')
-    // Ordered lists
-    .replace(/^\d+\. (.+)$/gm, '<li>$1</li>')
-    // Blockquotes
-    .replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>')
-    // Line breaks → paragraphs
-    .replace(/\n\n/g, '</p><p>')
-    .replace(/\n/g, '<br/>');
-
-  // Wrap consecutive <li> elements in <ul>
-  html = html.replace(/(<li>.*?<\/li>(\s*<br\/>)?)+/g, (match) => {
-    const cleaned = match.replace(/<br\/>/g, '');
-    return `<ul>${cleaned}</ul>`;
-  });
-
-  return `<p>${html}</p>`;
-}
+const AMBASSADORS = {
+  cskh: {
+    agent_id: "emp_43",
+    name: "Trọng Nghĩa",
+    role_title: "Hỗ trợ Khách hàng 24/7",
+    department: "Khối Tiếp thị & CRM",
+    region: "Bắc / Bắc Bộ",
+    style: "dịu, nhịp nói vừa",
+    avatar: "/assets/workforce/emp_43.jpg",
+    welcome_text:
+      "Dạ xin chào quý khách! Tôi là **Trọng Nghĩa** (AI Hỗ trợ Khách hàng 24/7) của **HUY TECHNOLOGY AI GROUP**.\n\nTôi sẵn sàng giải đáp thắc mắc về các hệ sinh thái:\n- 🎓 **EduViet AI** (Trợ lý Giáo viên)\n- 💰 **SmartTax AI** (Kế toán & Kê khai thuế)\n- ⚙️ **ZentraTech AI Hub** & Nền tảng Đào tạo\n\nQuý khách cần hỗ trợ nội dung nào hoặc cần tạo Ticket kỹ thuật ạ?",
+  },
+  marketing: {
+    agent_id: "emp_41",
+    name: "Phương Thảo",
+    role_title: "Tư vấn Dịch vụ & Marketing",
+    department: "Khối Tiếp thị & CRM",
+    region: "Trung / Huế",
+    style: "chững chạc, dễ hiểu",
+    avatar: "/assets/workforce/emp_41.jpg",
+    welcome_text:
+      "Kính chào quý khách! Tôi là **Phương Thảo** (Chuyên viên Tư vấn Giải pháp & Marketing) của **HUY TECHNOLOGY AI GROUP**.\n\nTôi có thể giúp quý khách tìm hiểu:\n- 🤖 Triển khai **Đội ngũ 63 Nhân sự AI** cho doanh nghiệp\n- ⚡ Tự động hóa quy trình với **n8n & Make.com**\n- 📊 Giải pháp Chuyển đổi số toàn diện & Đo lường ROI\n\nQuý khách đang quan tâm đến giải pháp hoặc khóa đào tạo nào để Thảo tư vấn chi tiết ạ?",
+  },
+};
 
 // ═══════════════════════════════════════════
 // SPEECH RECOGNITION HOOK
@@ -69,38 +74,34 @@ function renderMarkdown(text: string): string {
 function useSpeechRecognition(onTranscript: (text: string) => void) {
   const [isListening, setIsListening] = useState(false);
   const hydrated = useHydrated();
-  const isSupported = hydrated && !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+  const isSupported = hydrated && typeof window !== "undefined" && !!(window.SpeechRecognition || window.webkitSpeechRecognition);
   const recognitionRef = useRef<BrowserSpeechRecognition | null>(null);
 
   useEffect(() => {
-    const SpeechRecognition =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (typeof window === "undefined") return;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if (SpeechRecognition) {
       const recognition = new SpeechRecognition();
       recognition.continuous = false;
       recognition.interimResults = true;
-      // Multilingual: Tự động phát hiện ngôn ngữ
-      recognition.lang = "";
+      recognition.lang = "vi-VN";
 
-      recognition.onresult = (event) => {
-        const current = event.results[event.results.length - 1];
-        onTranscript(current[0].transcript);
+      recognition.onresult = (event: any) => {
+        let transcript = "";
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          transcript += event.results[i][0].transcript;
+        }
+        if (transcript.trim()) {
+          onTranscript(transcript);
+        }
       };
 
-      recognition.onend = () => {
-        setIsListening(false);
-      };
-
-      recognition.onerror = () => {
-        setIsListening(false);
-      };
-
+      recognition.onend = () => setIsListening(false);
+      recognition.onerror = () => setIsListening(false);
       recognitionRef.current = recognition;
+
       return () => {
-        recognition.onresult = null;
-        recognition.onend = null;
-        recognition.onerror = null;
         recognition.abort();
         recognitionRef.current = null;
       };
@@ -109,8 +110,12 @@ function useSpeechRecognition(onTranscript: (text: string) => void) {
 
   const startListening = useCallback(() => {
     if (recognitionRef.current && !isListening) {
-      recognitionRef.current.start();
-      setIsListening(true);
+      try {
+        recognitionRef.current.start();
+        setIsListening(true);
+      } catch (err) {
+        console.warn("Speech start err:", err);
+      }
     }
   }, [isListening]);
 
@@ -129,578 +134,511 @@ function useSpeechRecognition(onTranscript: (text: string) => void) {
 // ═══════════════════════════════════════════
 export function AIChatbot() {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "welcome",
-      role: "assistant",
-      content:
-        "Chào bạn! Tôi là **AI Tutor** 🧠 — Trợ lý Học tập Thông minh của ZentraTech Academy.\n\nTôi có thể giúp bạn:\n- 📄 Giải đáp từ nội dung **Ebook & Slide bài giảng**\n- 🔧 Phân tích lỗi **workflow Make/n8n** từ ảnh chụp\n- 🎤 Nhận câu hỏi bằng **giọng nói**\n\nHãy hỏi tôi bất cứ điều gì!",
-    },
-  ]);
+  const [mode, setMode] = useState<RoleMode>("cskh");
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [showLeadForm, setShowLeadForm] = useState(false);
-  const [formState, setFormState] = useState({
-    pending: false,
-    success: false,
-    error: "",
+  const [playingMsgId, setPlayingMsgId] = useState<string | null>(null);
+
+  // Form modal state (Ticket / Lead)
+  const [activeModal, setActiveModal] = useState<"ticket" | "lead" | null>(null);
+  const [modalForm, setModalForm] = useState({
+    name: "",
+    contact: "",
+    detail: "",
+    consent: true,
   });
-  const [pendingImage, setPendingImage] = useState<string | null>(null);
-  const [isScrolledUp, setIsScrolledUp] = useState(false);
+  const [modalResult, setModalResult] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const { isListening, isSupported, startListening, stopListening } =
-    useSpeechRecognition(setInput);
+    useSpeechRecognition((text) => setInput(text));
 
-  // Auto-scroll when new messages arrive
+  // Initialize mode welcome message
   useEffect(() => {
-    if (!isScrolledUp) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [messages, isOpen, showLeadForm, isScrolledUp]);
+    const currentAmbassador = AMBASSADORS[mode];
+    setMessages([
+      {
+        id: `welcome_${mode}`,
+        role: "assistant",
+        agent_id: currentAmbassador.agent_id,
+        agent_name: currentAmbassador.name,
+        content: currentAmbassador.welcome_text,
+        timestamp: new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
+      },
+    ]);
+  }, [mode]);
 
-  // Fill transcript into input when voice recognition captures text
-
-
-  // Track scroll position
-  const handleScroll = useCallback(() => {
-    if (!scrollContainerRef.current) return;
-    const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
-    setIsScrolledUp(scrollHeight - scrollTop - clientHeight > 100);
-  }, []);
-
-  const scrollToBottom = () => {
+  useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    setIsScrolledUp(false);
-  };
+  }, [messages]);
 
-  // ═══════════════════════════════════════════
-  // MESSAGE SENDING (Text + Image + Voice)
-  // ═══════════════════════════════════════════
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if ((!input.trim() && !pendingImage) || isLoading) return;
-
-    // Stop voice if still listening
-    if (isListening) stopListening();
-
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: "user",
-      content: input || "(Ảnh đính kèm)",
-      imagePreview: pendingImage || undefined,
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
-    const currentInput = input;
-    const currentImage = pendingImage;
-    setInput("");
-    setPendingImage(null);
-    setIsLoading(true);
+  // Voice Playback for AI answers
+  const handlePlayVoice = async (text: string, agent_id: string, msgId: string) => {
+    if (playingMsgId === msgId) {
+      audioRef.current?.pause();
+      setPlayingMsgId(null);
+      return;
+    }
 
     try {
-      const history = messages
-        .filter((m) => m.id !== "welcome")
-        .map((m) => ({ role: m.role, content: m.content }));
-
-      const payload: { message: string; history: { role: string; content: string }[]; imageBase64?: string } = {
-        message: currentInput || "Hãy phân tích ảnh đính kèm này.",
-        history,
-      };
-
-      if (currentImage) {
-        payload.imageBase64 = currentImage;
+      // First try pre-rendered demo audio if intro
+      const staticSample = `/voices/samples/${agent_id}_intro.mp3`;
+      if (audioRef.current) {
+        audioRef.current.src = staticSample;
+        try {
+          await audioRef.current.play();
+          setPlayingMsgId(msgId);
+          audioRef.current.onended = () => setPlayingMsgId(null);
+          return;
+        } catch {
+          // Fallback to dynamic synth API
+        }
       }
 
-      const response = await fetch("/api/chat", {
+      const res = await fetch("/api/voice/synthesize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ text, agent_id }),
       });
 
-      const data = await response.json();
+      if (!res.ok) throw new Error("Voice synth failed");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
 
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
+      if (audioRef.current) {
+        audioRef.current.src = url;
+        await audioRef.current.play();
+        setPlayingMsgId(msgId);
+        audioRef.current.onended = () => setPlayingMsgId(null);
+      }
+    } catch (err) {
+      console.warn("Audio playback fallback:", err);
+      // Fallback to browser SpeechSynthesis
+      if (typeof window !== "undefined" && "speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+        const cleanText = text.replace(/[*#`_]/g, "").slice(0, 200);
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        utterance.lang = "vi-VN";
+        utterance.onend = () => setPlayingMsgId(null);
+        window.speechSynthesis.speak(utterance);
+        setPlayingMsgId(msgId);
+      }
+    }
+  };
+
+  // Send message
+  const handleSend = async () => {
+    if (!input.trim() || isLoading) return;
+
+    const userText = input.trim();
+    setInput("");
+
+    const userMsg: Message = {
+      id: `usr_${Date.now()}`,
+      role: "user",
+      content: userText,
+      timestamp: new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
+    };
+
+    setMessages((prev) => [...prev, userMsg]);
+    setIsLoading(true);
+
+    const currentAmbassador = AMBASSADORS[mode];
+
+    try {
+      const res = await fetch("/api/public-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: userText,
+          agent_id: currentAmbassador.agent_id,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Chat response error");
+      const data = await res.json();
+
+      const aiMsg: Message = {
+        id: `ai_${Date.now()}`,
         role: "assistant",
-        content: data.reply,
-        sources: data.sources || [],
+        agent_id: currentAmbassador.agent_id,
+        agent_name: currentAmbassador.name,
+        content: data.reply || "Dạ, em đã nhận thông tin và sẽ phản hồi sớm nhất!",
+        timestamp: new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
       };
 
-      setMessages((prev) => [...prev, assistantMessage]);
-    } catch (error) {
-      console.error(error);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: (Date.now() + 1).toString(),
-          role: "assistant",
-          content: "⚠️ Đã có lỗi kết nối. Xin vui lòng thử lại sau.",
-        },
-      ]);
+      setMessages((prev) => [...prev, aiMsg]);
+    } catch (err) {
+      console.error("Public chat error:", err);
+      const fallbackMsg: Message = {
+        id: `err_${Date.now()}`,
+        role: "assistant",
+        agent_id: currentAmbassador.agent_id,
+        agent_name: currentAmbassador.name,
+        content: `Dạ, hiện hệ thống đang có lượng truy vấn cao. Quý khách vui lòng gọi Hotline kỹ thuật **0961 364 600** hoặc bấm nút "Gửi Yêu Cầu" để ${currentAmbassador.name} hỗ trợ ngay nhé!`,
+        timestamp: new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
+      };
+      setMessages((prev) => [...prev, fallbackMsg]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // ═══════════════════════════════════════════
-  // IMAGE UPLOAD HANDLER
-  // ═══════════════════════════════════════════
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  // Submit Ticket or Lead
+  const handleModalSubmit = async () => {
+    if (!modalForm.name || !modalForm.contact) return;
 
-    // Max 4MB
-    if (file.size > 4 * 1024 * 1024) {
-      alert("Ảnh quá lớn (tối đa 4MB). Vui lòng chọn ảnh nhỏ hơn.");
-      return;
-    }
+    setIsLoading(true);
+    try {
+      const actionType = activeModal === "ticket" ? "create_ticket" : "capture_lead";
+      const payload = {
+        action: actionType,
+        agent_id: mode === "cskh" ? "emp_43" : "emp_41",
+        contactData: {
+          name: modalForm.name,
+          contact: modalForm.contact,
+          phone: modalForm.contact,
+          issue: modalForm.detail,
+          demand: modalForm.detail,
+        },
+      };
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setPendingImage(reader.result as string);
-    };
-    reader.readAsDataURL(file);
-
-    // Reset input so same file can be uploaded again
-    e.target.value = "";
-  };
-
-  // ═══════════════════════════════════════════
-  // LEAD FORM
-  // ═══════════════════════════════════════════
-  const handleLeadSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setFormState({ pending: true, success: false, error: "" });
-    const formData = new FormData(e.currentTarget);
-    formData.append(
-      "message",
-      "ĐĂNG KÝ TƯ VẤN TỪ AI TUTOR: Khách hàng muốn liên hệ chuyên sâu."
-    );
-
-    const result = await submitContact(formData);
-
-    if (result.success) {
-      setFormState({ pending: false, success: true, error: "" });
-      setTimeout(() => setShowLeadForm(false), 3000);
-    } else {
-      setFormState({
-        pending: false,
-        success: false,
-        error: result.error || "Có lỗi xảy ra",
+      const res = await fetch("/api/public-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
+
+      const data = await res.json();
+      setModalResult(data.message || "Đã gửi thông tin thành công!");
+
+      setTimeout(() => {
+        setActiveModal(null);
+        setModalResult(null);
+        setModalForm({ name: "", contact: "", detail: "", consent: true });
+      }, 2500);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // ═══════════════════════════════════════════
-  // RENDER
-  // ═══════════════════════════════════════════
+  const ambassador = AMBASSADORS[mode];
+
   return (
     <>
-      {/* ─── Floating Trigger Button ─── */}
-      <button
-        onClick={() => setIsOpen(true)}
-        className={`fixed bottom-24 right-6 w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center shadow-[0_0_25px_rgba(0,255,133,0.4)] hover:scale-110 hover:shadow-[0_0_35px_rgba(0,255,133,0.6)] transition-all z-[51] pointer-events-auto ${isOpen ? "hidden" : "flex"} bg-gradient-to-br from-secondary to-emerald-400 text-black`}
-        aria-label="Open AI Tutor"
-        title="Trợ lý AI Hỗ Trợ"
-      >
-        <Sparkles className="w-5 h-5 md:w-6 md:h-6" />
-      </button>
+      <audio ref={audioRef} className="hidden" />
 
-      {/* ─── Chat Window ─── */}
+      {/* Floating Action Trigger Button */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="relative group p-3.5 rounded-full bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-950 font-bold shadow-2xl hover:scale-105 transition-all shadow-emerald-500/30 flex items-center gap-2"
+          aria-label="Mở Trợ lý AI Huy Technology AI"
+        >
+          <div className="relative w-7 h-7 rounded-full overflow-hidden border border-slate-900 bg-slate-900">
+            <img
+              src={ambassador.avatar}
+              alt={ambassador.name}
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <span className="text-xs font-black tracking-wide hidden sm:inline">
+            Trợ Lý AI {ambassador.name}
+          </span>
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-300 animate-ping absolute -top-1 -right-1" />
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 absolute -top-1 -right-1" />
+        </button>
+      </div>
+
+      {/* Main Chat Drawer Modal */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.85, y: 40 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.85, y: 40 }}
-            transition={{ type: "spring", stiffness: 350, damping: 28 }}
-            style={{ transformOrigin: "bottom right" }}
-            className="fixed bottom-4 right-4 md:bottom-6 md:right-6 w-[92vw] sm:w-[420px] h-[650px] max-h-[88vh] bg-surface/95 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-[0_0_40px_rgba(0,0,0,0.8),0_0_80px_rgba(0,255,133,0.05)] flex flex-col z-50 overflow-hidden"
+            initial={{ opacity: 0, y: 30, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 30, scale: 0.95 }}
+            className="fixed bottom-20 right-4 sm:right-6 z-50 w-[95vw] sm:w-[420px] h-[600px] max-h-[85vh] bg-slate-950 border border-white/15 rounded-3xl shadow-2xl flex flex-col overflow-hidden text-slate-100 font-sans"
           >
-            {/* ─── Header ─── */}
-            <div className="bg-gradient-to-r from-background/95 to-background/80 backdrop-blur-md px-4 py-3.5 flex items-center justify-between text-foreground border-b border-white/5 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-40 h-40 bg-secondary/5 rounded-full blur-3xl -z-10" />
-              <div className="absolute bottom-0 left-0 w-24 h-24 bg-cyan-500/5 rounded-full blur-2xl -z-10" />
-
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <div className="w-10 h-10 bg-gradient-to-br from-secondary/20 to-emerald-500/10 text-secondary border border-secondary/20 rounded-2xl flex items-center justify-center">
-                    <Bot className="w-5 h-5 drop-shadow-[0_0_6px_rgba(0,255,133,0.6)]" />
-                  </div>
-                  <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-secondary border-2 border-background shadow-[0_0_6px_rgba(0,255,133,0.8)]" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-sm flex items-center gap-1.5">
-                    AI Tutor
-                    <span className="text-[10px] font-medium bg-gradient-to-r from-secondary/20 to-cyan-500/20 text-secondary border border-secondary/20 px-1.5 py-0.5 rounded-md">
-                      RAG
-                    </span>
-                  </h3>
-                  <div className="text-[11px] text-foreground/50 flex items-center gap-1.5 mt-0.5">
-                    <Sparkles className="w-3 h-3 text-secondary" />
-                    Trợ lý Học tập Đa phương thức
-                  </div>
-                </div>
-              </div>
-
-              <button
-                onClick={() => setIsOpen(false)}
-                className="text-foreground/40 hover:text-red-400 transition-colors p-1.5 hover:bg-red-500/10 rounded-xl"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* ─── Messages Area ─── */}
-            <div
-              ref={scrollContainerRef}
-              onScroll={handleScroll}
-              className="flex-1 overflow-y-auto p-4 space-y-3 bg-gradient-to-b from-background/60 to-background/40 min-h-0"
-            >
-              <AnimatePresence initial={false}>
-                {messages.map((msg) => (
-                  <motion.div
-                    key={msg.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"} animate-msg-slide-up`}
-                  >
-                    <div className="max-w-[85%] flex flex-col gap-1.5">
-                      {/* Image preview (user messages) */}
-                      {msg.imagePreview && (
-                        <div className="flex justify-end">
-                          <div className="relative rounded-xl overflow-hidden border border-white/10 shadow-lg max-w-[200px]">
-                            <Image unoptimized width={640} height={480}
-                              src={msg.imagePreview}
-                              alt="Uploaded"
-                              className="w-full h-auto max-h-[160px] object-cover"
-                            />
-                            <div className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm text-[10px] text-foreground/70 px-2 py-1 text-center">
-                              📸 Ảnh đính kèm
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Message bubble */}
-                      <div
-                        className={`rounded-2xl px-4 py-2.5 text-[13px] leading-relaxed ${
-                          msg.role === "user"
-                            ? "bg-gradient-to-br from-secondary to-emerald-400 text-black font-medium rounded-br-md shadow-[0_2px_15px_rgba(0,255,133,0.15)]"
-                            : "bg-surface/80 border border-white/5 text-foreground rounded-bl-md shadow-sm"
-                        }`}
-                      >
-                        {msg.role === "assistant" && (
-                          <div className="flex items-center gap-1.5 mb-1.5 pb-1 border-b border-white/5">
-                            <Bot className="w-3.5 h-3.5 text-secondary" />
-                            <span className="text-[10px] font-bold text-secondary/80">
-                              AI Tutor
-                            </span>
-                          </div>
-                        )}
-                        {msg.role === "assistant" ? (
-                          <div
-                            className="chat-markdown"
-                            dangerouslySetInnerHTML={{
-                              __html: renderMarkdown(msg.content),
-                            }}
-                          />
-                        ) : (
-                          msg.content
-                        )}
-                      </div>
-
-                      {/* RAG Source Citations */}
-                      {msg.sources && msg.sources.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5 mt-1">
-                          {msg.sources.slice(0, 3).map((src, i) => (
-                            <a
-                              key={i}
-                              href={
-                                src.type === "RESOURCE"
-                                  ? "/resources"
-                                  : "/videos"
-                              }
-                              className="flex items-center gap-1 text-[10px] bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-2 py-1 rounded-lg hover:bg-cyan-500/20 transition-all group"
-                            >
-                              {src.type === "RESOURCE" ? (
-                                <FileText className="w-3 h-3" />
-                              ) : (
-                                <BookOpen className="w-3 h-3" />
-                              )}
-                              <span className="max-w-[120px] truncate">
-                                {src.title}
-                              </span>
-                              <span className="text-cyan-500/50 font-mono">
-                                {src.similarity}%
-                              </span>
-                              <ExternalLink className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                            </a>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-
-              {/* Typing indicator */}
-              {isLoading && (
-                <div className="flex justify-start">
-                  <div className="bg-surface/80 border border-white/5 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
-                    <div className="flex items-center gap-2">
-                      <div className="flex gap-1">
-                        <div
-                          className="w-2 h-2 bg-secondary/60 rounded-full animate-bounce"
-                          style={{ animationDelay: "0ms" }}
-                        />
-                        <div
-                          className="w-2 h-2 bg-secondary/60 rounded-full animate-bounce"
-                          style={{ animationDelay: "150ms" }}
-                        />
-                        <div
-                          className="w-2 h-2 bg-secondary/60 rounded-full animate-bounce"
-                          style={{ animationDelay: "300ms" }}
-                        />
-                      </div>
-                      <span className="text-[10px] text-foreground/30 ml-1">
-                        AI Tutor đang phân tích...
+            {/* Header: Mode Switcher */}
+            <div className="p-3 bg-slate-900/90 border-b border-white/10 flex flex-col gap-2.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400">
+                    <Sparkles className="w-4 h-4" />
+                  </span>
+                  <div>
+                    <h3 className="text-xs font-bold text-white flex items-center gap-1.5">
+                      HUY TECHNOLOGY AI GROUP
+                      <span className="text-[9px] bg-emerald-500/20 text-emerald-300 px-1 py-0.2 rounded border border-emerald-500/30">
+                        AI Verified
                       </span>
-                    </div>
+                    </h3>
+                    <p className="text-[10px] text-slate-400">
+                      Đội ngũ 63 Nhân Sự AI • Trực Tuyến 24/7
+                    </p>
                   </div>
                 </div>
-              )}
 
-              {/* Lead Form */}
-              {showLeadForm && (
-                <div className="bg-surface border border-secondary/30 rounded-xl p-4 shadow-md animate-msg-slide-up">
-                  {formState.success ? (
-                    <div className="text-center py-4">
-                      <CheckCircle2 className="w-10 h-10 text-secondary mx-auto mb-2" />
-                      <p className="text-sm font-bold text-secondary">
-                        Đã nhận thông tin!
-                      </p>
-                      <p className="text-xs text-foreground/70">
-                        Chuyên gia sẽ liên hệ bạn sớm.
-                      </p>
-                    </div>
-                  ) : (
-                    <form onSubmit={handleLeadSubmit} className="space-y-3">
-                      <h4 className="font-bold text-sm text-center">
-                        Đăng ký Tư Vấn 1-1
-                      </h4>
-                      {formState.error && (
-                        <p className="text-xs text-red-500">
-                          {formState.error}
-                        </p>
-                      )}
-                      <input
-                        type="text"
-                        name="name"
-                        required
-                        placeholder="Họ và Tên *"
-                        className="w-full text-sm px-3 py-2 rounded-lg border border-border bg-background focus:ring-1 focus:ring-secondary/50 outline-none"
-                      />
-                      <input
-                        type="email"
-                        name="email"
-                        required
-                        placeholder="Email liên hệ *"
-                        className="w-full text-sm px-3 py-2 rounded-lg border border-border bg-background focus:ring-1 focus:ring-secondary/50 outline-none"
-                      />
-                      <input
-                        type="text"
-                        name="company"
-                        placeholder="Tên Công ty"
-                        className="w-full text-sm px-3 py-2 rounded-lg border border-border bg-background focus:ring-1 focus:ring-secondary/50 outline-none"
-                      />
-                      <button
-                        type="submit"
-                        disabled={formState.pending}
-                        className="w-full bg-secondary text-black font-bold py-2 rounded-lg text-sm hover:bg-secondary/90 transition-colors disabled:opacity-50 shadow-[0_0_10px_rgba(0,255,133,0.2)]"
-                      >
-                        {formState.pending ? "Đang gửi..." : "Gửi yêu cầu"}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setShowLeadForm(false)}
-                        className="w-full text-xs text-foreground/50 hover:text-foreground"
-                      >
-                        Hủy bỏ
-                      </button>
-                    </form>
-                  )}
-                </div>
-              )}
-
-              <div ref={messagesEndRef} />
-            </div>
-
-            {/* Scroll to bottom FAB */}
-            {isScrolledUp && (
-              <button
-                onClick={scrollToBottom}
-                className="absolute bottom-[140px] left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-surface border border-white/10 flex items-center justify-center shadow-lg hover:bg-white/10 transition-all z-10"
-              >
-                <ChevronDown className="w-4 h-4 text-foreground/60" />
-              </button>
-            )}
-
-            {/* ─── Quick Action Chips ─── */}
-            {!showLeadForm && messages.length <= 2 && (
-              <div className="px-3 py-2 bg-background/60 border-t border-white/5 flex gap-1.5 overflow-x-auto scrollbar-hide">
                 <button
-                  onClick={() =>
-                    setInput("Giải thích về Retrieval-Augmented Generation?")
-                  }
-                  className="whitespace-nowrap text-[11px] bg-secondary/10 text-secondary border border-secondary/20 px-3 py-1.5 rounded-full hover:bg-secondary hover:text-black transition-all font-bold shadow-[0_0_8px_rgba(0,255,133,0.08)]"
-                >
-                  <span className="mr-1">🧠</span> Giải thích RAG
-                </button>
-                <button
-                  onClick={() =>
-                    setInput("Cách debug lỗi connection trên n8n workflow?")
-                  }
-                  className="whitespace-nowrap text-[11px] bg-surface border border-white/10 px-3 py-1.5 rounded-full hover:border-secondary/50 hover:text-secondary transition-all font-medium"
-                >
-                  <span className="mr-1">🔧</span> Debug n8n
-                </button>
-                <button
-                  onClick={() =>
-                    setInput("Tóm tắt nội dung tài liệu mới nhất?")
-                  }
-                  className="whitespace-nowrap text-[11px] bg-surface border border-white/10 px-3 py-1.5 rounded-full hover:border-secondary/50 hover:text-secondary transition-all font-medium"
-                >
-                  <span className="mr-1">📄</span> Tóm tắt tài liệu
-                </button>
-                <button
-                  onClick={() => setShowLeadForm(true)}
-                  className="whitespace-nowrap text-[11px] bg-surface border border-white/10 px-3 py-1.5 rounded-full hover:border-secondary/50 hover:text-secondary transition-all font-medium"
-                >
-                  <span className="mr-1">🎯</span> Tư vấn sâu
-                </button>
-              </div>
-            )}
-
-            {/* ─── Image Preview Bar ─── */}
-            {pendingImage && (
-              <div className="px-3 py-2 bg-background/80 border-t border-white/5 flex items-center gap-2">
-                <div className="relative w-12 h-12 rounded-lg overflow-hidden border border-secondary/30 shrink-0">
-                  <Image unoptimized width={640} height={480}
-                    src={pendingImage}
-                    alt="Preview"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[11px] font-bold text-foreground/80 truncate">
-                    📸 Ảnh đã đính kèm
-                  </p>
-                  <p className="text-[10px] text-foreground/40">
-                    Nhấn gửi để AI phân tích
-                  </p>
-                </div>
-                <button
-                  onClick={() => setPendingImage(null)}
-                  className="p-1.5 text-foreground/40 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
+                  onClick={() => setIsOpen(false)}
+                  className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-all"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
-            )}
 
-            {/* ─── Input Area ─── */}
-            <form
-              onSubmit={handleSendMessage}
-              className="p-3 bg-surface/90 border-t border-white/5 flex items-center gap-2"
-            >
-              {/* Hidden file input */}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                className="hidden"
-              />
-
-              {/* Image upload button */}
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isLoading || showLeadForm}
-                className="w-9 h-9 rounded-xl flex items-center justify-center text-foreground/40 hover:text-cyan-400 hover:bg-cyan-500/10 transition-all disabled:opacity-30 shrink-0"
-                title="Đính kèm ảnh chụp workflow"
-              >
-                <ImagePlus className="w-4.5 h-4.5" />
-              </button>
-
-              {/* Voice input button */}
-              {isSupported && (
+              {/* Ambassador Switch Buttons */}
+              <div className="grid grid-cols-2 gap-1.5 bg-slate-950/80 p-1 rounded-xl border border-white/10">
                 <button
-                  type="button"
-                  onClick={isListening ? stopListening : startListening}
-                  disabled={isLoading || showLeadForm}
-                  className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all disabled:opacity-30 shrink-0 ${
-                    isListening
-                      ? "bg-red-500/20 text-red-400 voice-pulse-ring border border-red-500/30"
-                      : "text-foreground/40 hover:text-amber-400 hover:bg-amber-500/10"
+                  onClick={() => setMode("cskh")}
+                  className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-bold transition-all ${
+                    mode === "cskh"
+                      ? "bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20"
+                      : "text-slate-400 hover:text-white"
                   }`}
-                  title={
-                    isListening
-                      ? "Dừng ghi âm"
-                      : "Hỏi bằng giọng nói"
-                  }
                 >
-                  {isListening ? (
-                    <MicOff className="w-4 h-4" />
-                  ) : (
-                    <Mic className="w-4 h-4" />
-                  )}
+                  <Headphones className="w-3.5 h-3.5" />
+                  CSKH (Trọng Nghĩa)
                 </button>
+
+                <button
+                  onClick={() => setMode("marketing")}
+                  className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-bold transition-all ${
+                    mode === "marketing"
+                      ? "bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/20"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  <TrendingUp className="w-3.5 h-3.5" />
+                  Tư Vấn (Phương Thảo)
+                </button>
+              </div>
+
+              {/* Ambassador Identity Banner */}
+              <div className="flex items-center justify-between text-[11px] px-2 py-1 rounded-lg bg-white/5 border border-white/5">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-full overflow-hidden border border-emerald-400/50">
+                    <img src={ambassador.avatar} alt={ambassador.name} className="w-full h-full object-cover" />
+                  </div>
+                  <div>
+                    <span className="font-bold text-white">{ambassador.name}</span>
+                    <span className="text-slate-400 text-[10px] ml-1.5">({ambassador.region})</span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setActiveModal(mode === "cskh" ? "ticket" : "lead")}
+                  className="text-[10px] font-bold text-emerald-400 hover:underline flex items-center gap-1"
+                >
+                  {mode === "cskh" ? "+ Tạo Ticket" : "+ Đăng Ký Tư Vấn"}
+                </button>
+              </div>
+            </div>
+
+            {/* Chat Body */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-3.5">
+              {messages.map((m) => (
+                <div
+                  key={m.id}
+                  className={`flex gap-2.5 max-w-[85%] ${
+                    m.role === "user" ? "ml-auto flex-row-reverse" : ""
+                  }`}
+                >
+                  <div
+                    className={`w-7 h-7 rounded-full shrink-0 flex items-center justify-center font-bold text-[10px] ${
+                      m.role === "user"
+                        ? "bg-emerald-500 text-slate-950"
+                        : "bg-slate-800 border border-white/20 overflow-hidden"
+                    }`}
+                  >
+                    {m.role === "user" ? (
+                      "Tôi"
+                    ) : (
+                      <img src={ambassador.avatar} alt={m.agent_name || "AI"} className="w-full h-full object-cover" />
+                    )}
+                  </div>
+
+                  <div
+                    className={`p-3 rounded-2xl text-xs space-y-1 leading-relaxed ${
+                      m.role === "user"
+                        ? "bg-emerald-500/20 text-emerald-100 border border-emerald-500/30 rounded-tr-none"
+                        : "bg-slate-900 text-slate-200 border border-white/10 rounded-tl-none shadow-sm"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-3 text-[10px] text-slate-400">
+                      <span className="font-semibold">{m.role === "user" ? "Quý khách" : m.agent_name}</span>
+                      <span>{m.timestamp}</span>
+                    </div>
+
+                    <div className="whitespace-pre-wrap">{m.content}</div>
+
+                    {m.role === "assistant" && (
+                      <div className="pt-1.5 flex items-center gap-2 border-t border-white/5">
+                        <button
+                          onClick={() => handlePlayVoice(m.content, m.agent_id || ambassador.agent_id, m.id)}
+                          className="flex items-center gap-1 text-[10px] font-semibold text-slate-400 hover:text-emerald-400 transition-colors"
+                        >
+                          <Volume2 className="w-3 h-3 text-emerald-400" />
+                          {playingMsgId === m.id ? "Đang phát..." : "Nghe giọng"}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+
+              {isLoading && (
+                <div className="flex gap-2 items-center text-xs text-slate-400 italic pl-9">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-400" />
+                  {ambassador.name} đang suy nghĩ câu trả lời...
+                </div>
               )}
+              <div ref={messagesEndRef} />
+            </div>
 
-              {/* Text input */}
-              <input
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder={
-                  isListening
-                    ? "🎤 Đang lắng nghe..."
-                    : "Hỏi AI Tutor bất kỳ điều gì..."
-                }
-                className={`flex-1 px-4 py-2.5 bg-background/60 border rounded-xl text-sm focus:outline-none transition-all min-w-0 ${
-                  isListening
-                    ? "border-red-500/30 ring-1 ring-red-500/20 text-red-300 placeholder:text-red-400/50"
-                    : "border-white/10 focus:border-secondary/50 focus:ring-1 focus:ring-secondary/30"
-                }`}
-                disabled={isLoading || showLeadForm}
-              />
-
-              {/* Send button */}
-              <button
-                type="submit"
-                disabled={
-                  (!input.trim() && !pendingImage) ||
-                  isLoading ||
-                  showLeadForm
-                }
-                className="w-9 h-9 bg-gradient-to-br from-secondary to-emerald-400 text-black rounded-xl flex items-center justify-center hover:scale-105 transition-all disabled:opacity-30 disabled:cursor-not-allowed shrink-0 shadow-[0_0_12px_rgba(0,255,133,0.2)]"
-              >
-                {isLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Send className="w-4 h-4 ml-0.5" />
+            {/* Input Bar */}
+            <div className="p-3 bg-slate-900/80 border-t border-white/10">
+              <div className="flex items-center gap-2">
+                {isSupported && (
+                  <button
+                    onClick={isListening ? stopListening : startListening}
+                    className={`p-2 rounded-xl border transition-all ${
+                      isListening
+                        ? "bg-rose-500 text-white border-rose-400 animate-pulse"
+                        : "bg-white/5 hover:bg-white/10 text-slate-300 border-white/10"
+                    }`}
+                    title={isListening ? "Dừng ghi âm" : "Nói bằng tiếng Việt"}
+                  >
+                    {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                  </button>
                 )}
-              </button>
-            </form>
+
+                <input
+                  type="text"
+                  placeholder={`Nhắn tin với ${ambassador.name}...`}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                  className="flex-1 bg-slate-950 border border-white/15 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                />
+
+                <button
+                  onClick={handleSend}
+                  disabled={!input.trim() || isLoading}
+                  className="p-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 text-slate-950 font-bold transition-all shadow-md shadow-emerald-500/20"
+                >
+                  <Send className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Ticket / Lead Capture Modal */}
+      {activeModal && (
+        <div className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-sm bg-slate-900 border border-white/20 rounded-2xl p-5 shadow-2xl space-y-3.5 text-xs">
+            <div className="flex items-center justify-between border-b border-white/10 pb-2.5">
+              <h4 className="font-bold text-white flex items-center gap-1.5">
+                {activeModal === "ticket" ? (
+                  <>
+                    <FileText className="w-4 h-4 text-emerald-400" />
+                    Tạo Ticket Hỗ Trợ Kỹ Thuật
+                  </>
+                ) : (
+                  <>
+                    <TrendingUp className="w-4 h-4 text-cyan-400" />
+                    Đăng Ký Tư Vấn Giải Pháp AI 1-1
+                  </>
+                )}
+              </h4>
+              <button onClick={() => setActiveModal(null)} className="text-slate-400 hover:text-white">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {modalResult ? (
+              <div className="p-4 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-200 text-center space-y-1">
+                <CheckCircle2 className="w-6 h-6 mx-auto text-emerald-400" />
+                <p className="font-bold text-sm">Gửi Thành Công!</p>
+                <p className="text-[11px]">{modalResult}</p>
+              </div>
+            ) : (
+              <>
+                <div>
+                  <label className="block text-slate-400 mb-1">Họ & Tên của bạn *</label>
+                  <input
+                    type="text"
+                    placeholder="Nguyễn Văn A"
+                    value={modalForm.name}
+                    onChange={(e) => setModalForm({ ...modalForm, name: e.target.value })}
+                    className="w-full bg-slate-950 border border-white/15 rounded-lg p-2 text-white focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-400 mb-1">Số điện thoại / Email liên hệ *</label>
+                  <input
+                    type="text"
+                    placeholder="0912 345 678 hoặc email@domain.com"
+                    value={modalForm.contact}
+                    onChange={(e) => setModalForm({ ...modalForm, contact: e.target.value })}
+                    className="w-full bg-slate-950 border border-white/15 rounded-lg p-2 text-white focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-400 mb-1">
+                    {activeModal === "ticket" ? "Mô tả vấn đề cần hỗ trợ" : "Nhu cầu tự động hóa / khóa học quan tâm"}
+                  </label>
+                  <textarea
+                    rows={2}
+                    placeholder="Nhập chi tiết yêu cầu..."
+                    value={modalForm.detail}
+                    onChange={(e) => setModalForm({ ...modalForm, detail: e.target.value })}
+                    className="w-full bg-slate-950 border border-white/15 rounded-lg p-2 text-white focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+
+                <div className="flex items-center gap-2 pt-1 text-[11px] text-slate-400">
+                  <input
+                    type="checkbox"
+                    id="consent"
+                    checked={modalForm.consent}
+                    onChange={(e) => setModalForm({ ...modalForm, consent: e.target.checked })}
+                    className="rounded accent-emerald-500"
+                  />
+                  <label htmlFor="consent" className="cursor-pointer">
+                    Tôi đồng ý để Huy Technology AI liên hệ tư vấn.
+                  </label>
+                </div>
+
+                <div className="flex justify-end gap-2 pt-2 border-t border-white/10">
+                  <button
+                    onClick={() => setActiveModal(null)}
+                    className="px-3 py-1.5 rounded-lg text-slate-400 hover:text-white"
+                  >
+                    Đóng
+                  </button>
+                  <button
+                    onClick={handleModalSubmit}
+                    disabled={!modalForm.name || !modalForm.contact || !modalForm.consent || isLoading}
+                    className="px-4 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 text-slate-950 font-bold shadow-md shadow-emerald-500/20"
+                  >
+                    {isLoading ? "Đang gửi..." : "Xác Nhận & Gửi"}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </>
   );
 }
