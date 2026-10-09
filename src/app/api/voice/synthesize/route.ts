@@ -78,10 +78,11 @@ export async function POST(req: NextRequest) {
 
     try {
       await execAsync(cmd, { timeout: 15000 });
-    } catch (execErr: any) {
+    } catch (execErr: unknown) {
       console.error("edge-tts synthesis failed:", execErr);
+      const details = execErr instanceof Error ? execErr.message : "Execution failed";
       return NextResponse.json(
-        { error: "Audio synthesis failed on NODE-01 engine", details: execErr.message },
+        { error: "Audio synthesis failed on NODE-01 engine", details },
         { status: 500 }
       );
     }
@@ -98,8 +99,9 @@ export async function POST(req: NextRequest) {
         "X-Voice-Cached": "false",
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Synthesize API Error:", error);
-    return NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 });
+    const message = error instanceof Error ? error.message : "Internal server error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useRef } from "react";
+import Link from "next/link";
 import {
   Shield,
   ShieldCheck,
@@ -2242,22 +2243,22 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
 
       {/* TABS NAVIGATION */}
       <nav className="px-4 lg:px-8 border-b border-white/10 bg-[#0F172A]/40 flex items-center gap-2 overflow-x-auto py-2">
-        <button
-          onClick={() => window.location.href = '/admincenter/company-chat'}
+        <Link
+          href="/admincenter/company-chat"
           className="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500 hover:text-black shadow-lg shadow-emerald-500/20"
         >
           <Bot className="w-4 h-4 text-emerald-400" />
           <span>💬 Chat Toàn Công Ty & Giao Việc 63 AI</span>
           <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-emerald-500/30 font-mono text-emerald-200">LIVE</span>
-        </button>
+        </Link>
 
-        <button
-          onClick={() => window.location.href = '/admincenter/voice-library'}
+        <Link
+          href="/admincenter/voice-library"
           className="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 hover:bg-cyan-500 hover:text-black shadow-lg shadow-cyan-500/20"
         >
           <Sparkles className="w-4 h-4 text-cyan-400" />
           <span>🎙️ Thư Viện 63 Giọng Đọc AI</span>
-        </button>
+        </Link>
         <button
           onClick={() => setActiveTab("swarm")}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 ${

@@ -1,30 +1,15 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import {
-  Users,
   MessageSquare,
-  Bot,
   Send,
-  Mic,
-  MicOff,
   Volume2,
-  VolumeX,
   PlusCircle,
-  Clock,
-  CheckCircle2,
-  AlertCircle,
   Search,
-  Filter,
   ArrowLeft,
-  Sparkles,
-  ShieldAlert,
-  Play,
-  Pause,
-  Layers,
-  ChevronRight,
   Briefcase
 } from "lucide-react";
 
@@ -80,7 +65,15 @@ export default function CompanyChatPage() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [selectedChannel, setSelectedChannel] = useState<string>("all");
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: "msg_init",
+      sender_type: "system",
+      sender_name: "Autonomous Control Plane (NODE-01)",
+      content: "Chào mừng Mr. Huy Technology AI đến với Hệ thống Chat Doanh nghiệp & Điều phối 63 AI. Toàn bộ 8 phòng ban và 63 AI Agent đã sẵn sàng tiếp nhận chỉ thị.",
+      timestamp: "18:00:00"
+    }
+  ]);
   const [inputText, setInputText] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
@@ -119,17 +112,6 @@ export default function CompanyChatPage() {
         }
       })
       .catch((err) => console.error("Error loading agent voices:", err));
-
-    // Initial welcome message
-    setMessages([
-      {
-        id: "msg_init",
-        sender_type: "system",
-        sender_name: "Autonomous Control Plane (NODE-01)",
-        content: "Chào mừng Mr. Huy Technology AI đến với Hệ thống Chat Doanh nghiệp & Điều phối 63 AI. Toàn bộ 8 phòng ban và 63 AI Agent đã sẵn sàng tiếp nhận chỉ thị.",
-        timestamp: new Date().toLocaleTimeString("vi-VN")
-      }
-    ]);
   }, []);
 
   useEffect(() => {
@@ -549,7 +531,7 @@ export default function CompanyChatPage() {
                 <Briefcase className="w-6 h-6 text-slate-500 mb-2" />
                 <p className="text-xs text-slate-400 font-medium">Chưa có nhiệm vụ nào được giao</p>
                 <p className="text-[10px] text-slate-500 mt-1">
-                  Bấm "Giao Nhiệm Vụ Mới" để phân bổ việc cho 63 AI
+                  Bấm &quot;Giao Nhiệm Vụ Mới&quot; để phân bổ việc cho 63 AI
                 </p>
               </div>
             ) : (
@@ -645,7 +627,9 @@ export default function CompanyChatPage() {
                   <label className="block text-slate-300 font-semibold mb-1">Mức Độ Ưu Tiên</label>
                   <select
                     value={taskForm.priority}
-                    onChange={(e: any) => setTaskForm({ ...taskForm, priority: e.target.value })}
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                      setTaskForm({ ...taskForm, priority: e.target.value as "CRITICAL" | "HIGH" | "NORMAL" })
+                    }
                     className="w-full bg-slate-950 border border-white/20 rounded-lg p-2 text-white focus:outline-none focus:border-emerald-500"
                   >
                     <option value="CRITICAL">🔴 CRITICAL (Khẩn cấp)</option>

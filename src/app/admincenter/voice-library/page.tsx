@@ -1,21 +1,15 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import {
   Volume2,
   Play,
   Pause,
   Search,
-  Filter,
   ArrowLeft,
-  Sparkles,
-  CheckCircle2,
-  AlertCircle,
-  ShieldCheck,
-  RefreshCw,
-  Layers,
-  ChevronDown
+  ShieldCheck
 } from "lucide-react";
 
 interface VoiceProfile {
@@ -38,7 +32,6 @@ interface VoiceProfile {
 
 export default function VoiceLibraryPage() {
   const [voices, setVoices] = useState<VoiceProfile[]>([]);
-  const [filteredVoices, setFilteredVoices] = useState<VoiceProfile[]>([]);
   const [search, setSearch] = useState("");
   const [regionFilter, setRegionFilter] = useState("ALL");
   const [playingId, setPlayingId] = useState<string | null>(null);
@@ -53,13 +46,12 @@ export default function VoiceLibraryPage() {
         if (data?.voices) {
           const list = Object.values(data.voices) as VoiceProfile[];
           setVoices(list);
-          setFilteredVoices(list);
         }
       })
       .catch((err) => console.error("Error loading voice registry:", err));
   }, []);
 
-  useEffect(() => {
+  const filteredVoices = useMemo(() => {
     let result = voices;
     if (search.trim()) {
       const q = search.toLowerCase();
@@ -74,7 +66,7 @@ export default function VoiceLibraryPage() {
     if (regionFilter !== "ALL") {
       result = result.filter((v) => v.region.includes(regionFilter));
     }
-    setFilteredVoices(result);
+    return result;
   }, [search, regionFilter, voices]);
 
   const handlePlayVoice = (v: VoiceProfile) => {

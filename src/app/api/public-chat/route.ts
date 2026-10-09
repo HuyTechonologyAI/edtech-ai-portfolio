@@ -11,7 +11,7 @@ const DATA_DIR = path.join(process.cwd(), "src/data");
 const TICKETS_FILE = path.join(DATA_DIR, "cskh_tickets.json");
 const LEADS_FILE = path.join(DATA_DIR, "marketing_leads.json");
 
-function ensureFile(filePath: string, defaultData: any) {
+function ensureFile(filePath: string, defaultData: unknown) {
   if (!fs.existsSync(filePath)) {
     fs.mkdirSync(path.dirname(filePath), { recursive: true });
     fs.writeFileSync(filePath, JSON.stringify(defaultData, null, 2), "utf-8");
@@ -154,8 +154,9 @@ export async function POST(req: NextRequest) {
       fallback: true
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Public Chat Error:", error);
-    return NextResponse.json({ error: error.message || "Lỗi xử lý hệ thống" }, { status: 500 });
+    const message = error instanceof Error ? error.message : "Lỗi xử lý hệ thống";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

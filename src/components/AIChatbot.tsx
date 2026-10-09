@@ -1,27 +1,21 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
-import Image from "next/image";
 import type { BrowserSpeechRecognition } from "@/types/browser-speech";
 import { useHydrated } from "@/hooks/use-browser-state";
 import { useState, useRef, useEffect, useCallback } from "react";
 import {
   X,
   Send,
-  Bot,
   CheckCircle2,
   Mic,
   MicOff,
   Sparkles,
   Volume2,
-  VolumeX,
   Headphones,
   TrendingUp,
   FileText,
-  PhoneCall,
-  Loader2,
-  ShieldCheck,
-  Play,
-  Pause
+  Loader2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -87,9 +81,10 @@ function useSpeechRecognition(onTranscript: (text: string) => void) {
       recognition.interimResults = true;
       recognition.lang = "vi-VN";
 
-      recognition.onresult = (event: any) => {
+      recognition.onresult = (event: { results: ArrayLike<ArrayLike<{ transcript: string }>>; resultIndex?: number }) => {
         let transcript = "";
-        for (let i = event.resultIndex; i < event.results.length; i++) {
+        const startIndex = event.resultIndex ?? 0;
+        for (let i = startIndex; i < event.results.length; i++) {
           transcript += event.results[i][0].transcript;
         }
         if (transcript.trim()) {
@@ -135,7 +130,16 @@ function useSpeechRecognition(onTranscript: (text: string) => void) {
 export function AIChatbot() {
   const [isOpen, setIsOpen] = useState(false);
   const [mode, setMode] = useState<RoleMode>("cskh");
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: "welcome_cskh",
+      role: "assistant",
+      agent_id: AMBASSADORS.cskh.agent_id,
+      agent_name: AMBASSADORS.cskh.name,
+      content: AMBASSADORS.cskh.welcome_text,
+      timestamp: "18:00",
+    },
+  ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [playingMsgId, setPlayingMsgId] = useState<string | null>(null);
@@ -156,20 +160,21 @@ export function AIChatbot() {
   const { isListening, isSupported, startListening, stopListening } =
     useSpeechRecognition((text) => setInput(text));
 
-  // Initialize mode welcome message
-  useEffect(() => {
-    const currentAmbassador = AMBASSADORS[mode];
+  const handleSwitchMode = (newMode: RoleMode) => {
+    if (newMode === mode) return;
+    setMode(newMode);
+    const currentAmbassador = AMBASSADORS[newMode];
     setMessages([
       {
-        id: `welcome_${mode}`,
+        id: `welcome_${newMode}`,
         role: "assistant",
         agent_id: currentAmbassador.agent_id,
         agent_name: currentAmbassador.name,
         content: currentAmbassador.welcome_text,
-        timestamp: new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
+        timestamp: "18:00",
       },
     ]);
-  }, [mode]);
+  };
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -395,7 +400,7 @@ export function AIChatbot() {
               {/* Ambassador Switch Buttons */}
               <div className="grid grid-cols-2 gap-1.5 bg-slate-950/80 p-1 rounded-xl border border-white/10">
                 <button
-                  onClick={() => setMode("cskh")}
+                  onClick={() => handleSwitchMode("cskh")}
                   className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-bold transition-all ${
                     mode === "cskh"
                       ? "bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20"
@@ -407,7 +412,7 @@ export function AIChatbot() {
                 </button>
 
                 <button
-                  onClick={() => setMode("marketing")}
+                  onClick={() => handleSwitchMode("marketing")}
                   className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-bold transition-all ${
                     mode === "marketing"
                       ? "bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/20"
