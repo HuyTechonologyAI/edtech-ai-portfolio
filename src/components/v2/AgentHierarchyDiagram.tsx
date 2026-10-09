@@ -118,10 +118,19 @@ export function AgentHierarchyDiagram() {
         </div>
 
         {/* Governance Commitment Footer */}
-        <div className="mt-12 text-center text-xs text-slate-400 max-w-2xl mx-auto">
+        <div className="mt-12 text-center text-xs text-slate-400 max-w-2xl mx-auto space-y-4">
           <p>
             🔒 <strong className="text-white">Nguyên tắc bảo vệ dữ liệu:</strong> Toàn bộ dữ liệu của đối tác và khách hàng được phân vùng cách ly logic, chỉ xử lý trong phạm vi được chỉ định và luôn dưới sự giám sát của con người đối với các tác vụ rủi ro cao.
           </p>
+          <div className="pt-2">
+            <a
+              href="#ai-workforce"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold text-black bg-gradient-to-r from-[#00E5FF] to-[#0070F3] hover:shadow-[0_0_25px_rgba(0,229,255,0.5)] hover:scale-102 transition-all cursor-pointer"
+            >
+              <span>Khám phá Đội ngũ 63 Nhân sự AI</span>
+              <span className="text-xs">↓</span>
+            </a>
+          </div>
         </div>
       </div>
     </section>
