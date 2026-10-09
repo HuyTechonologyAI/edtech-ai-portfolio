@@ -30,8 +30,12 @@ interface VoiceProfile {
   approval_status: string;
 }
 
+import voiceRegistry from "@/data/voice_registry.json";
+
 export default function VoiceLibraryPage() {
-  const [voices, setVoices] = useState<VoiceProfile[]>([]);
+  const [voices, setVoices] = useState<VoiceProfile[]>(
+    Object.values(voiceRegistry.voices) as VoiceProfile[]
+  );
   const [search, setSearch] = useState("");
   const [regionFilter, setRegionFilter] = useState("ALL");
   const [playingId, setPlayingId] = useState<string | null>(null);
@@ -39,16 +43,20 @@ export default function VoiceLibraryPage() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    fetch("/src/data/voice_registry.json")
-      .then((res) => res.json())
-      .catch(() => fetch("/api/voice/registry").then((r) => r.json()))
+    fetch("/api/voice/registry")
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const ct = res.headers.get("content-type");
+        if (!ct || !ct.includes("application/json")) throw new Error("Not JSON");
+        return res.json();
+      })
       .then((data) => {
         if (data?.voices) {
           const list = Object.values(data.voices) as VoiceProfile[];
           setVoices(list);
         }
       })
-      .catch((err) => console.error("Error loading voice registry:", err));
+      .catch((err) => console.warn("Using bundled voice registry:", err));
   }, []);
 
   const filteredVoices = useMemo(() => {

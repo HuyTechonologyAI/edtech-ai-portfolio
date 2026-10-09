@@ -1,4 +1,8 @@
 import { NextResponse } from "next/server";
+import {
+  CANONICAL_63_WORKFORCE_CARDS,
+  HUMAN_ROOT_OWNER,
+} from "@/data/ai-workforce-63";
 import { CANONICAL_59_AGENTS } from "@/data/ai-agency-canonical";
 
 export interface AgentLiveTelemetry {
@@ -182,11 +186,11 @@ if (!globalForSwarm.__HUY_SWARM_STATE__) {
 export function getLiveTelemetryData() {
   const isPaused = swarmState.mode === "PAUSED_SAFE";
 
-  // Build 59 Agents Real State: 100% clean baseline
-  const agents: AgentLiveTelemetry[] = CANONICAL_59_AGENTS.map((canonical) => {
+  // Build 63 Agents Real State: 100% clean baseline from CANONICAL_63_WORKFORCE_CARDS
+  const agents: AgentLiveTelemetry[] = CANONICAL_63_WORKFORCE_CARDS.map((canonical) => {
     const custom = swarmState.customTasks[canonical.id];
 
-    let state: AgentLiveTelemetry["state"] = canonical.state;
+    let state: AgentLiveTelemetry["state"] = canonical.state as AgentLiveTelemetry["state"];
     if (isPaused) {
       state = "PAUSED";
     } else if (custom?.state) {
@@ -206,7 +210,7 @@ export function getLiveTelemetryData() {
       model: canonical.model,
       state,
       currentTask: custom?.task || canonical.currentTask,
-      currentThought: custom?.thought || (canonical.id === "L0-OWNER" ? "Đang duy trì Root of Trust tối cao và thẩm định các chỉ thị trên Node-01." : "Đang kết nối tới điểm neo Node-01 Dell M4800, sẵn sàng nhận nhiệm vụ thực tế từ SuperAdmin."),
+      currentThought: custom?.thought || "Đang kết nối tới điểm neo Node-01 Dell M4800, sẵn sàng nhận nhiệm vụ thực tế từ SuperAdmin.",
       targetPeer: null,
       tokensPerSec: 0, // Số liệu thật: 0 t/s khi chưa có luồng API phát sinh
       tokensUsed: 0,   // Số liệu thật: 0 token tiêu thụ
@@ -227,11 +231,12 @@ export function getLiveTelemetryData() {
     systemTime: new Date().toISOString(),
     swarmMode: swarmState.mode,
     lastBroadcast: swarmState.lastBroadcast,
+    humanOwner: HUMAN_ROOT_OWNER,
     metrics: {
-      totalAgents: 59,
-      activeAgentsCount: activeCount, // 1 (L0-OWNER)
-      collaboratingCount,            // 0
-      standbyCount,                  // 58
+      totalAgents: 63,
+      activeAgentsCount: activeCount,
+      collaboratingCount,
+      standbyCount,
       tokensPerSecTotal: 0,          // 0 Tokens/giây thật
       totalTokensUsed: 0,            // 0 Tokens thật
       pgmqQueueDepth: 0,             // 0 Hàng đợi sạch
@@ -416,7 +421,7 @@ export async function POST(req: Request) {
       });
 
       // Update targeted agents with the real directive
-      CANONICAL_59_AGENTS.forEach((agent) => {
+      CANONICAL_63_WORKFORCE_CARDS.forEach((agent) => {
         if (targetBU === "ALL" || agent.businessUnit.toLowerCase().includes(targetBU.toLowerCase())) {
           swarmState.customTasks[agent.id] = {
             task: `[CHỈ THỊ SUPERADMIN] ${directive}`,
@@ -434,7 +439,7 @@ export async function POST(req: Request) {
       if (agentId === "L0-OWNER") {
         return NextResponse.json({ error: "Cannot dispatch tasks to Human Owner (Human Gate holds supreme authority)" }, { status: 403 });
       }
-      const targetAgent = CANONICAL_59_AGENTS.find((a) => a.id === agentId);
+      const targetAgent = CANONICAL_63_WORKFORCE_CARDS.find((a) => a.id === agentId) || CANONICAL_59_AGENTS.find((a) => a.id === agentId);
       if (!targetAgent) {
         return NextResponse.json({ error: "Agent not found" }, { status: 404 });
       }
@@ -487,7 +492,7 @@ export async function POST(req: Request) {
         toAgent: null,
         type: "SECURITY",
         businessUnit: "Tập đoàn HUY AI",
-        content: "🛑 [LỆNH DỪNG KHẨN CẤP] Toàn bộ 59 AI Agency bị khóa an toàn tức thời theo lệnh của SuperAdmin.",
+        content: "🛑 [LỆNH DỪNG KHẨN CẤP] Toàn bộ 63 AI Agency bị khóa an toàn tức thời theo lệnh của SuperAdmin.",
         latency: "1.2ms",
         status: "COMPLETED",
       });

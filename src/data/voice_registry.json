@@ -62,7 +62,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:31Z",
-      "sample_sha256": "PENDING_SYNTHESIS_ON_DEMAND"
+      "sample_sha256": "dc0637214f91f3de4c1aaf0e7d21f65db10c65d04e05ef482a132431828bea34",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_03": {
       "agent_id": "emp_03",
@@ -115,7 +116,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:31Z",
-      "sample_sha256": "PENDING_SYNTHESIS_ON_DEMAND"
+      "sample_sha256": "9caf2c09d8a4326f044ee0a9aefaf0d4317e4e4b61ea2d76bcf7409a178aaba4",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_05": {
       "agent_id": "emp_05",
@@ -141,7 +143,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:31Z",
-      "sample_sha256": "PENDING_SYNTHESIS_ON_DEMAND"
+      "sample_sha256": "cb52392618164b161bbd9dd927c545e082d3eb1b3cfd29451783a53ea2be2d7c",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_06": {
       "agent_id": "emp_06",
@@ -167,7 +170,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:31Z",
-      "sample_sha256": "PENDING_SYNTHESIS_ON_DEMAND"
+      "sample_sha256": "594cd76f05d973daaa68f1a5657170888ec809560d71b63e7392288f859cff50",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_07": {
       "agent_id": "emp_07",
@@ -220,7 +224,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:31Z",
-      "sample_sha256": "PENDING_SYNTHESIS_ON_DEMAND"
+      "sample_sha256": "df360fa8c961b1b59973067bf5b19eb7e54e3746870889b4ece2efd5e622308e",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_09": {
       "agent_id": "emp_09",
@@ -246,7 +251,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:31Z",
-      "sample_sha256": "PENDING_SYNTHESIS_ON_DEMAND"
+      "sample_sha256": "d4d3f45681432ccb895c92e37003933351a1b471120fa9b07f0da12916fd44d6",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_10": {
       "agent_id": "emp_10",
@@ -272,7 +278,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:31Z",
-      "sample_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "sample_sha256": "9d95e9a758d2a43167d11f25c7053085c0543e3cac703a457bb8fcb3392a1e0c",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_11": {
       "agent_id": "emp_11",
@@ -298,7 +305,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:35Z",
-      "sample_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "sample_sha256": "3edc155fcb9485afdbc7b0045eb1e572b51b392cbc017b7c8656837ca2c0dcea",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_12": {
       "agent_id": "emp_12",
@@ -324,7 +332,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:38Z",
-      "sample_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "sample_sha256": "c0bc77ec98ef84cd916618e4ec9f071046474bcc91b4532e25d9be372a2cdb3f",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_13": {
       "agent_id": "emp_13",
@@ -377,7 +386,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
-      "sample_sha256": "PENDING_SYNTHESIS_ON_DEMAND"
+      "sample_sha256": "fe60d9b22b4be233060d87010e56424f4674e94b98ef242b93bfc086c5c294a6",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_15": {
       "agent_id": "emp_15",
@@ -403,7 +413,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
-      "sample_sha256": "PENDING_SYNTHESIS_ON_DEMAND"
+      "sample_sha256": "399aba0dde7e37444b2b4751ff08fe3c68cec11e9bb6da693c3cd1596c24acdc",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_16": {
       "agent_id": "emp_16",
@@ -429,7 +440,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
-      "sample_sha256": "PENDING_SYNTHESIS_ON_DEMAND"
+      "sample_sha256": "c871d0748912dcdeddbd8e7a26d1b34a9dd118727d8be23cb9679e09d16b3e9c",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_17": {
       "agent_id": "emp_17",
@@ -455,7 +467,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
-      "sample_sha256": "PENDING_SYNTHESIS_ON_DEMAND"
+      "sample_sha256": "1baf7019f451cb9d273145141d291198f15f4a3ad763da96961d8310e4853890",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_18": {
       "agent_id": "emp_18",
@@ -481,7 +494,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
-      "sample_sha256": "PENDING_SYNTHESIS_ON_DEMAND"
+      "sample_sha256": "acfad4c6a4f534e0a7ae406219c5b21a0b52d90479563e895802a31b1beffbba",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_19": {
       "agent_id": "emp_19",
@@ -507,7 +521,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
-      "sample_sha256": "PENDING_SYNTHESIS_ON_DEMAND"
+      "sample_sha256": "f2fd04566cb45f17f68c06224d1d5ad52d2187aca97f88c4b932d9282e3e0d08",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_20": {
       "agent_id": "emp_20",
@@ -533,7 +548,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
-      "sample_sha256": "PENDING_SYNTHESIS_ON_DEMAND"
+      "sample_sha256": "c5e3740d67227d028c1cb04edd566498d6524ea84a4a5d27d124cdebddd32384",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_21": {
       "agent_id": "emp_21",
@@ -559,7 +575,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
-      "sample_sha256": "PENDING_SYNTHESIS_ON_DEMAND"
+      "sample_sha256": "4499aa0c6abebfef49218723100a3b3e79c8c894309971585c8bf8135e7ffbde",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_22": {
       "agent_id": "emp_22",
@@ -585,7 +602,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
-      "sample_sha256": "PENDING_SYNTHESIS_ON_DEMAND"
+      "sample_sha256": "73bf9055c8ee2c4ff5db0db05872ccb45b8e19bfc60973468de6c64ba2299072",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_23": {
       "agent_id": "emp_23",
@@ -611,7 +629,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
-      "sample_sha256": "PENDING_SYNTHESIS_ON_DEMAND"
+      "sample_sha256": "f65e9361f0ef6d221f56c3db08416a3ee2f7543b480440a7a053ece2af88fd87",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_24": {
       "agent_id": "emp_24",
@@ -637,7 +656,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
-      "sample_sha256": "PENDING_SYNTHESIS_ON_DEMAND"
+      "sample_sha256": "39abef2b8fdf19f2178325324c2dab178b59e20a8d9827a11af7f4140c51623c",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_25": {
       "agent_id": "emp_25",
@@ -663,7 +683,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
-      "sample_sha256": "PENDING_SYNTHESIS_ON_DEMAND"
+      "sample_sha256": "b00f51d4aabe8a24998e193410dba70e276911a6a65d0d6a95e9b0e8008fb697",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_26": {
       "agent_id": "emp_26",
@@ -689,7 +710,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
-      "sample_sha256": "PENDING_SYNTHESIS_ON_DEMAND"
+      "sample_sha256": "e3e47fc0b36d36c9123e68d88d3cdc99b5477e5e62fb979a54e5f6951217a634",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_27": {
       "agent_id": "emp_27",
@@ -715,7 +737,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
-      "sample_sha256": "PENDING_SYNTHESIS_ON_DEMAND"
+      "sample_sha256": "3d756fdb27416c4aa99c375c362b64439803a39ef5b843424f60cee3e84a1d46",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_28": {
       "agent_id": "emp_28",
@@ -741,7 +764,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
-      "sample_sha256": "PENDING_SYNTHESIS_ON_DEMAND"
+      "sample_sha256": "7f68f764cb292e603e83fc2b22e0714adaa15a96322ae1ecffc6cf8f4505a92d",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_29": {
       "agent_id": "emp_29",
@@ -767,7 +791,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
-      "sample_sha256": "PENDING_SYNTHESIS_ON_DEMAND"
+      "sample_sha256": "f0e7aefc1941e6be67cbd94a4c01f1758ec6b03de339a0d3a9a7f4f864ef7259",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_30": {
       "agent_id": "emp_30",
@@ -793,7 +818,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
-      "sample_sha256": "PENDING_SYNTHESIS_ON_DEMAND"
+      "sample_sha256": "ac9443b151db93590710c01feaa05f8e0de538c80f61d9bf4ecf292d278f7d57",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_31": {
       "agent_id": "emp_31",
@@ -819,7 +845,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
-      "sample_sha256": "PENDING_SYNTHESIS_ON_DEMAND"
+      "sample_sha256": "4434d684101718c1836b168d3f5ddb76a51b6561f6a53b1d2f5e22fd04454e55",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_32": {
       "agent_id": "emp_32",
@@ -845,7 +872,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
-      "sample_sha256": "PENDING_SYNTHESIS_ON_DEMAND"
+      "sample_sha256": "eb486b67cdcb7a3f2d6cde8f1fb7508200f375c23d6e1863880e772f5518eef4",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_33": {
       "agent_id": "emp_33",
@@ -871,7 +899,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
-      "sample_sha256": "PENDING_SYNTHESIS_ON_DEMAND"
+      "sample_sha256": "d227503574931c21cb07bc78881879f99087dbf74cb3cf1d982c2db53f8772cc",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_34": {
       "agent_id": "emp_34",
@@ -897,7 +926,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
-      "sample_sha256": "PENDING_SYNTHESIS_ON_DEMAND"
+      "sample_sha256": "9350abf98d4dd9701e0197f7b8b915a9b8cf5b6a211e4a6645f5b20aa2333186",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_35": {
       "agent_id": "emp_35",
@@ -923,7 +953,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
-      "sample_sha256": "PENDING_SYNTHESIS_ON_DEMAND"
+      "sample_sha256": "8cc954c795f4fd339aae36e9f03720da88d71980df3c7ebe4610843db2590a24",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_36": {
       "agent_id": "emp_36",
@@ -949,7 +980,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
-      "sample_sha256": "PENDING_SYNTHESIS_ON_DEMAND"
+      "sample_sha256": "56093953ea1e44ffde13cdff0e42e2a61d3e4cbf578ae4a5b66ec6569c5b9685",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_37": {
       "agent_id": "emp_37",
@@ -975,7 +1007,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
-      "sample_sha256": "PENDING_SYNTHESIS_ON_DEMAND"
+      "sample_sha256": "3a91b70c38981dc2d432ea4bb04500db65105d05911ff5efe54a67e76a104238",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_38": {
       "agent_id": "emp_38",
@@ -1001,7 +1034,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
-      "sample_sha256": "PENDING_SYNTHESIS_ON_DEMAND"
+      "sample_sha256": "8212429f9814fb9f0baf9b3cb0b660d52d256cb4248acf7d83ba60d6c0d671ec",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_39": {
       "agent_id": "emp_39",
@@ -1027,7 +1061,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
-      "sample_sha256": "PENDING_SYNTHESIS_ON_DEMAND"
+      "sample_sha256": "b9eeaf26be287174d53f95bbdd8f1cb42fadc855bc6a21ef78058b5b3ba509c7",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_40": {
       "agent_id": "emp_40",
@@ -1053,7 +1088,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:41Z",
-      "sample_sha256": "PENDING_SYNTHESIS_ON_DEMAND"
+      "sample_sha256": "a269f5589e805e1cf7cea1cbdac69848182bafd160d5d7498c4fcda6179ab853",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_41": {
       "agent_id": "emp_41",
@@ -1079,7 +1115,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:42Z",
-      "sample_sha256": "PENDING_SYNTHESIS_ON_DEMAND"
+      "sample_sha256": "2c936e8c24020bfd99b432e125512e18cb92b3c2523fc4490f9860de61435db1",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_42": {
       "agent_id": "emp_42",
@@ -1105,7 +1142,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:42Z",
-      "sample_sha256": "PENDING_SYNTHESIS_ON_DEMAND"
+      "sample_sha256": "50d742c0767bc80246f0c8b75122ff69f2addcf1855ec7611ecd7dbdc3290c05",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_43": {
       "agent_id": "emp_43",
@@ -1158,7 +1196,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:42Z",
-      "sample_sha256": "PENDING_SYNTHESIS_ON_DEMAND"
+      "sample_sha256": "f185964736cd7f5d3a9052675c4d5047672b8412018d620857636b3377cbe548",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_45": {
       "agent_id": "emp_45",
@@ -1184,7 +1223,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:42Z",
-      "sample_sha256": "PENDING_SYNTHESIS_ON_DEMAND"
+      "sample_sha256": "a9e7e8476dacaea174d0beed5fd8a67967fdad7c1ab228f1d2297a58a7bdeceb",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_46": {
       "agent_id": "emp_46",
@@ -1210,7 +1250,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:42Z",
-      "sample_sha256": "PENDING_SYNTHESIS_ON_DEMAND"
+      "sample_sha256": "1ddfe799073da90f252b56251eacd29013c65d897aa63f0fc440761c8d5c8263",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_47": {
       "agent_id": "emp_47",
@@ -1236,7 +1277,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:42Z",
-      "sample_sha256": "PENDING_SYNTHESIS_ON_DEMAND"
+      "sample_sha256": "0d9d3272c7d93469eee253394c06ac28fe246d09c02061ad17afa41747111f89",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_48": {
       "agent_id": "emp_48",
@@ -1262,7 +1304,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:42Z",
-      "sample_sha256": "PENDING_SYNTHESIS_ON_DEMAND"
+      "sample_sha256": "66d59450f7457e90c0af57e26656997faa1bf420abef610a212e3c76853f0666",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_49": {
       "agent_id": "emp_49",
@@ -1315,7 +1358,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:43Z",
-      "sample_sha256": "PENDING_SYNTHESIS_ON_DEMAND"
+      "sample_sha256": "7835a903665b8409f1ae7c40f283080b8f59b2603fecac7076f695d48116ff7d",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_51": {
       "agent_id": "emp_51",
@@ -1341,7 +1385,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:43Z",
-      "sample_sha256": "PENDING_SYNTHESIS_ON_DEMAND"
+      "sample_sha256": "c05d5ed86b4da29d2517d7d6a1e70b3b4872cf68ee1197dd319e6c9116013bd7",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_52": {
       "agent_id": "emp_52",
@@ -1421,7 +1466,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:43Z",
-      "sample_sha256": "PENDING_SYNTHESIS_ON_DEMAND"
+      "sample_sha256": "d2e8f1721c82f4871800382dfbd2600d2e4a96de7f4fbf6388fee311526bf135",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_55": {
       "agent_id": "emp_55",
@@ -1447,7 +1493,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:43Z",
-      "sample_sha256": "PENDING_SYNTHESIS_ON_DEMAND"
+      "sample_sha256": "58a82838860a3856d88bec3517e5b50c9c7d8159367b563dbad55381c8fbd5ed",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_56": {
       "agent_id": "emp_56",
@@ -1473,7 +1520,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:43Z",
-      "sample_sha256": "PENDING_SYNTHESIS_ON_DEMAND"
+      "sample_sha256": "20f31abd35a48ed3a646199cde10b20f26a138a83814616d6bc159533bb252f1",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_57": {
       "agent_id": "emp_57",
@@ -1499,7 +1547,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:43Z",
-      "sample_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "sample_sha256": "92da83566e05b7c2b136fbbf0b2cbc114a9d706665e855acd6d013ec7894b94b",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_58": {
       "agent_id": "emp_58",
@@ -1552,7 +1601,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:46Z",
-      "sample_sha256": "PENDING_SYNTHESIS_ON_DEMAND"
+      "sample_sha256": "521d8a3f2a5179aad7c13dfa5e742754f8180f1a113a9aabc31367f8cdc51f01",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_60": {
       "agent_id": "emp_60",
@@ -1578,7 +1628,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:46Z",
-      "sample_sha256": "PENDING_SYNTHESIS_ON_DEMAND"
+      "sample_sha256": "80fce640ec69a14624b340ffbcea55611292aea68505021b20848283d21e0d74",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_61": {
       "agent_id": "emp_61",
@@ -1631,7 +1682,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:46Z",
-      "sample_sha256": "PENDING_SYNTHESIS_ON_DEMAND"
+      "sample_sha256": "09f22b129d08ca53138083da2eb18623373fb62b2efcff07da56048bb721df1d",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     },
     "emp_63": {
       "agent_id": "emp_63",
@@ -1657,7 +1709,8 @@
       "approval_status": "APPROVED",
       "human_gate_verdict": "VERIFIED_VALID",
       "updated_at": "2026-10-09T10:40:46Z",
-      "sample_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "sample_sha256": "739865dae9c06edf9203ba9c2d84b594b197a2cc49a737b7efcfa895054c1a35",
+      "sample_status": "SYNTHESIZED_VERIFIED"
     }
   }
 }
