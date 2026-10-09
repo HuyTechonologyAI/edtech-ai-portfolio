@@ -30,13 +30,14 @@ function safeEqual(a: string, b: string): boolean {
   return timingSafeEqual(ha, hb);
 }
 
-function setSessionCookies(res: NextResponse, mustChange: boolean) {
+function setSessionCookies(res: NextResponse, mustChange: boolean, req?: NextRequest) {
+  const isHttps = req ? (req.headers.get("x-forwarded-proto") === "https" || req.url.startsWith("https:")) : false;
   const base = {
     path: "/",
     maxAge: SESSION_TTL_SEC,
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict" as const,
+    secure: isHttps,
+    sameSite: "lax" as const,
   };
   res.cookies.set("admincenter_session", signSession("admincenter", SESSION_TTL_SEC), base);
   // UI hint only; authorization never depends on this cookie.
@@ -134,7 +135,7 @@ export async function POST(req: NextRequest) {
           message: `Đã đổi mật khẩu và lưu bền vững (${storage}).`,
           mustChangePassword: false,
         });
-        setSessionCookies(res, false);
+        setSessionCookies(res, false, req);
         return res;
       } catch (e) {
         console.error("change_password persist failed:", e);
@@ -219,7 +220,7 @@ export async function POST(req: NextRequest) {
         user: DEFAULT_USERNAME,
         mustChangePassword: usingInitial,
       });
-      setSessionCookies(res, usingInitial);
+      setSessionCookies(res, usingInitial, req);
       return res;
     }
 

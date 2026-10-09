@@ -25,7 +25,7 @@ const nextConfig: NextConfig = {
       },
       {
         key: "Content-Security-Policy",
-        value: "upgrade-insecure-requests; frame-ancestors 'self'",
+        value: "frame-ancestors 'self'",
       },
     ];
 

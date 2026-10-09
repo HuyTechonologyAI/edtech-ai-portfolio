@@ -4,6 +4,7 @@ import { AppHeader } from "./AppHeader";
 import { HeroSection } from "./HeroSection";
 import { MetricCards } from "./MetricCards";
 import { AgentHierarchyDiagram } from "./AgentHierarchyDiagram";
+import { AiWorkforceDirectory } from "./AiWorkforceDirectory";
 import { CoreBusinessUnits } from "./CoreBusinessUnits";
 import { SolutionsSection } from "./SolutionsSection";
 import { FlagshipProducts } from "./FlagshipProducts";
@@ -35,6 +36,9 @@ export function CorporateHomePageV2() {
 
         {/* 05. AI Agency Operating Model (5-Layer Orchestration) */}
         <AgentHierarchyDiagram />
+
+        {/* 05b. AI Digital Workforce (63 Nhân Sự AI & Human Avatars) */}
+        <AiWorkforceDirectory />
 
         {/* 07. Enterprise Solutions */}
         <SolutionsSection />

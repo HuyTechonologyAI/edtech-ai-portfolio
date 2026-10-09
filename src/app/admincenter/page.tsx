@@ -45,6 +45,7 @@ import {
   Archive,
   ExternalLink,
   Settings,
+  Globe,
 } from "lucide-react";
 
 import type { ComplianceAuditResult } from "@/lib/compliance-guard";
@@ -179,7 +180,7 @@ export default function AdminCenterPage() {
   const [isChangingPassword, setIsChangingPassword] = useState<boolean>(false);
 
   // Dashboard Tabs
-  const [activeTab, setActiveTab] = useState<"swarm" | "agents" | "quotas" | "hierarchy" | "node01" | "audit" | "a2a" | "supervisor" | "n8n" | "local-ai">("swarm");
+  const [activeTab, setActiveTab] = useState<"swarm" | "agents" | "quotas" | "hierarchy" | "node01" | "audit" | "a2a" | "supervisor" | "n8n" | "local-ai" | "zentratech-cms">("swarm");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedBU, setSelectedBU] = useState<string>("ALL");
   const [selectedTier, setSelectedTier] = useState<string>("ALL");
@@ -2372,6 +2373,19 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
           <Bot className="w-4 h-4 text-emerald-400" />
           <span>AI Local Live Studio</span>
           <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-black/30 font-mono">NOTE-01</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab("zentratech-cms")}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 ${
+            activeTab === "zentratech-cms"
+              ? "bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-500 text-white shadow-lg shadow-indigo-500/30"
+              : "text-slate-300 hover:text-white hover:bg-white/5"
+          }`}
+        >
+          <Globe className="w-4 h-4 text-cyan-400" />
+          <span>ZentraTech CMS</span>
+          <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-indigo-950 text-cyan-300 border border-cyan-500/30 font-mono">PORT 3006</span>
         </button>
       </nav>
 

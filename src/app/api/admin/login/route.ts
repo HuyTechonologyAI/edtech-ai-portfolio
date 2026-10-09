@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { signSession } from "@/lib/admincenter-session";
 
 // ── In-memory rate limiter ──────────────────────────────────────────────────
@@ -69,16 +68,19 @@ export async function POST(req: Request) {
       // Đăng nhập thành công → xoá rate limit
       clearRateLimit(ip);
 
-      const cookieStore = await cookies();
-      cookieStore.set("admin_session", signSession("admin", 60 * 60 * 12), {
+      const token = signSession("admin", 60 * 60 * 12);
+      const isHttps = req.headers.get("x-forwarded-proto") === "https" || req.url.startsWith("https:");
+      
+      const res = NextResponse.json({ success: true });
+      res.cookies.set("admin_session", token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
+        secure: isHttps,
+        sameSite: "lax",
         path: "/",
         maxAge: 60 * 60 * 12, // 12 hours
       });
 
-      return NextResponse.json({ success: true });
+      return res;
     }
 
     // Sai mật khẩu — không tiết lộ thông tin cụ thể
@@ -86,7 +88,11 @@ export async function POST(req: Request) {
       { error: "Mật khẩu không chính xác" },
       { status: 401 }
     );
-  } catch {
-    return NextResponse.json({ error: "Lỗi hệ thống" }, { status: 500 });
+  } catch (err) {
+    console.error("ADMIN_LOGIN_ERROR:", err);
+    return NextResponse.json(
+      { error: "Lỗi hệ thống", details: err instanceof Error ? err.message : String(err) },
+      { status: 500 }
+    );
   }
 }
