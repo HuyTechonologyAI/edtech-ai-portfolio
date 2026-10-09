@@ -199,7 +199,7 @@ export default function AvatarAuditDashboardPage() {
                       <td className="py-3 px-3">
                         <div className="flex items-center gap-2.5">
                           <img
-                            src={item.emp.avatarPath}
+                            src={`${item.emp.avatarPath}?v=20261009-v2`}
                             alt={item.emp.name}
                             className="w-8 h-8 rounded-full object-cover border border-slate-700 shrink-0"
                           />
@@ -298,7 +298,7 @@ export default function AvatarAuditDashboardPage() {
                 <span className="text-[11px] text-slate-400 mb-2 font-mono">Avatar Hiện Tại</span>
                 <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-slate-700 shadow-md relative">
                   <img
-                    src={selectedAuditItem.emp.avatarPath}
+                    src={`${selectedAuditItem.emp.avatarPath}?v=20261009-v2`}
                     alt={selectedAuditItem.emp.name}
                     className="w-full h-full object-cover"
                   />

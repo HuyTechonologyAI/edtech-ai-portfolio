@@ -56,7 +56,7 @@ export const AgentAvatar: React.FC<AgentAvatarProps> = ({
             {/* Hình ảnh Avatar thực tế */}
             {!imageError ? (
               <img
-                src={agent.avatarPath}
+                src={`${agent.avatarPath}?v=20261009-v2`}
                 alt={`${agent.name} - ${agent.title}`}
                 className="w-full h-full object-cover"
                 onError={handleImageError}
