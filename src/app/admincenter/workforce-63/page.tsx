@@ -45,6 +45,12 @@ export default function Workforce63GalleryPage() {
 
           <div className="flex flex-wrap items-center gap-3">
             <Link
+              href="/admincenter/workforce-63/ai-hr"
+              className="bg-emerald-600/90 hover:bg-emerald-600 text-white font-semibold text-xs px-3.5 py-2.5 rounded-xl border border-emerald-500/30 flex items-center gap-1.5 shadow-lg shadow-emerald-600/20 transition-all shrink-0"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-300" /> Quản Trị AI HR (V2.0)
+            </Link>
+            <Link
               href="/admincenter/workforce-63/avatar-audit"
               className="bg-indigo-600/90 hover:bg-indigo-600 text-white font-semibold text-xs px-3.5 py-2.5 rounded-xl border border-indigo-500/30 flex items-center gap-1.5 shadow-lg shadow-indigo-600/20 transition-all shrink-0"
             >

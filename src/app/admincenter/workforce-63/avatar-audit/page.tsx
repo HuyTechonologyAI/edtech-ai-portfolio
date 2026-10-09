@@ -55,8 +55,15 @@ export default function AvatarAuditDashboardPage() {
             <ArrowLeft className="w-4 h-4 mr-2" /> Quay lại Danh bạ Workforce-63
           </Link>
           <span className="text-slate-600">|</span>
+          <Link
+            href="/admincenter/workforce-63/ai-hr"
+            className="inline-flex items-center text-emerald-400 hover:text-emerald-300 transition-colors text-sm font-semibold"
+          >
+            <ShieldCheck className="w-4 h-4 mr-1.5" /> Quản Trị AI HR (V2.0)
+          </Link>
+          <span className="text-slate-600">|</span>
           <span className="text-xs px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-mono">
-            Audit Mode v1.0 • Node-01
+            Audit Mode v2.0 • Node-01
           </span>
         </div>
 
