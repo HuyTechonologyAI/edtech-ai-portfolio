@@ -14,8 +14,10 @@ import {
   CheckCircle2,
   Layers,
   Cpu,
+  Volume2,
 } from "lucide-react";
 import { AI_WORKFORCE_63, ADMINCENTER_DEPARTMENTS, AIEmployee } from "@/data/ai-workforce-63";
+import { AiVoiceCardPlayer, stopAnyActiveVoice } from "./AiVoiceCardPlayer";
 
 // Friendly short names for department filter tabs
 const DEPT_SHORT_NAMES: Record<string, string> = {
@@ -36,16 +38,24 @@ export function AiWorkforceDirectory() {
   const [selectedEmployee, setSelectedEmployee] = useState<AIEmployee | null>(null);
   const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
 
-  // Close modal on Escape
+  // Close modal on Escape and stop active audio
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
+        stopAnyActiveVoice();
         setSelectedEmployee(null);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
+
+  // Stop active voice whenever modal closes
+  useEffect(() => {
+    if (!selectedEmployee) {
+      stopAnyActiveVoice();
+    }
+  }, [selectedEmployee]);
 
   // Lock body scroll when modal is open
   useEffect(() => {
@@ -322,7 +332,10 @@ export function AiWorkforceDirectory() {
               return (
                 <div
                   key={emp.id}
-                  onClick={() => setSelectedEmployee(emp)}
+                  onClick={() => {
+                    stopAnyActiveVoice();
+                    setSelectedEmployee(emp);
+                  }}
                   className="rounded-2xl bg-[#0F172A]/90 border border-white/10 hover:border-white/25 p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_30px_rgba(0,0,0,0.5)] flex flex-col justify-between group cursor-pointer relative overflow-hidden"
                   style={{
                     borderTopColor: emp.color,
@@ -398,14 +411,29 @@ export function AiWorkforceDirectory() {
                     </p>
                   </div>
 
-                  {/* Bottom Action Button */}
+                  {/* Bottom Action Button with Voice Prompt */}
                   <div className="pt-3 border-t border-white/5 mt-2 flex items-center justify-between text-xs">
                     <span className="text-[11px] text-slate-400 font-mono">
                       {emp.id}
                     </span>
-                    <span className="inline-flex items-center gap-1 text-[#00E5FF] font-semibold text-[11px] group-hover:translate-x-1 transition-transform">
-                      Hồ sơ năng lực <ArrowRight className="w-3 h-3" />
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          stopAnyActiveVoice();
+                          setSelectedEmployee(emp);
+                        }}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-cyan-500/10 text-cyan-300 hover:bg-cyan-500/20 border border-cyan-500/30 text-[11px] font-semibold transition-colors cursor-pointer"
+                        title={`Nghe lời giới thiệu của ${emp.name}`}
+                      >
+                        <Volume2 className="w-3 h-3 text-cyan-400" />
+                        <span>Nghe giới thiệu</span>
+                      </button>
+                      <span className="inline-flex items-center gap-1 text-slate-400 group-hover:text-white font-semibold text-[11px] transition-colors">
+                        Hồ sơ <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                      </span>
+                    </div>
                   </div>
                 </div>
               );
@@ -428,7 +456,10 @@ export function AiWorkforceDirectory() {
           aria-modal="true"
           aria-labelledby="modal-agent-name"
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in"
-          onClick={() => setSelectedEmployee(null)}
+          onClick={() => {
+            stopAnyActiveVoice();
+            setSelectedEmployee(null);
+          }}
         >
           <div
             className="w-full max-w-xl bg-[#0B1120] border border-white/20 rounded-3xl p-6 sm:p-8 shadow-2xl relative max-h-[90vh] overflow-y-auto"
@@ -441,15 +472,18 @@ export function AiWorkforceDirectory() {
             {/* Close Button */}
             <button
               type="button"
-              onClick={() => setSelectedEmployee(null)}
-              className="absolute top-5 right-5 w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
+              onClick={() => {
+                stopAnyActiveVoice();
+                setSelectedEmployee(null);
+              }}
+              className="absolute top-5 right-5 w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors cursor-pointer"
               aria-label="Đóng cửa sổ chi tiết"
             >
               <X className="w-4 h-4" />
             </button>
 
             {/* Profile Header */}
-            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 pb-6 border-b border-white/10 text-center sm:text-left">
+            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 pb-5 border-b border-white/10 text-center sm:text-left">
               {/* Large Avatar */}
               <div
                 className="w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden p-0.5 shrink-0"
@@ -505,6 +539,16 @@ export function AiWorkforceDirectory() {
                   <span>{selectedEmployee.department}</span>
                 </p>
               </div>
+            </div>
+
+            {/* Voice Introduction Player (Directive AG-VOICE-CARD-003) */}
+            <div className="pt-4">
+              <AiVoiceCardPlayer
+                key={selectedEmployee.id}
+                agentId={selectedEmployee.id}
+                displayName={selectedEmployee.name}
+                autoPlay={true}
+              />
             </div>
 
             {/* Profile Body */}
