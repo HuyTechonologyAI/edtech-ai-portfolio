@@ -76,7 +76,7 @@ export function LocalAIAgentTreeControlPlane({
         supervisor: {
           ...state.supervisor,
           status: "RUNNING",
-          currentTask: state.supervisor.currentTask || "Đang xử lý luồng suy luận trực tiếp trên Note-01...",
+          currentTask: state.supervisor.currentTask || "Đang xử lý luồng suy luận trực tiếp trên Node-01...",
         },
         agents: {
           ...state.agents,
@@ -450,12 +450,32 @@ export function LocalAIAgentTreeControlPlane({
                 <div className="flex items-center gap-3 text-[10px] font-mono">
                   <span className="text-slate-400">
                     Tests:{" "}
-                    <span className="text-emerald-400 font-bold">
-                      {graphState.verify.testsPassed}/{graphState.verify.testsRun || 1} PASS
-                    </span>
+                    {graphState.verify.testsRun === 0 ? (
+                      <span className="text-slate-400 font-bold">NOT_RUN (0/0)</span>
+                    ) : graphState.verify.testsPassed === graphState.verify.testsRun ? (
+                      <span className="text-emerald-400 font-bold">
+                        {graphState.verify.testsPassed}/{graphState.verify.testsRun} PASS
+                      </span>
+                    ) : (
+                      <span className="text-rose-400 font-bold">
+                        {graphState.verify.testsPassed}/{graphState.verify.testsRun} FAIL
+                      </span>
+                    )}
                   </span>
-                  <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold">
-                    {graphState.verify.policyCheck === "PASS" ? "COMPLIANT" : "AUDITED"}
+                  <span
+                    className={`px-2 py-0.5 rounded font-bold ${
+                      graphState.verify.policyCheck === "PASS"
+                        ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                        : graphState.verify.policyCheck === "FAIL"
+                        ? "bg-rose-500/20 text-rose-300 border border-rose-500/30"
+                        : "bg-slate-800 text-slate-400 border border-slate-700"
+                    }`}
+                  >
+                    {graphState.verify.policyCheck === "PASS"
+                      ? "COMPLIANT"
+                      : graphState.verify.policyCheck === "FAIL"
+                      ? "REJECTED"
+                      : "PENDING_AUDIT"}
                   </span>
                 </div>
               </div>

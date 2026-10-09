@@ -875,3 +875,107 @@ export const AI_WORKFORCE_63: AIEmployee[] = [
     description: "Lưu trữ nhật ký kiểm toán bất biến theo chuẩn HAIP v2.0, bảo đảm minh bạch mọi hành động của 63 Agent."
   }
 ];
+
+export interface WorkforceAgentCard {
+  id: string;
+  code: string;
+  name: string;
+  tier: "L0" | "L1" | "L2" | "L3" | "SEC" | "HR" | "RESERVE";
+  team: string;
+  role: string;
+  state: "ACTIVE" | "STANDBY" | "WARM_STANDBY" | "COLD_STANDBY" | "QUARANTINED" | "COLLABORATING";
+  provider: string;
+  model: string;
+  framework: string;
+  quotaDomain: "anthropic-prod" | "openai-tier4" | "google-vertex" | "deepseek-api" | "groq-ultra" | "local-node01";
+  quotaUsedPct: number;
+  tokensUsed: string;
+  tokensLimit: string;
+  currentTask: string;
+  businessUnit: string;
+  riskLevel: "R0" | "R1" | "R2" | "R3" | "R4";
+  healthScore: number;
+  lastActive: string;
+  avatarPath: string;
+  isLeader?: boolean;
+}
+
+export const HUMAN_ROOT_OWNER: WorkforceAgentCard = {
+  id: "L0-OWNER",
+  code: "L0-ROOT",
+  name: "Human Owner (Mr. Huy - Root of Trust)",
+  tier: "L0",
+  team: "Ban Quản trị & Điều phối Tối cao",
+  role: "Tối cao / Root of Trust / Ký duyệt Human Gate R3-R4 (Mr. Huy Technology AI)",
+  state: "ACTIVE",
+  provider: "Human Sovereign",
+  model: "Ed25519 Secure Auth",
+  framework: "HAIP Core",
+  quotaDomain: "local-node01",
+  quotaUsedPct: 0,
+  tokensUsed: "N/A",
+  tokensLimit: "Unlimited",
+  currentTask: "Giám sát điều hành toàn bộ hệ sinh thái 63 AI & Phê duyệt Human Gate Node-01",
+  businessUnit: "Tập đoàn HUY AI",
+  riskLevel: "R4",
+  healthScore: 100,
+  lastActive: "Đang trực tuyến",
+  avatarPath: "/assets/workforce/avatar-human-owner.png",
+  isLeader: true,
+};
+
+function resolveAgentTier(code: string): WorkforceAgentCard["tier"] {
+  if (code.startsWith("L1")) return "L1";
+  if (code.startsWith("L2")) return "L2";
+  if (code.startsWith("SEC")) return "SEC";
+  if (code.startsWith("HR")) return "HR";
+  return "L3";
+}
+
+function resolveAgentProvider(department: string, code: string) {
+  if (department.includes("Hạ tầng") || code.includes("DEV") || code.includes("OPS")) {
+    return { provider: "Node-01 Ollama", model: "Qwen 2.5 Coder 7B-INT4", quotaDomain: "local-node01" as const };
+  }
+  if (department.includes("Quản trị") || code.startsWith("L1")) {
+    return { provider: "Anthropic Claude", model: "Claude 3.5 Sonnet", quotaDomain: "anthropic-prod" as const };
+  }
+  if (department.includes("Công nghệ") || department.includes("Kiến trúc")) {
+    return { provider: "OpenAI Tier-4", model: "GPT-4o", quotaDomain: "openai-tier4" as const };
+  }
+  if (department.includes("Giáo dục") || department.includes("EdTech")) {
+    return { provider: "Google Vertex", model: "Gemini 1.5 Pro", quotaDomain: "google-vertex" as const };
+  }
+  if (department.includes("Sáng tạo") || department.includes("n8n")) {
+    return { provider: "DeepSeek API", model: "DeepSeek-V3", quotaDomain: "deepseek-api" as const };
+  }
+  return { provider: "Node-01 Local", model: "Qwen 2.5 7B", quotaDomain: "local-node01" as const };
+}
+
+export const CANONICAL_63_WORKFORCE_CARDS: WorkforceAgentCard[] = AI_WORKFORCE_63.map((emp) => {
+  const tier = resolveAgentTier(emp.code);
+  const prov = resolveAgentProvider(emp.department, emp.code);
+  return {
+    id: emp.id,
+    code: emp.code,
+    name: `${emp.name} (${emp.code})`,
+    tier,
+    team: emp.department,
+    role: emp.role,
+    state: "STANDBY",
+    provider: prov.provider,
+    model: prov.model,
+    framework: "HAIP Core",
+    quotaDomain: prov.quotaDomain,
+    quotaUsedPct: 0,
+    tokensUsed: "0",
+    tokensLimit: "5.0M",
+    currentTask: emp.description,
+    businessUnit: emp.department,
+    riskLevel: tier === "L1" ? "R2" : tier === "SEC" ? "R3" : "R1",
+    healthScore: 100,
+    lastActive: "Sẵn sàng 24/7",
+    avatarPath: emp.avatarPath,
+    isLeader: tier === "L1",
+  };
+});
+

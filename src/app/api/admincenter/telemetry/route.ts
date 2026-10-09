@@ -431,9 +431,15 @@ export async function POST(req: Request) {
 
     if (action === "agent_action") {
       const { agentId, agentAction, task } = body;
+      if (agentId === "L0-OWNER") {
+        return NextResponse.json({ error: "Cannot dispatch tasks to Human Owner (Human Gate holds supreme authority)" }, { status: 403 });
+      }
       const targetAgent = CANONICAL_59_AGENTS.find((a) => a.id === agentId);
       if (!targetAgent) {
         return NextResponse.json({ error: "Agent not found" }, { status: 404 });
+      }
+      if (targetAgent.tier === "L0") {
+        return NextResponse.json({ error: "Cannot dispatch tasks to Human Gate Root" }, { status: 403 });
       }
 
       if (agentAction === "activate") {

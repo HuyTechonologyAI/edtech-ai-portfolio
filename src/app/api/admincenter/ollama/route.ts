@@ -4,7 +4,7 @@ import { auditContentCompliance } from "@/lib/compliance-guard";
 
 /**
  * OLLAMA GATEWAY & AI LOCAL STUDIO — HUY AI CENTER
- * Connects AdminCenter to Note-01 Local Compute (192.168.1.43:11434)
+ * Connects AdminCenter to Node-01 Local Compute (192.168.1.43:11434)
  * Provides interactive prompt execution, benchmark metrics, generated asset history,
  * and live Agent Tree Runtime Control Plane events.
  */
@@ -51,7 +51,7 @@ Kính chào quý thầy cô! Thời đại công nghệ 4.0, việc chuẩn bị
 👉 Trải nghiệm ngay nền tảng trợ giảng AI miễn phí tại: https://www.gvcncdsai.io.vn/
 #GiaoVienAI #EduTechVietNam #TuDongHoaGiaoDuc #HuyAICenter #AIforTeachers`,
       createdAt: "2026-10-02T12:30:00.000Z",
-      model: "Qwen 2.5 Coder 7B-INT4 @ Note-01",
+      model: "Qwen 2.5 Coder 7B-INT4 @ Node-01",
       executionNode: "HUYAI-N01 (192.168.1.43)",
       tokensCount: 385,
       latencyMs: 320,
@@ -99,7 +99,7 @@ function pushAgentTreeEvents(events: RuntimeEvent[]) {
 }
 
 export async function GET() {
-  // Check Note-01 telemetry from Supabase
+  // Check Node-01 telemetry from Supabase
   try {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -197,7 +197,7 @@ export async function POST(req: Request) {
       let tokensGenerated = 280;
       
       
-      let reportContent = `[BÁO CÁO KIỂM THỬ TÍNH TOÁN HIỆU NĂNG NOTE-01]\n- Thiết bị tính toán: Dell Precision M4800 (huy-ai-node-01)\n- Địa chỉ IP LAN: 192.168.1.43 (DHCP Reserved: 0C:8B:FD:CE:65:9E)\n- Model kiểm thử: ${model}\n- Thời gian trễ phản hồi (First-token Latency): 110ms\n- Tốc độ sinh Token thực tế: 218.7 tokens/giây\n- Trạng thái cấp phát RAM: 32.000 MB (Trống: 29.600 MB - 100% An toàn)\n- Bảo vệ phân mảnh bộ nhớ: vm.compaction_proactiveness=0 (PASS - Không soft lockup)\n- Đánh giá tổng thể: PHẦN CỨNG SẴN SÀNG CHO SUITE ĐĂNG BÀI VÀ PHỄU 24/7.`;
+      let reportContent = `[BÁO CÁO KIỂM THỬ TÍNH TOÁN HIỆU NĂNG NODE-01]\n- Thiết bị tính toán: Dell Precision M4800 (huy-ai-node-01)\n- Địa chỉ IP LAN: 192.168.1.43 (DHCP Reserved: 0C:8B:FD:CE:65:9E)\n- Model kiểm thử: ${model}\n- Thời gian trễ phản hồi (First-token Latency): 110ms\n- Tốc độ sinh Token thực tế: 218.7 tokens/giây\n- Trạng thái cấp phát RAM: 32.000 MB (Trống: 29.600 MB - 100% An toàn)\n- Bảo vệ phân mảnh bộ nhớ: vm.compaction_proactiveness=0 (PASS - Không soft lockup)\n- Đánh giá tổng thể: PHẦN CỨNG SẴN SÀNG CHO SUITE ĐĂNG BÀI VÀ PHỄU 24/7.`;
       
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
       const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -247,7 +247,7 @@ export async function POST(req: Request) {
 
       const asset: GeneratedAsset = {
         id: `BENCH-${Date.now()}`,
-        title: "Báo cáo Benchmark Sức Mạnh Tính Toán Note-01",
+        title: "Báo cáo Benchmark Sức Mạnh Tính Toán Node-01",
         type: "BENCHMARK_REPORT",
         content: reportContent,
         createdAt: nowIso,

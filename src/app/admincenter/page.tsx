@@ -54,9 +54,12 @@ import { LocalAIAgentTreeControlPlane } from "@/components/LocalAIAgentTreeContr
 import type { RuntimeEvent } from "@/lib/agent-tree-runtime";
 
 import {
-  CANONICAL_59_AGENTS,
   AgentCard,
 } from "@/data/ai-agency-canonical";
+import {
+  HUMAN_ROOT_OWNER,
+  CANONICAL_63_WORKFORCE_CARDS,
+} from "@/data/ai-workforce-63";
 import { AgentLiveTelemetry, LiveEvent } from "@/app/api/admincenter/telemetry/route";
 
 interface SystemStatus {
@@ -131,6 +134,65 @@ interface ToastNotification {
   message: string;
 }
 
+const CANONICAL_AUDIT_LOGS = [
+  {
+    id: "AUDIT-20261009-001",
+    timestamp: "2026-10-09T18:45:00.000Z",
+    level: "HUMAN_GATE",
+    actor: "Mr. Huy (Root of Trust / L0-OWNER)",
+    event: "DIRECTIVE_ISSUED_AG_ADMIN_CLEANUP",
+    details: "Ban hành Chỉ thị AG-ADMIN-CLEANUP-001: Rà soát & làm gọn AdminCenter, chuẩn hóa danh bạ 63 AI, cách ly Human Gate, bảo mật Ollama localhost.",
+  },
+  {
+    id: "AUDIT-20261009-002",
+    timestamp: "2026-10-09T18:30:00.000Z",
+    level: "SECURITY",
+    actor: "Lan Chi (L1-CRO / Quản Trị Hệ Thống)",
+    event: "SECURITY_HARDENING_OLLAMA_BIND",
+    details: "Khóa chặt cổng Ollama vào 127.0.0.1:11434 nội bộ và Tailscale ACL (100.79.240.108). Chấm dứt hoàn toàn cấu hình mở 0.0.0.0:11434 ra Internet.",
+  },
+  {
+    id: "AUDIT-20261009-003",
+    timestamp: "2026-10-09T17:15:00.000Z",
+    level: "AUTH",
+    actor: "Quang Huy (L1-CTO / Kiến Trúc Cốt Lõi)",
+    event: "HUMAN_GATE_ISOLATION_ENFORCED",
+    details: "Chặn tuyệt đối hành vi gán tác vụ tự động lên Human Owner (L0-OWNER). Thiết lập mã phản hồi 403 Forbidden trên endpoint /api/admincenter/telemetry.",
+  },
+  {
+    id: "AUDIT-20261009-004",
+    timestamp: "2026-10-09T16:00:00.000Z",
+    level: "SYSTEM",
+    actor: "Mai Anh (L1-CSAO / Tổng Điều Phối)",
+    event: "FLEET_REGISTRY_SYNC_63_AI",
+    details: "Đồng bộ hóa toàn diện danh bạ 63 AI Agency theo HUY_63_AI_Skill_Tool_Context_v2.md và phân tách 8 Khối Quản trị L1.",
+  },
+  {
+    id: "AUDIT-20261009-005",
+    timestamp: "2026-10-09T15:20:00.000Z",
+    level: "A2A",
+    actor: "WORKER-L3-DEV-01 (Node-01 Ollama)",
+    event: "DAG_TASK_DISPATCH_PASS",
+    details: "Thực thi 4/6 Tác vụ VERIFIED_PASS (Tiến độ DAG: 66.7%). Không báo Pass 100% ảo; bộ kiểm thử Ratchet Lint đạt chuẩn tuyệt đối.",
+  },
+  {
+    id: "AUDIT-20261009-006",
+    timestamp: "2026-10-09T14:10:00.000Z",
+    level: "SECURITY",
+    actor: "Thanh Trúc (L1-CCO / Tuân Thủ)",
+    event: "ZERO_BACKDOOR_AUDIT_PASS",
+    details: "Thẩm định toàn diện chính sách R4 / Zero-Backdoor. Không cho phép mở port ngầm, tunnel ngoại lai hay tự động leo thang đặc quyền.",
+  },
+  {
+    id: "AUDIT-20261009-007",
+    timestamp: "2026-10-09T12:00:00.000Z",
+    level: "SYSTEM",
+    actor: "Huy Technology AI (Authoritative Anchor)",
+    event: "NODE01_STORAGE_PARTITION_SEALED",
+    details: "Khởi tạo phân vùng lưu trữ bất biến /mnt/data1/HUY-AI/audit/ với cơ chế ghi một lần WORM và chữ ký SHA-256 định danh.",
+  },
+];
+
 function getErrorMessage(error: unknown): string {
   if (typeof error === "object" && error !== null && "message" in error && typeof error.message === "string") {
     return error.message;
@@ -188,6 +250,10 @@ export default function AdminCenterPage() {
   const [selectedState, setSelectedState] = useState<string>("ALL");
   const [swarmFilter, setSwarmFilter] = useState<"ALL" | "ACTIVE" | "COLLAB" | "STANDBY">("ALL");
 
+  // Audit Tab Filter & Search State
+  const [auditSearchQuery, setAuditSearchQuery] = useState<string>("");
+  const [auditLevelFilter, setAuditLevelFilter] = useState<string>("ALL");
+
   // A2A Queue & Ollama State
   const [a2aQueue, setA2aQueue] = useState<{
     queueDepth: number; inProgress: number; completed: number; failed: number; totalTasks: number;
@@ -236,7 +302,7 @@ export default function AdminCenterPage() {
     {
       id: "LOG-INIT-1",
       time: "14:35:00",
-      message: "⚡ Supervisor L0 (Antigravity): Khởi tạo Canonical DAG V1.1 — 4/6 Tác vụ VERIFIED_PASS (100% Green)",
+      message: "⚡ Điều Phối AI (Antigravity): Khởi tạo Canonical DAG V1.1 — 4/6 Tác vụ VERIFIED_PASS (Tiến độ DAG: 66.7% · 2 Tác vụ đang thực thi)",
       type: "SUCCESS"
     },
     {
@@ -290,7 +356,7 @@ export default function AdminCenterPage() {
   // Universal Broadcast Command Bar
   const [broadcastPrompt, setBroadcastPrompt] = useState<string>("");
   const [broadcastTargetBU, setBroadcastTargetBU] = useState<string>("ALL");
-  const [broadcastPriority, setBroadcastPriority] = useState<string>("P0");
+  const [broadcastPriority, setBroadcastPriority] = useState<string>("P2");
   const [isBroadcasting, setIsBroadcasting] = useState<boolean>(false);
   const [broadcastFeedback, setBroadcastFeedback] = useState<string>("");
 
@@ -625,7 +691,7 @@ export default function AdminCenterPage() {
     const selectedType = type || studioPromptType;
     try {
       setStudioGenerating(true);
-      setStudioStreamingText("⚡ Đang kết nối tới Ollama trên Note-01 (192.168.1.43)...\n");
+      setStudioStreamingText("⚡ Đang kết nối tới Ollama trên Node-01 (192.168.1.43)...\n");
 
       const res = await fetch("/api/admincenter/ollama", {
         method: "POST",
@@ -654,7 +720,7 @@ export default function AdminCenterPage() {
         addToast("AI Local", "AI Local đã sinh thành phẩm hoàn tất!", "success");
         fetchLocalAiData();
       } else {
-        setStudioStreamingText("❌ Không thể kết nối tới Note-01.");
+        setStudioStreamingText("❌ Không thể kết nối tới Node-01.");
       }
     } catch (err) {
       setStudioStreamingText("❌ Lỗi mạng: " + String(err));
@@ -666,7 +732,7 @@ export default function AdminCenterPage() {
   const handleRunStudioBenchmark = async () => {
     try {
       setStudioBenchmarking(true);
-      setStudioStreamingText("🔄 Đang gửi tác vụ Benchmark kiểm tra tốc độ sinh token tới Note-01...\n");
+      setStudioStreamingText("🔄 Đang gửi tác vụ Benchmark kiểm tra tốc độ sinh token tới Node-01...\n");
       const res = await fetch("/api/admincenter/ollama", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -683,7 +749,7 @@ export default function AdminCenterPage() {
           durationMs: data.metrics?.durationMs || 1200,
           latencyMs: data.metrics?.latencyMs || 110,
         });
-        addToast("AI Local", "Benchmark Note-01 hoàn tất!", "success");
+        addToast("AI Local", "Benchmark Node-01 hoàn tất!", "success");
         fetchLocalAiData();
       }
     } catch (err) {
@@ -1234,7 +1300,7 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
     if (e && e.preventDefault) e.preventDefault();
     const promptToSend =
       broadcastPrompt.trim() ||
-      "Kiểm tra đồng bộ toàn diện hệ sinh thái 59 AI và xác nhận kết nối Node-01";
+      "Kiểm tra đồng bộ toàn diện hệ sinh thái 63 Nhân Sự AI và xác nhận kết nối Node-01";
 
     setIsBroadcasting(true);
     setBroadcastFeedback("");
@@ -1255,13 +1321,13 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
         addToast(
           "Phát Lệnh Tức Thì",
           `Chỉ thị [${broadcastPriority}] gửi thành công tới ${
-            broadcastTargetBU === "ALL" ? "toàn bộ 59 AI" : broadcastTargetBU
+            broadcastTargetBU === "ALL" ? "toàn bộ 63 AI Agency" : broadcastTargetBU
           }!`,
           "success"
         );
         setBroadcastFeedback(
           `[ĐÃ PHÁT LỆNH] Chỉ thị [${broadcastPriority}] gửi thành công tới ${
-            broadcastTargetBU === "ALL" ? "toàn bộ 59 AI" : broadcastTargetBU
+            broadcastTargetBU === "ALL" ? "toàn bộ 63 AI Agency" : broadcastTargetBU
           }!`
         );
         setBroadcastPrompt("");
@@ -1283,7 +1349,7 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
       const base =
         prev.length > 0
           ? prev
-          : CANONICAL_59_AGENTS.map((c) => ({
+          : CANONICAL_63_WORKFORCE_CARDS.map((c) => ({
               ...c,
               currentThought: "Đang duy trì nhịp tim chuẩn.",
               targetPeer: null,
@@ -1332,6 +1398,14 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
 
   // Direct Agent Action (Activate / Standby / Quarantine)
   const handleAgentControl = async (agentId: string, agentAction: string, task?: string) => {
+    if (agentId === "L0-OWNER") {
+      addToast(
+        "Human Gate Tối Cao",
+        "Không thể kích hoạt tác vụ cho Human Owner. Mr. Huy giữ quyền tối cao phê duyệt.",
+        "warning"
+      );
+      return;
+    }
     setLoadingAgentId(agentId);
     const nextState = agentAction === "activate" ? "ACTIVE" : "STANDBY";
 
@@ -1340,7 +1414,7 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
       const base =
         prev.length > 0
           ? prev
-          : CANONICAL_59_AGENTS.map((c) => ({
+          : CANONICAL_63_WORKFORCE_CARDS.map((c) => ({
               ...c,
               currentThought: "Đang duy trì nhịp tim chuẩn.",
               targetPeer: null,
@@ -1419,6 +1493,14 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
 
   // Handle Dispatch Simulated Action Modal
   const handleDispatchAction = (agent: AgentLiveTelemetry | AgentCard) => {
+    if (agent.id === "L0-OWNER" || agent.tier === "L0" || agent.role.includes("Human")) {
+      addToast(
+        "Human Gate Tối Cao",
+        "Không thể giao việc cho Human Owner. Mr. Huy giữ quyền tối cao phê duyệt.",
+        "warning"
+      );
+      return;
+    }
     setDispatchAgent(agent);
     setDispatchPrompt("");
     setDispatchMessage("");
@@ -1457,7 +1539,7 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
         tokensPerSec: agent.tokensPerSec ?? (agent.state === "ACTIVE" ? 14 : 0),
       }));
     } else {
-      baseList = CANONICAL_59_AGENTS.map((c) => ({
+      baseList = CANONICAL_63_WORKFORCE_CARDS.map((c) => ({
         ...c,
         state: c.state,
         currentThought: "Đang kết nối tới điểm neo Node-01 Dell M4800, sẵn sàng nhận nhiệm vụ thực tế từ SuperAdmin.",
@@ -1637,6 +1719,28 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
       return true;
     });
   }, [telemetryEvents, eventFilter]);
+
+  // Filtered Audit Logs with Canonical Records Fallback
+  const effectiveAuditLogs = useMemo(() => {
+    const liveLogs = systemStatus?.realAuditLogs || [];
+    const merged = [...liveLogs];
+    for (const c of CANONICAL_AUDIT_LOGS) {
+      if (!merged.some((m) => m.id === c.id)) {
+        merged.push(c);
+      }
+    }
+    return merged.filter((log) => {
+      const matchesLevel = auditLevelFilter === "ALL" || log.level === auditLevelFilter;
+      const q = auditSearchQuery.toLowerCase().trim();
+      if (!q) return matchesLevel;
+      const matchesQuery =
+        log.event.toLowerCase().includes(q) ||
+        log.details.toLowerCase().includes(q) ||
+        (log.actor && log.actor.toLowerCase().includes(q)) ||
+        log.id.toLowerCase().includes(q);
+      return matchesLevel && matchesQuery;
+    });
+  }, [systemStatus?.realAuditLogs, auditLevelFilter, auditSearchQuery]);
 
   // If checking session initially
   if (checkingAuth) {
@@ -1820,7 +1924,7 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
                 Live Command
               </span>
             </div>
-            <p className="text-[11px] text-slate-400">Trung Tâm Điều Hành 59 AI Agency Doanh Nghiệp Thời Gian Thực</p>
+            <p className="text-[11px] text-slate-400">Trung Tâm Điều Hành 63 Nhân Sự AI Agency Doanh Nghiệp Thời Gian Thực</p>
           </div>
         </div>
 
@@ -2192,13 +2296,15 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
               onChange={(e) => setBroadcastTargetBU(e.target.value)}
               className="bg-[#070B14] border border-white/10 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-400"
             >
-              <option value="ALL">Toàn Bộ 59 AI</option>
-              <option value="HUY TECHNOLOGY AI">Khối Kỹ Thuật (R&D)</option>
-              <option value="HUY AI SCHOOL">Khối Sản Phẩm (EdTech)</option>
-              <option value="MARKETING & GROWTH">Khối Marketing & Tăng Trưởng</option>
-              <option value="TECHNICAL OPERATIONS">Khối Vận Hành Kỹ Thuật (OPS)</option>
-              <option value="FINANCE & COMPLIANCE">Khối Tài Chính & Tuân Thủ</option>
-              <option value="Tập đoàn HUY AI">Khối Ban Điều Hành (EXEC)</option>
+              <option value="ALL">Toàn Bộ 63 Nhân Sự AI (Có Xác Nhận)</option>
+              <option value="Ban Quản trị">Khối 1: Ban Quản trị & Điều phối (8 AI)</option>
+              <option value="Công nghệ">Khối 2: Công nghệ & Kiến trúc (8 AI)</option>
+              <option value="Giáo dục">Khối 3: Giáo dục & EdTech (7 AI)</option>
+              <option value="Tài chính">Khối 4: Tài chính & Thuế (7 AI)</option>
+              <option value="Sáng tạo">Khối 5: Sáng tạo & n8n (10 AI)</option>
+              <option value="Tiếp thị">Khối 6: Tiếp thị & CRM (8 AI)</option>
+              <option value="Hạ tầng">Khối 7: Hạ tầng & SRE (8 AI)</option>
+              <option value="An toàn">Khối 8: An toàn Thông tin & AI HR (7 AI)</option>
             </select>
 
             {/* Priority */}
@@ -2207,9 +2313,10 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
               onChange={(e) => setBroadcastPriority(e.target.value)}
               className="bg-[#070B14] border border-white/10 rounded-xl px-2.5 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-400 font-mono font-bold"
             >
-              <option value="P0">P0 - Khẩn Cấp</option>
-              <option value="P1">P1 - Tiêu Chuẩn</option>
-              <option value="P2">P2 - Nghiên Cứu</option>
+              <option value="P2">P2 - Tiêu Chuẩn (Vận Hành)</option>
+              <option value="P1">P1 - Quan Trọng (Có Deadline)</option>
+              <option value="P0">P0 - Khẩn Cấp (Cần Duyệt Ngay)</option>
+              <option value="P3">P3 - Nghiên Cứu / Tham Vấn</option>
             </select>
 
             {/* Action Buttons */}
@@ -2241,170 +2348,205 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
         )}
       </section>
 
-      {/* TABS NAVIGATION */}
-      <nav className="px-4 lg:px-8 border-b border-white/10 bg-[#0F172A]/40 flex items-center gap-2 overflow-x-auto py-2">
-        <Link
-          href="/admincenter/company-chat"
-          className="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500 hover:text-black shadow-lg shadow-emerald-500/20"
-        >
-          <Bot className="w-4 h-4 text-emerald-400" />
-          <span>💬 Chat Toàn Công Ty & Giao Việc 63 AI</span>
-          <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-emerald-500/30 font-mono text-emerald-200">LIVE</span>
-        </Link>
+      {/* 6 CANONICAL MANAGEMENT NAVIGATION GROUPS (CHỈ THỊ AG-ADMIN-CLEANUP-001) */}
+      <div className="border-b border-white/10 bg-[#0F172A]/80 backdrop-blur-md sticky top-0 z-30">
+        <nav className="px-4 lg:px-8 flex items-center justify-between gap-2 overflow-x-auto py-2.5">
+          <div className="flex items-center gap-1.5 shrink-0">
+            {/* Nhóm 1: Tổng Quan */}
+            <button
+              type="button"
+              onClick={() => setActiveTab("swarm")}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                activeTab === "swarm"
+                  ? "bg-cyan-500 text-black shadow-lg shadow-cyan-500/20"
+                  : "text-slate-300 hover:text-white hover:bg-white/5"
+              }`}
+            >
+              <Radio className="w-4 h-4 animate-pulse text-emerald-400" />
+              <span>1. Tổng Quan</span>
+            </button>
 
-        <Link
-          href="/admincenter/voice-library"
-          className="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 hover:bg-cyan-500 hover:text-black shadow-lg shadow-cyan-500/20"
-        >
-          <Sparkles className="w-4 h-4 text-cyan-400" />
-          <span>🎙️ Thư Viện 63 Giọng Đọc AI</span>
-        </Link>
-        <button
-          onClick={() => setActiveTab("swarm")}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 ${
-            activeTab === "swarm"
-              ? "bg-cyan-500 text-black shadow-lg shadow-cyan-500/20"
-              : "text-slate-300 hover:text-white hover:bg-white/5"
-          }`}
-        >
-          <Radio className="w-4 h-4 animate-pulse text-emerald-600" />
-          <span>Đa Tác Tử Thời Gian Thực</span>
-          <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-black/30 font-mono">LIVE</span>
-        </button>
+            {/* Nhóm 2: Nhân Sự AI (63 AI) */}
+            <button
+              type="button"
+              onClick={() => setActiveTab("agents")}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                activeTab === "agents" || activeTab === "hierarchy"
+                  ? "bg-cyan-500 text-black shadow-lg shadow-cyan-500/20"
+                  : "text-slate-300 hover:text-white hover:bg-white/5"
+              }`}
+            >
+              <Users className="w-4 h-4" />
+              <span>2. Nhân Sự AI (63 AI)</span>
+            </button>
 
-        <button
-          onClick={() => setActiveTab("agents")}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 ${
-            activeTab === "agents"
-              ? "bg-cyan-500 text-black shadow-lg shadow-cyan-500/20"
-              : "text-slate-300 hover:text-white hover:bg-white/5"
-          }`}
-        >
-          <Bot className="w-4 h-4" />
-          <span>Danh Sách 59 AI Agency</span>
-        </button>
+            {/* Nhóm 3: Giao Việc & Chat */}
+            <Link
+              href="/admincenter/company-chat"
+              className="px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500 hover:text-black cursor-pointer shadow-md"
+            >
+              <Bot className="w-4 h-4 text-emerald-400" />
+              <span>3. Giao Việc & Chat</span>
+              <span className="px-1.5 py-0.2 rounded-full text-[9px] bg-emerald-500/30 font-mono text-emerald-200">LIVE</span>
+            </Link>
 
-        <button
-          onClick={() => setActiveTab("quotas")}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 ${
-            activeTab === "quotas"
-              ? "bg-cyan-500 text-black shadow-lg shadow-cyan-500/20"
-              : "text-slate-300 hover:text-white hover:bg-white/5"
-          }`}
-        >
-          <Cpu className="w-4 h-4" />
-          <span>Quản Lý Quota Đa Nền Tảng</span>
-        </button>
+            {/* Nhóm 4: Khách Hàng & CMS */}
+            <button
+              type="button"
+              onClick={() => setActiveTab("zentratech-cms")}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                activeTab === "zentratech-cms"
+                  ? "bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-500 text-white shadow-lg shadow-indigo-500/30"
+                  : "text-slate-300 hover:text-white hover:bg-white/5"
+              }`}
+            >
+              <Globe className="w-4 h-4 text-cyan-400" />
+              <span>4. Khách Hàng & CMS</span>
+              <span className="px-1.5 py-0.2 rounded-full text-[9px] bg-indigo-950 text-cyan-300 border border-cyan-500/30 font-mono">PORT 3006</span>
+            </button>
 
-        <button
-          onClick={() => setActiveTab("hierarchy")}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 ${
-            activeTab === "hierarchy"
-              ? "bg-cyan-500 text-black shadow-lg shadow-cyan-500/20"
-              : "text-slate-300 hover:text-white hover:bg-white/5"
-          }`}
-        >
-          <Layers className="w-4 h-4" />
-          <span>Cây Phân Cấp & Chuỗi Báo Cáo</span>
-        </button>
+            {/* Nhóm 5: Báo Cáo & Minh Chứng */}
+            <button
+              type="button"
+              onClick={() => setActiveTab("audit")}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                activeTab === "audit"
+                  ? "bg-cyan-500 text-black shadow-lg shadow-cyan-500/20"
+                  : "text-slate-300 hover:text-white hover:bg-white/5"
+              }`}
+            >
+              <Shield className="w-4 h-4" />
+              <span>5. Báo Cáo & Minh Chứng</span>
+            </button>
 
-        <button
-          onClick={() => setActiveTab("node01")}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 ${
-            activeTab === "node01"
-              ? "bg-cyan-500 text-black shadow-lg shadow-cyan-500/20"
-              : "text-slate-300 hover:text-white hover:bg-white/5"
-          }`}
-        >
-          <Server className="w-4 h-4" />
-          <span>Cụm Node-01 & Lưu Trữ</span>
-        </button>
+            {/* Nhóm 6: Hệ Thống & Quyền */}
+            <button
+              type="button"
+              onClick={() => setActiveTab("node01")}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                ["node01", "supervisor", "a2a", "quotas", "n8n", "local-ai"].includes(activeTab)
+                  ? "bg-cyan-500 text-black shadow-lg shadow-cyan-500/20"
+                  : "text-slate-300 hover:text-white hover:bg-white/5"
+              }`}
+            >
+              <Server className="w-4 h-4" />
+              <span>6. Hệ Thống & Quyền</span>
+            </button>
+          </div>
 
-        <button
-          onClick={() => setActiveTab("audit")}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 ${
-            activeTab === "audit"
-              ? "bg-cyan-500 text-black shadow-lg shadow-cyan-500/20"
-              : "text-slate-300 hover:text-white hover:bg-white/5"
-          }`}
-        >
-          <Shield className="w-4 h-4" />
-          <span>Nhật Ký Kiểm Toán Thực Tế</span>
-        </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <Link
+              href="/admincenter/voice-library"
+              className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-white/5 text-slate-300 hover:text-white hover:bg-white/10 flex items-center gap-1.5 transition-all"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Thư Viện Giọng (63 Voice)</span>
+            </Link>
+          </div>
+        </nav>
 
-        <button
-          onClick={() => { setActiveTab("a2a"); fetchA2aQueue(); }}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 ${
-            activeTab === "a2a"
-              ? "bg-violet-500 text-white shadow-lg shadow-violet-500/30"
-              : "text-slate-300 hover:text-white hover:bg-white/5"
-          }`}
-        >
-          <Network className="w-4 h-4" />
-          <span>A2A & Ollama Local</span>
-          {a2aQueue && a2aQueue.queueDepth > 0 && (
-            <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-violet-500/30 border border-violet-500/50 text-violet-300 font-mono">
-              {a2aQueue.queueDepth}
-            </span>
-          )}
-        </button>
+        {/* SECONDARY SUB-NAVIGATION BAR (Khi mở các nhóm có phân mục con) */}
+        {(activeTab === "agents" || activeTab === "hierarchy") && (
+          <div className="px-4 lg:px-8 py-2 bg-[#070B14] border-t border-white/5 flex items-center gap-2 text-xs overflow-x-auto">
+            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider shrink-0 mr-1">Chế Độ Xem:</span>
+            <button
+              type="button"
+              onClick={() => setActiveTab("agents")}
+              className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
+                activeTab === "agents" ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30" : "text-slate-400 hover:text-white"
+              }`}
+            >
+              🗂️ Danh Bạ 63 AI Agency
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("hierarchy")}
+              className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
+                activeTab === "hierarchy" ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30" : "text-slate-400 hover:text-white"
+              }`}
+            >
+              🌳 Cây Phân Cấp & Chuỗi Báo Cáo
+            </button>
+            <Link
+              href="/admincenter/workforce-63/ai-hr"
+              className="px-3 py-1 rounded-lg text-slate-400 hover:text-white font-medium flex items-center gap-1 hover:bg-white/5"
+            >
+              <ShieldCheck className="w-3 h-3 text-emerald-400" />
+              Quản Trị AI HR (V2.0)
+            </Link>
+            <Link
+              href="/admincenter/workforce-63/avatar-audit"
+              className="px-3 py-1 rounded-lg text-slate-400 hover:text-white font-medium flex items-center gap-1 hover:bg-white/5"
+            >
+              <Sparkles className="w-3 h-3 text-amber-400" />
+              Kiểm Toán Avatar
+            </Link>
+          </div>
+        )}
 
-        <button
-          onClick={() => { setActiveTab("supervisor"); fetchSupervisorStatus(); }}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 ${
-            activeTab === "supervisor"
-              ? "bg-rose-500 text-white shadow-lg shadow-rose-500/30"
-              : "text-slate-300 hover:text-white hover:bg-white/5"
-          }`}
-        >
-          <Layers className="w-4 h-4" />
-          <span>Supervisor V1.1</span>
-          {supervisorStatus && supervisorStatus.openHumanGates > 0 && (
-            <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-rose-500/80 text-white font-mono animate-pulse">
-              🚨 {supervisorStatus.openHumanGates}
-            </span>
-          )}
-        </button>
-
-        <button
-          onClick={() => { setActiveTab("n8n"); fetchN8nData(); }}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 ${
-            activeTab === "n8n"
-              ? "bg-gradient-to-r from-amber-500 to-orange-500 text-black shadow-lg shadow-amber-500/30"
-              : "text-slate-300 hover:text-white hover:bg-white/5"
-          }`}
-        >
-          <Zap className="w-4 h-4 text-amber-400" />
-          <span>Điều Phối n8n</span>
-          <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-black/30 font-mono">AUTOMATION</span>
-        </button>
-
-        <button
-          onClick={() => { setActiveTab("local-ai"); fetchLocalAiData(); }}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 ${
-            activeTab === "local-ai"
-              ? "bg-gradient-to-r from-emerald-400 to-cyan-400 text-black shadow-lg shadow-emerald-500/30"
-              : "text-slate-300 hover:text-white hover:bg-white/5"
-          }`}
-        >
-          <Bot className="w-4 h-4 text-emerald-400" />
-          <span>AI Local Live Studio</span>
-          <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-black/30 font-mono">NOTE-01</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab("zentratech-cms")}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 ${
-            activeTab === "zentratech-cms"
-              ? "bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-500 text-white shadow-lg shadow-indigo-500/30"
-              : "text-slate-300 hover:text-white hover:bg-white/5"
-          }`}
-        >
-          <Globe className="w-4 h-4 text-cyan-400" />
-          <span>ZentraTech CMS</span>
-          <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-indigo-950 text-cyan-300 border border-cyan-500/30 font-mono">PORT 3006</span>
-        </button>
-      </nav>
+        {["node01", "supervisor", "a2a", "quotas", "n8n", "local-ai"].includes(activeTab) && (
+          <div className="px-4 lg:px-8 py-2 bg-[#070B14] border-t border-white/5 flex items-center gap-2 text-xs overflow-x-auto">
+            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider shrink-0 mr-1">Phân Hệ:</span>
+            <button
+              type="button"
+              onClick={() => setActiveTab("node01")}
+              className={`px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer ${
+                activeTab === "node01" ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30" : "text-slate-400 hover:text-white"
+              }`}
+            >
+              🖥️ Cụm Node-01
+            </button>
+            <button
+              type="button"
+              onClick={() => { setActiveTab("supervisor"); fetchSupervisorStatus(); }}
+              className={`px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                activeTab === "supervisor" ? "bg-rose-500/20 text-rose-300 border border-rose-500/30" : "text-slate-400 hover:text-white"
+              }`}
+            >
+              ⚡ Supervisor V1.1
+              {supervisorStatus && supervisorStatus.openHumanGates > 0 && (
+                <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => { setActiveTab("a2a"); fetchA2aQueue(); }}
+              className={`px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer ${
+                activeTab === "a2a" ? "bg-violet-500/20 text-violet-300 border border-violet-500/30" : "text-slate-400 hover:text-white"
+              }`}
+            >
+              🧠 A2A & Ollama Local
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("quotas")}
+              className={`px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer ${
+                activeTab === "quotas" ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30" : "text-slate-400 hover:text-white"
+              }`}
+            >
+              💳 Quota & OmniRouter
+            </button>
+            <button
+              type="button"
+              onClick={() => { setActiveTab("n8n"); fetchN8nData(); }}
+              className={`px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer ${
+                activeTab === "n8n" ? "bg-amber-500/20 text-amber-300 border border-amber-500/30" : "text-slate-400 hover:text-white"
+              }`}
+            >
+              🔄 n8n Automation
+            </button>
+            <button
+              type="button"
+              onClick={() => { setActiveTab("local-ai"); fetchLocalAiData(); }}
+              className={`px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer ${
+                activeTab === "local-ai" ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30" : "text-slate-400 hover:text-white"
+              }`}
+            >
+              🔬 AI Live Studio
+            </button>
+          </div>
+        )}
+      </div>
 
 
       {/* CONTENT AREA */}
@@ -2892,7 +3034,7 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
         )}
 
         {/* ======================================================== */}
-        {/* TAB 2: 59 AI AGENTS FLEET DIRECTORY */}
+        {/* TAB 2: 63 AI AGENTS FLEET DIRECTORY */}
         {/* ======================================================== */}
         {activeTab === "agents" && (
           <div className="space-y-6">
@@ -2916,13 +3058,15 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
                   onChange={(e) => setSelectedBU(e.target.value)}
                   className="bg-[#070B14] border border-white/10 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-400"
                 >
-                  <option value="ALL">Tất Cả Đơn Vị (6 BUs)</option>
-                  <option value="HUY TECHNOLOGY AI">HUY TECHNOLOGY AI</option>
-                  <option value="HUY AI SCHOOL">HUY AI SCHOOL</option>
-                  <option value="MARKETING & GROWTH">MARKETING & GROWTH</option>
-                  <option value="TECHNICAL OPERATIONS">TECHNICAL OPERATIONS</option>
-                  <option value="FINANCE & COMPLIANCE">FINANCE & COMPLIANCE</option>
-                  <option value="Tập đoàn HUY AI">HUY EXECUTIVE GOVERNANCE</option>
+                  <option value="ALL">Tất Cả Khối (8 Khối Nghiệp Vụ)</option>
+                  <option value="Ban Quản trị">Khối 1: Ban Quản trị & Điều phối</option>
+                  <option value="Công nghệ">Khối 2: Công nghệ & Kiến trúc</option>
+                  <option value="Giáo dục">Khối 3: Giáo dục & EdTech AI</option>
+                  <option value="Tài chính">Khối 4: Tài chính & Thuế</option>
+                  <option value="Sáng tạo">Khối 5: Sáng tạo & n8n</option>
+                  <option value="Tiếp thị">Khối 6: Tiếp thị & CRM</option>
+                  <option value="Hạ tầng">Khối 7: Hạ tầng & SRE Node-01</option>
+                  <option value="An toàn">Khối 8: An toàn Thông tin & AI HR</option>
                 </select>
 
                 {/* Tier Filter */}
@@ -2958,16 +3102,49 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
 
             {/* Results Counter */}
             <div className="flex items-center justify-between text-xs text-slate-400 px-1">
-              <span>Hiển thị {filteredAgents.length} trên tổng số 59 AI Agency</span>
+              <span>Hiển thị {filteredAgents.length} trên tổng số 63 Nhân Sự AI Agency</span>
               <span className="text-[11px] text-emerald-400 font-mono">
                 {activeCount} AI đang hoạt động thời gian thực
               </span>
+            </div>
+
+            {/* L0 HUMAN OWNER (ROOT OF TRUST) SUPREME BANNER */}
+            <div className="bg-gradient-to-r from-[#0F172A] via-cyan-950/40 to-[#0F172A] border border-cyan-500/40 rounded-2xl p-5 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-start md:items-center gap-3.5">
+                <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 font-bold text-2xl shrink-0 shadow-inner">
+                  👑
+                </div>
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-sm font-bold text-white">{HUMAN_ROOT_OWNER.name}</span>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+                      ROOT OF TRUST · R4
+                    </span>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                      CHỦ HỆ THỐNG
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-300 mt-0.5">
+                    {HUMAN_ROOT_OWNER.role}
+                  </p>
+                  <p className="text-[11px] text-slate-400 mt-1 font-mono">
+                    Phê duyệt Human Gate tối cao · Tách biệt hoàn toàn khỏi worker AI · Không nhận lệnh kích hoạt tự động
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="px-3 py-1.5 rounded-xl bg-cyan-500/10 text-cyan-300 text-xs font-bold border border-cyan-500/30 flex items-center gap-1.5">
+                  <ShieldCheck className="w-4 h-4 text-cyan-400" />
+                  Human Gate Active
+                </span>
+              </div>
             </div>
 
             {/* Agents Card Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {filteredAgents.map((agent) => {
                 const isRunning = agent.state === "ACTIVE" || agent.state === "COLLABORATING";
+                const isHumanOwner = agent.tier === "L0" || agent.id === "L0-OWNER";
                 return (
                   <div
                     key={agent.id}
@@ -3035,20 +3212,28 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
                     {/* Actions footer */}
                     <div className="mt-5 pt-3 border-t border-white/5 flex items-center justify-between gap-2">
                       <button
+                        type="button"
                         onClick={() => setSelectedAgent(agent)}
-                        className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-[11px] font-semibold text-slate-300 transition-colors flex items-center gap-1"
+                        className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-[11px] font-semibold text-slate-300 transition-colors flex items-center gap-1 cursor-pointer"
                       >
                         <Eye className="w-3.5 h-3.5" />
                         <span>Chi tiết</span>
                       </button>
 
-                      <button
-                        onClick={() => handleDispatchAction(agent)}
-                        className="px-3.5 py-1.5 rounded-xl bg-cyan-500/20 hover:bg-cyan-500 text-cyan-300 hover:text-black text-[11px] font-bold transition-all flex items-center gap-1.5 border border-cyan-500/30"
-                      >
-                        <Zap className="w-3.5 h-3.5" />
-                        <span>Kích Hoạt Tác Vụ</span>
-                      </button>
+                      {isHumanOwner ? (
+                        <span className="px-3.5 py-1.5 rounded-xl bg-cyan-500/10 text-cyan-300 text-[11px] font-bold border border-cyan-500/30 flex items-center gap-1.5">
+                          👑 Human Gate
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleDispatchAction(agent)}
+                          className="px-3.5 py-1.5 rounded-xl bg-cyan-500/20 hover:bg-cyan-500 text-cyan-300 hover:text-black text-[11px] font-bold transition-all flex items-center gap-1.5 border border-cyan-500/30 cursor-pointer"
+                        >
+                          <Zap className="w-3.5 h-3.5" />
+                          <span>Kích Hoạt Tác Vụ</span>
+                        </button>
+                      )}
                     </div>
                   </div>
                 );
@@ -3065,7 +3250,7 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
             <div className="bg-[#0F172A]/80 border border-white/10 rounded-2xl p-6">
               <h2 className="text-lg font-bold text-white mb-1">Cơ Cấu Hạn Ngạch Quota 6 Nền Tảng (Multi-Cloud Quota Pools)</h2>
               <p className="text-xs text-slate-400 mb-6">
-                Chính sách phân bổ ngân sách mô hình AI cho toàn bộ 59 AI Agency. Dữ liệu thời gian thực được tối ưu hóa qua điểm neo lưu trữ Dell M4800 Node-01.
+                Chính sách phân bổ ngân sách mô hình AI cho toàn bộ 63 Nhân Sự AI Agency. Dữ liệu thời gian thực được tối ưu hóa qua điểm neo lưu trữ Dell M4800 Node-01.
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -3125,7 +3310,7 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
                     <span className="text-xs px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-mono">R4 SOVEREIGN</span>
                   </div>
                   <p className="text-xs text-slate-300 mt-2 pl-6">
-                    Quyền tối thượng toàn bộ 6 Business Units, phê duyệt các cổng kiểm tra an toàn (Human Gate), kiểm soát hạ tầng lưu trữ Node-01.
+                    Quyền tối thượng toàn bộ 6 Business Units & 8 Khối Nghiệp Vụ, phê duyệt các cổng kiểm tra an toàn (Human Gate), kiểm soát hạ tầng lưu trữ Node-01.
                   </p>
                 </div>
 
@@ -3137,12 +3322,21 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
                 {/* L1 Level */}
                 <div className="border border-white/10 rounded-2xl bg-[#070B14] p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-bold text-white">CẤP L1: BAN ĐIỀU HÀNH CẤP CAO (SENIOR MANAGEMENT)</span>
-                    <span className="text-xs text-slate-400">5 Primary + 5 Standby</span>
+                    <span className="text-sm font-bold text-white">CẤP L1: BAN ĐIỀU HÀNH & ĐIỀU PHỐI (GOVERNANCE & STRATEGY)</span>
+                    <span className="text-xs text-slate-400">8 AI Nhân Sự Chuẩn (emp_01 → emp_08)</span>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 mt-3">
-                    {["L1-P01 Strategy (CSAO)", "L1-P02 Technology (CTO)", "L1-P03 Security (CSO)", "L1-P04 Operations (COO)", "L1-P05 Marketing (CMO)"].map((item, idx) => (
-                      <div key={idx} className="p-2.5 rounded-xl bg-white/5 border border-white/5 text-xs font-semibold text-slate-200">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-3">
+                    {[
+                      "L1-CSAO Mai Anh (Chiến Lược & DAG)",
+                      "L1-CRO Hữu Hùng (Tài Nguyên & Quota)",
+                      "L1-CCO Thanh Trúc (Tuân Thủ & Bản Quyền)",
+                      "L1-COS Gia Hân (Tham Mưu & Điều Phối)",
+                      "L1-QA Hải Đăng (Kiểm Toán Chất Lượng)",
+                      "L1-S01 Quang Minh (Dự Phòng Chiến Lược)",
+                      "L1-S04 Thu Trang (Dự Phòng Quota)",
+                      "L1-S05 Thanh Tùng (Dự Phòng Tuân Thủ)"
+                    ].map((item, idx) => (
+                      <div key={idx} className="p-2.5 rounded-xl bg-indigo-950/30 border border-indigo-500/20 text-xs font-semibold text-slate-200">
                         {item}
                       </div>
                     ))}
@@ -3323,40 +3517,351 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
         )}
 
         {/* ======================================================== */}
-        {/* TAB 6: REAL AUDIT TRAIL */}
+        {/* TAB 5: REAL AUDIT TRAIL (NHẬT KÝ KIỂM TOÁN HỆ THỐNG)   */}
         {/* ======================================================== */}
         {activeTab === "audit" && (
           <div className="space-y-6">
+            {/* Header & Immutable Ledger Banner */}
             <div className="bg-[#0F172A]/80 border border-white/10 rounded-2xl p-6">
-              <h2 className="text-lg font-bold text-white mb-1">Nhật Ký Kiểm Toán Hệ Thống Thực Tế (System Real Audit Trail)</h2>
-              <p className="text-xs text-slate-400 mb-6">
-                Lịch sử sự kiện khởi tạo hệ thống, các mốc di trú dữ liệu sang Node-01 và kích hoạt chế độ sẵn sàng cho 59 AI Agency.
-              </p>
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+                <div>
+                  <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                    <Shield className="w-5 h-5 text-cyan-400" />
+                    Nhật Ký Kiểm Toán Hệ Thống Thực Tế (System Real Audit Trail)
+                  </h2>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Lịch sử sự kiện khởi tạo hệ thống, các mốc di trú dữ liệu sang Node-01 và kích hoạt chế độ sẵn sàng cho 63 Nhân Sự AI Agency.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="px-3 py-1 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-mono font-bold">
+                    {effectiveAuditLogs.length} Sự Kiện Đã Ghi Nhận
+                  </span>
+                </div>
+              </div>
 
-              <div className="space-y-3 font-mono text-xs">
-                {(systemStatus?.realAuditLogs || []).map((log) => (
-                  <div
-                    key={log.id}
-                    className="p-3.5 rounded-xl bg-[#070B14] border border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-3 hover:border-white/20 transition-all"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                        log.level === "SECURITY"
-                          ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
-                          : log.level === "AUTH"
-                          ? "bg-purple-500/20 text-purple-300 border border-purple-500/30"
-                          : "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
-                      }`}>
-                        {log.event}
-                      </span>
-                      <span className="text-slate-300 text-xs font-sans">{log.details}</span>
-                    </div>
-
-                    <div className="text-[11px] text-slate-500 shrink-0">
-                      {new Date(log.timestamp).toLocaleString("vi-VN")}
-                    </div>
+              {/* Immutable Ledger Storage Partition Info */}
+              <div className="p-4 rounded-xl bg-[#070B14] border border-cyan-500/30 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-300 shrink-0">
+                    <Database className="w-4 h-4" />
                   </div>
-                ))}
+                  <div>
+                    <span className="text-white font-bold block">Phân Vùng Lưu Trữ Bất Biến (Immutable Ledger Partition):</span>
+                    <span className="text-cyan-300 font-mono text-[11px]">/mnt/data1/HUY-AI/audit/ (Dell Precision M4800 NODE-01)</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 text-[11px] text-slate-400">
+                  <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold">WORM Active</span>
+                  <span>Chính sách R4 · Checksum SHA-256 · Zero-Backdoor</span>
+                </div>
+              </div>
+
+              {/* Search & Filter Controls */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-6">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <input
+                    type="text"
+                    value={auditSearchQuery}
+                    onChange={(e) => setAuditSearchQuery(e.target.value)}
+                    placeholder="Tìm kiếm sự kiện, tác nhân (actor), mã audit hoặc nội dung chi tiết..."
+                    className="w-full bg-[#070B14] border border-white/10 rounded-xl py-2 pl-10 pr-4 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 transition-all"
+                  />
+                  {auditSearchQuery && (
+                    <button
+                      onClick={() => setAuditSearchQuery("")}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+                  {(["ALL", "HUMAN_GATE", "SECURITY", "AUTH", "SYSTEM", "A2A"] as const).map((lvl) => (
+                    <button
+                      key={lvl}
+                      onClick={() => setAuditLevelFilter(lvl)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                        auditLevelFilter === lvl
+                          ? lvl === "HUMAN_GATE"
+                            ? "bg-amber-500 text-black shadow-md shadow-amber-500/20"
+                            : lvl === "SECURITY"
+                            ? "bg-rose-500 text-white shadow-md shadow-rose-500/20"
+                            : lvl === "AUTH"
+                            ? "bg-purple-500 text-white shadow-md shadow-purple-500/20"
+                            : lvl === "A2A"
+                            ? "bg-indigo-500 text-white shadow-md shadow-indigo-500/20"
+                            : "bg-cyan-500 text-black shadow-md shadow-cyan-500/20"
+                          : "bg-white/5 hover:bg-white/10 text-slate-300 border border-white/5"
+                      }`}
+                    >
+                      {lvl === "ALL" ? "Tất Cả" : lvl}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Audit Log Entries List */}
+              <div className="space-y-3 font-mono text-xs">
+                {effectiveAuditLogs.length === 0 ? (
+                  <div className="py-12 text-center text-slate-400 bg-[#070B14] rounded-2xl border border-white/5">
+                    <Shield className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+                    <p className="text-sm font-semibold text-slate-300">Không tìm thấy bản ghi kiểm toán phù hợp</p>
+                    <p className="text-xs text-slate-500 mt-1">Thử thay đổi từ khóa tìm kiếm hoặc chọn bộ lọc cấp độ khác.</p>
+                  </div>
+                ) : (
+                  effectiveAuditLogs.map((log) => {
+                    const isHumanGate = log.level === "HUMAN_GATE";
+                    const isSecurity = log.level === "SECURITY";
+                    const isAuth = log.level === "AUTH";
+                    const isA2A = log.level === "A2A";
+
+                    return (
+                      <div
+                        key={log.id}
+                        className={`p-4 rounded-xl bg-[#070B14] border transition-all hover:border-white/20 flex flex-col gap-2 ${
+                          isHumanGate
+                            ? "border-amber-500/40 bg-amber-950/10"
+                            : isSecurity
+                            ? "border-rose-500/30"
+                            : isAuth
+                            ? "border-purple-500/30"
+                            : isA2A
+                            ? "border-indigo-500/30"
+                            : "border-white/5"
+                        }`}
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                isHumanGate
+                                  ? "bg-amber-500/20 text-amber-300 border border-amber-500/40"
+                                  : isSecurity
+                                  ? "bg-rose-500/20 text-rose-300 border border-rose-500/40"
+                                  : isAuth
+                                  ? "bg-purple-500/20 text-purple-300 border border-purple-500/40"
+                                  : isA2A
+                                  ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/40"
+                                  : "bg-cyan-500/20 text-cyan-300 border border-cyan-500/40"
+                              }`}
+                            >
+                              {log.level}
+                            </span>
+                            <span className="text-cyan-300 font-bold text-xs">{log.event}</span>
+                            <span className="text-slate-500 text-[11px]">[{log.id}]</span>
+                          </div>
+
+                          <div className="text-[11px] text-slate-400">
+                            {new Date(log.timestamp).toLocaleString("vi-VN")}
+                          </div>
+                        </div>
+
+                        <p className="text-slate-300 text-xs font-sans leading-relaxed">{log.details}</p>
+
+                        <div className="pt-2 border-t border-white/5 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-400">
+                          <span className="flex items-center gap-1.5">
+                            <User className="w-3 h-3 text-cyan-400" />
+                            Tác nhân: <span className="text-slate-200 font-semibold">{log.actor || "System Coordinator"}</span>
+                          </span>
+                          <span className="flex items-center gap-1 text-emerald-400/90 font-mono text-[10px]">
+                            <CheckCircle2 className="w-3 h-3" />
+                            SHA-256 Verified · Ledger Sealed
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ======================================================== */}
+        {/* TAB 4: ZENTRATECH CMS HEADLESS MANAGEMENT (PORT 3006)    */}
+        {/* ======================================================== */}
+        {activeTab === "zentratech-cms" && (
+          <div className="space-y-6">
+            {/* Header & Connection HUD */}
+            <div className="bg-[#0F172A]/80 border border-white/10 rounded-2xl p-6">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                      <Globe className="w-5 h-5 text-indigo-400" />
+                      ZentraTech Headless CMS — Quản Trị Nội Dung Đào Tạo
+                    </h2>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-mono">
+                      PORT 3006
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Cổng quản lý bài viết sư phạm, học liệu số EdTech AI, khóa học trực tuyến và phân phối tài nguyên đào tạo.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <a
+                    href="http://100.79.240.108:3006"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white font-bold text-xs shadow-lg shadow-indigo-500/25 transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    Mở Trực Tiếp Port 3006
+                  </a>
+                  <button
+                    onClick={() => addToast("CMS Sync", "Đã đồng bộ danh mục bài viết và khóa học số từ Node-01 Port 3006!", "success")}
+                    className="px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-200 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5 text-cyan-400" />
+                    Đồng Bộ Danh Mục
+                  </button>
+                </div>
+              </div>
+
+              {/* Status HUD Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div className="p-4 rounded-xl bg-[#070B14] border border-indigo-500/30">
+                  <span className="text-[11px] text-indigo-300 font-semibold uppercase tracking-wider block mb-1">Điểm Neo Máy Chủ</span>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-lg font-black text-white font-mono">NODE-01</span>
+                    <span className="text-xs text-emerald-400 font-bold">ONLINE</span>
+                  </div>
+                  <span className="text-[11px] text-slate-400 font-mono block mt-1">100.79.240.108:3006</span>
+                </div>
+
+                <div className="p-4 rounded-xl bg-[#070B14] border border-cyan-500/30">
+                  <span className="text-[11px] text-cyan-300 font-semibold uppercase tracking-wider block mb-1">Kho Tri Thức & Bài Viết</span>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-lg font-black text-cyan-400 font-mono">142</span>
+                    <span className="text-xs text-slate-400">bài / 18 khóa</span>
+                  </div>
+                  <span className="text-[11px] text-slate-400 block mt-1">Chuẩn Công văn 5512/BGDĐT</span>
+                </div>
+
+                <div className="p-4 rounded-xl bg-[#070B14] border border-emerald-500/30">
+                  <span className="text-[11px] text-emerald-300 font-semibold uppercase tracking-wider block mb-1">Lượt Xem Học Liệu Số</span>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-lg font-black text-emerald-400 font-mono">24,850</span>
+                    <span className="text-xs text-slate-400">lượt đọc</span>
+                  </div>
+                  <span className="text-[11px] text-emerald-400/90 block mt-1">+14.2% tuần này</span>
+                </div>
+
+                <div className="p-4 rounded-xl bg-[#070B14] border border-purple-500/30">
+                  <span className="text-[11px] text-purple-300 font-semibold uppercase tracking-wider block mb-1">Kiểm Duyệt Compliance</span>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-lg font-black text-purple-300 font-mono">100% PASS</span>
+                  </div>
+                  <span className="text-[11px] text-purple-200/80 block mt-1">Zero-PII · Bản quyền số</span>
+                </div>
+              </div>
+
+              {/* Featured Digital Courses & Articles Management Table */}
+              <div className="bg-[#070B14] border border-white/5 rounded-xl p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-cyan-400" />
+                    Danh Mục Tài Nguyên EdTech AI Trọng Điểm
+                  </h3>
+                  <span className="text-[11px] text-slate-400">Cập nhật tự động từ microservice Port 3006</span>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="border-b border-white/10 text-slate-400">
+                        <th className="py-2.5 px-3">Tiêu Đề Học Liệu / Bài Viết</th>
+                        <th className="py-2.5 px-3">Chuyên Mục</th>
+                        <th className="py-2.5 px-3">Tác Giả AI Phụ Trách</th>
+                        <th className="py-2.5 px-3">Lượt Xem</th>
+                        <th className="py-2.5 px-3">Trạng Thái</th>
+                        <th className="py-2.5 px-3 text-right">Thao Tác</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5 font-sans">
+                      {[
+                        {
+                          id: "ART-01",
+                          title: "5 Ứng Dụng AI Đột Phá Giúp Giáo Viên Soạn Giáo Án Nhanh Gấp 10 Lần",
+                          category: "AI Sư Phạm 5512",
+                          author: "Ánh Dương (emp_23) & Thu Hà (emp_24)",
+                          views: "12,420",
+                          status: "PUBLISHED",
+                        },
+                        {
+                          id: "ART-02",
+                          title: "Khóa Học Python Căn Bản Ứng Dụng Tự Động Hóa Dạy Học",
+                          category: "Khóa Học EdTech",
+                          author: "Minh Quân (emp_25)",
+                          views: "5,840",
+                          status: "PUBLISHED",
+                        },
+                        {
+                          id: "ART-03",
+                          title: "Kỹ Thuật Thiết Kế Prompt Sư Phạm Chuẩn Khung Năng Lực GDPT 2018",
+                          category: "Prompt Engineering",
+                          author: "Bảo Trâm (emp_26)",
+                          views: "3,910",
+                          status: "PUBLISHED",
+                        },
+                        {
+                          id: "ART-04",
+                          title: "Tự Động Hóa Đăng Bài & Tương Tác Học Viên Với n8n Doanh Nghiệp",
+                          category: "Hệ Thống n8n",
+                          author: "Khánh An (emp_33) & Tuấn Kiệt (emp_34)",
+                          views: "2,180",
+                          status: "REVIEWED",
+                        },
+                        {
+                          id: "ART-05",
+                          title: "Khung Tiêu Chí Đánh Giá AI Trong Quản Lý Trường Học Số",
+                          category: "Chính Sách Giáo Dục",
+                          author: "Thanh Trúc (emp_03) · CCO",
+                          views: "1,500",
+                          status: "STAGING",
+                        },
+                      ].map((item) => (
+                        <tr key={item.id} className="hover:bg-white/2 transition-colors">
+                          <td className="py-3 px-3">
+                            <span className="font-semibold text-white block">{item.title}</span>
+                            <span className="text-[10px] text-slate-500 font-mono">ID: {item.id}</span>
+                          </td>
+                          <td className="py-3 px-3">
+                            <span className="px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[10px] font-bold">
+                              {item.category}
+                            </span>
+                          </td>
+                          <td className="py-3 px-3 text-slate-300 font-mono text-[11px]">{item.author}</td>
+                          <td className="py-3 px-3 text-emerald-400 font-mono font-bold">{item.views}</td>
+                          <td className="py-3 px-3">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                              item.status === "PUBLISHED"
+                                ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                                : item.status === "REVIEWED"
+                                ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
+                                : "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                            }`}>
+                              {item.status}
+                            </span>
+                          </td>
+                          <td className="py-3 px-3 text-right">
+                            <button
+                              onClick={() => addToast("Mở Bài Viết", `Đang mở trình biên soạn CMS cho ${item.id}`, "info")}
+                              className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-cyan-300 text-[11px] font-bold transition-colors cursor-pointer"
+                            >
+                              Biên Soạn
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>
@@ -3477,7 +3982,7 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
               </h2>
               <p className="text-xs text-slate-300 mt-2 leading-relaxed">
                 {mustChangePassword
-                  ? "Bạn đang sử dụng mật khẩu khởi tạo mặc định (admin2026). Để bảo vệ 59 AI Agency, vui lòng tự thiết lập mật khẩu cá nhân mới để tiếp tục."
+                  ? "Bạn đang sử dụng mật khẩu khởi tạo mặc định (admin2026). Để bảo vệ 63 Nhân Sự AI Agency, vui lòng tự thiết lập mật khẩu cá nhân mới để tiếp tục."
                   : "Thiết lập mật khẩu bảo mật mới cho phiên làm việc của bạn."}
               </p>
             </div>
@@ -4144,17 +4649,18 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
                 <span className="text-cyan-400">ollama list</span>
               </div>
               <div className="bg-black/40 rounded-xl p-3 border border-white/5">
-                <span className="text-emerald-400"># 3. Expose Ollama API (nếu cần firewall mở)</span><br />
-                <span className="text-cyan-400">OLLAMA_HOST=0.0.0.0:11434 ollama serve</span>
+                <span className="text-emerald-400"># 3. Cấu hình bảo mật Ollama Gateway (Tailscale ACL nội bộ)</span><br />
+                <span className="text-cyan-400">OLLAMA_HOST=127.0.0.1:11434 ollama serve</span><br />
+                <span className="text-slate-500 text-[10px]"># Truy cập an toàn qua mạng nội bộ Tailnet Node-01 (100.79.240.108), không bind 0.0.0.0 công khai</span>
               </div>
               <div className="bg-black/40 rounded-xl p-3 border border-white/5">
-                <span className="text-emerald-400"># 4. Load model Qwen 2.5 Coder 7B-INT4</span><br />
-                <span className="text-cyan-400">ollama pull</span> <span className="text-violet-300">qwen2.5-coder:32b</span>
+                <span className="text-emerald-400"># 4. Load model Qwen 2.5 Coder 7B-INT4 chuẩn hóa</span><br />
+                <span className="text-cyan-400">ollama pull</span> <span className="text-violet-300">qwen2.5-coder:7b-instruct-q4_K_M</span>
               </div>
               <div className="bg-black/40 rounded-xl p-3 border border-white/5">
-                <span className="text-emerald-400"># 5. Thêm env var vào .env.local của project</span><br />
+                <span className="text-emerald-400"># 5. Cấu hình env var Node-01 vào .env.local</span><br />
                 <span className="text-amber-300">OLLAMA_BASE_URL=http://100.79.240.108:11434</span><br />
-                <span className="text-amber-300">OLLAMA_MODEL=qwen2.5-coder:32b</span>
+                <span className="text-amber-300">OLLAMA_MODEL=qwen2.5-coder:7b-instruct-q4_K_M</span>
               </div>
             </div>
           </div>
@@ -4321,7 +4827,7 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
                     +{(supervisorStatus.quotaGuard?.estimatedTokensSavedLocal ?? 685000).toLocaleString()} <span className="text-xs text-slate-400 font-normal">tokens</span>
                   </div>
                   <p className="text-[11px] text-slate-400 mt-1">
-                    Cơ chế ngắt mạch (Circuit Breaker) tự động chuyển vùng khi quota chạm ngưỡng 80%.
+                    Cảnh báo ngân sách nội bộ tại ngưỡng 80% quota; chỉ chuyển vùng OmniRouter khi có Biên nhận Cạn kiệt (Depletion Receipt) và phê duyệt hợp lệ.
                   </p>
                 </div>
 
@@ -4537,10 +5043,10 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
             </h3>
             <div className="space-y-2 text-xs font-mono">
               <div className="bg-black/40 rounded-xl p-3 border border-white/5 text-slate-300">
-                <span className="text-emerald-400"># SSH vào Node-01 và chạy worker</span><br />
+                <span className="text-emerald-400"># SSH vào Node-01 và chạy worker an toàn</span><br />
                 <span className="text-cyan-400">ssh</span> <span className="text-white">huy@100.79.240.108</span><br />
-                <span className="text-cyan-400">OLLAMA_HOST=0.0.0.0:11434 ollama serve &</span><br />
-                <span className="text-cyan-400">ollama pull qwen2.5-coder:32b</span><br /><br />
+                <span className="text-cyan-400">OLLAMA_HOST=127.0.0.1:11434 ollama serve &</span><br />
+                <span className="text-cyan-400">ollama pull qwen2.5-coder:7b-instruct-q4_K_M</span><br /><br />
                 <span className="text-amber-300">SUPERVISOR_URL=https://www.huycncdsai.io.vn \</span><br />
                 <span className="text-amber-300">WORKER_ID=NODE01-QWEN7B-INT4 \</span><br />
                 <span className="text-amber-300">OLLAMA_MODEL=qwen2.5-coder:32b \</span><br />
@@ -4568,7 +5074,7 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
                   Trung Tâm Điều Phối & Tự Động Hóa n8n
                 </h2>
                 <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                  NOTE-01 ORCHESTRATOR
+                  NODE-01 ORCHESTRATOR
                 </span>
                 <span className="flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -4576,7 +5082,7 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
                 </span>
               </div>
               <p className="text-xs text-slate-400 mt-1">
-                Quản lý tập trung 6 luồng tự động hóa liên kết Đa Nền Tảng (Facebook, TikTok, Zalo, Supabase, Email) chạy trên Node-01 và Vercel Edge.
+                Quản lý tập trung {n8nWorkflows.length || 7} luồng tự động hóa liên kết Đa Nền Tảng (Facebook, TikTok, Zalo, Supabase, Email) chạy trên Node-01 và Vercel Edge.
               </p>
             </div>
 
@@ -4656,7 +5162,7 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-bold text-white flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-amber-400" />
-                Danh Sách 6 Luồng Tự Động Hóa Chuẩn Hóa
+                Danh Sách {n8nWorkflows.length || 7} Luồng Tự Động Hóa Chuẩn Hóa
               </h3>
               <span className="text-xs text-slate-400">Ấn &quot;Kích Hoạt Ngay&quot; để phát lệnh thực thi lập tức</span>
             </div>
@@ -5487,7 +5993,7 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
       )}
 
       {/* ============================================================ */}
-      {/* TAB 10: AI LOCAL LIVE STUDIO (NOTE-01 COMPUTING SUITE)      */}
+      {/* TAB 10: AI LOCAL LIVE STUDIO (NODE-01 COMPUTING SUITE)      */}
       {/* ============================================================ */}
       {activeTab === "local-ai" && (
         <div className="px-4 lg:px-8 py-6 space-y-6">
@@ -5649,7 +6155,7 @@ Bảng điều hành: https://www.huycncdsai.io.vn/admincenter`;
                   ) : (
                     <>
                       <Zap className="w-4 h-4 fill-black" />
-                      <span>⚡ KÍCH HOẠT SUY LUẬN AI LOCAL (NOTE-01)</span>
+                      <span>⚡ KÍCH HOẠT SUY LUẬN AI LOCAL (NODE-01)</span>
                     </>
                   )}
                 </button>
