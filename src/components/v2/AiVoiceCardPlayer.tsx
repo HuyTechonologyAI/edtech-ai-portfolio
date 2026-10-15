@@ -46,13 +46,18 @@ export function stopAnyActiveVoice() {
     try {
       globalActiveAudio.pause();
       globalActiveAudio.currentTime = 0;
+      globalActiveAudio.src = "";
     } catch {
       // ignore
     }
     globalActiveAudio = null;
   }
   if (globalActiveStopCallback) {
-    globalActiveStopCallback();
+    try {
+      globalActiveStopCallback();
+    } catch {
+      // ignore
+    }
     globalActiveStopCallback = null;
   }
 }
@@ -85,6 +90,13 @@ export function AiVoiceCardPlayer({
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const progressInputRef = useRef<HTMLInputElement | null>(null);
 
+  // Enforce absolute voice termination when component unmounts
+  useEffect(() => {
+    return () => {
+      stopAnyActiveVoice();
+    };
+  }, []);
+
   // Candidate audio URLs: card intro first, fallback intro sample
   const primaryUrl = samplePath || registeredVoice?.card_intro?.sample_path || `/voices/cards/${agentId}_card.mp3`;
   const secondaryUrl = fallbackSamplePath || registeredVoice?.sample_path || `/voices/samples/${agentId}_intro.mp3`;
@@ -93,15 +105,29 @@ export function AiVoiceCardPlayer({
     if (audioRef.current) {
       try {
         audioRef.current.pause();
+        audioRef.current.currentTime = 0;
         audioRef.current.src = "";
-        audioRef.current.load();
       } catch {
         // ignore
       }
-      audioRef.current = null;
     }
-    if (globalActiveAudio === audioRef.current) {
+    if (globalActiveAudio) {
+      try {
+        globalActiveAudio.pause();
+        globalActiveAudio.currentTime = 0;
+        globalActiveAudio.src = "";
+      } catch {
+        // ignore
+      }
       globalActiveAudio = null;
+    }
+    audioRef.current = null;
+    if (globalActiveStopCallback) {
+      try {
+        globalActiveStopCallback();
+      } catch {
+        // ignore
+      }
       globalActiveStopCallback = null;
     }
     setIsPlaying(false);
@@ -135,6 +161,14 @@ export function AiVoiceCardPlayer({
 
     audio.play()
       .then(() => {
+        // Guard against race condition: if modal closed or audio stopped while promise was pending
+        if (!audioRef.current || audioRef.current !== audio || audio.src === "") {
+          try {
+            audio.pause();
+            audio.currentTime = 0;
+          } catch {}
+          return;
+        }
         setIsLoading(false);
         setIsPlaying(true);
       })
