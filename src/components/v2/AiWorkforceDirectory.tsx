@@ -57,6 +57,13 @@ export function AiWorkforceDirectory() {
     }
   }, [selectedEmployee]);
 
+  // Enforce audio cleanup when directory unmounts
+  useEffect(() => {
+    return () => {
+      stopAnyActiveVoice();
+    };
+  }, []);
+
   // Lock body scroll when modal is open
   useEffect(() => {
     if (selectedEmployee) {
