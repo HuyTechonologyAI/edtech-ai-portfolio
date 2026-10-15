@@ -44,9 +44,14 @@ let globalActiveStopCallback: (() => void) | null = null;
 export function stopAnyActiveVoice() {
   if (globalActiveAudio) {
     try {
+      globalActiveAudio.onerror = null;
+      globalActiveAudio.onloadedmetadata = null;
+      globalActiveAudio.ontimeupdate = null;
+      globalActiveAudio.onended = null;
       globalActiveAudio.pause();
       globalActiveAudio.currentTime = 0;
-      globalActiveAudio.src = "";
+      globalActiveAudio.removeAttribute("src");
+      globalActiveAudio.load();
     } catch {
       // ignore
     }
@@ -70,7 +75,7 @@ export function AiVoiceCardPlayer({
   introText,
   samplePath,
   fallbackSamplePath,
-  autoPlay = true,
+  autoPlay = false,
 }: AiVoiceCardPlayerProps) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const registeredVoice = (voiceRegistryData as any)?.voices?.[agentId];
@@ -89,33 +94,39 @@ export function AiVoiceCardPlayer({
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const progressInputRef = useRef<HTMLInputElement | null>(null);
-
-  // Enforce absolute voice termination when component unmounts
-  useEffect(() => {
-    return () => {
-      stopAnyActiveVoice();
-    };
-  }, []);
+  const isDestroyedRef = useRef(false);
+  const playFallbackRef = useRef<(() => void) | null>(null);
 
   // Candidate audio URLs: card intro first, fallback intro sample
   const primaryUrl = samplePath || registeredVoice?.card_intro?.sample_path || `/voices/cards/${agentId}_card.mp3`;
   const secondaryUrl = fallbackSamplePath || registeredVoice?.sample_path || `/voices/samples/${agentId}_intro.mp3`;
 
   const cleanupAudio = useCallback(() => {
+    isDestroyedRef.current = true;
     if (audioRef.current) {
       try {
+        audioRef.current.onerror = null;
+        audioRef.current.onloadedmetadata = null;
+        audioRef.current.ontimeupdate = null;
+        audioRef.current.onended = null;
         audioRef.current.pause();
         audioRef.current.currentTime = 0;
-        audioRef.current.src = "";
+        audioRef.current.removeAttribute("src");
+        audioRef.current.load();
       } catch {
         // ignore
       }
     }
     if (globalActiveAudio) {
       try {
+        globalActiveAudio.onerror = null;
+        globalActiveAudio.onloadedmetadata = null;
+        globalActiveAudio.ontimeupdate = null;
+        globalActiveAudio.onended = null;
         globalActiveAudio.pause();
         globalActiveAudio.currentTime = 0;
-        globalActiveAudio.src = "";
+        globalActiveAudio.removeAttribute("src");
+        globalActiveAudio.load();
       } catch {
         // ignore
       }
@@ -133,6 +144,14 @@ export function AiVoiceCardPlayer({
     setIsPlaying(false);
     setCurrentTime(0);
   }, []);
+
+  // Enforce absolute voice termination when component unmounts
+  useEffect(() => {
+    return () => {
+      cleanupAudio();
+      stopAnyActiveVoice();
+    };
+  }, [cleanupAudio]);
 
   const handleStop = useCallback(() => {
     if (audioRef.current) {
@@ -161,8 +180,8 @@ export function AiVoiceCardPlayer({
 
     audio.play()
       .then(() => {
-        // Guard against race condition: if modal closed or audio stopped while promise was pending
-        if (!audioRef.current || audioRef.current !== audio || audio.src === "") {
+        // Guard against race condition: if component unmounted or stopped during play promise
+        if (isDestroyedRef.current || !audioRef.current || audioRef.current !== audio || !audio.src) {
           try {
             audio.pause();
             audio.currentTime = 0;
@@ -176,19 +195,19 @@ export function AiVoiceCardPlayer({
         setIsLoading(false);
         setIsPlaying(false);
         if (err.name === "NotAllowedError" || err.name === "AbortError") {
-          // Autoplay blocked by browser policy: show explicit Play button
           setAutoplayBlocked(true);
         } else {
-          console.warn("Audio playback issue:", err);
-          setHasError(true);
+          if (!isDestroyedRef.current) {
+            console.warn("Audio playback issue:", err);
+            setHasError(true);
+          }
         }
       });
   }, []);
 
-  const playFallbackRef = useRef<(() => void) | null>(null);
-
   const initAndPlayAudio = useCallback((urlToTry: string, allowFallback = true) => {
     cleanupAudio();
+    isDestroyedRef.current = false;
 
     const audio = new Audio();
     audio.preload = "metadata";
@@ -217,8 +236,9 @@ export function AiVoiceCardPlayer({
     };
 
     audio.onerror = () => {
+      // CRUCIAL: Do not trigger fallback if component is destroyed / closing modal!
+      if (isDestroyedRef.current) return;
       if (allowFallback && urlToTry !== secondaryUrl && playFallbackRef.current) {
-        // Try fallback general intro sample
         playFallbackRef.current();
       } else {
         setIsLoading(false);
@@ -232,7 +252,9 @@ export function AiVoiceCardPlayer({
 
   useEffect(() => {
     playFallbackRef.current = () => {
-      initAndPlayAudio(secondaryUrl, false);
+      if (!isDestroyedRef.current) {
+        initAndPlayAudio(secondaryUrl, false);
+      }
     };
   }, [initAndPlayAudio, secondaryUrl]);
 
@@ -241,7 +263,9 @@ export function AiVoiceCardPlayer({
     let timer: NodeJS.Timeout | null = null;
     if (autoPlay) {
       timer = setTimeout(() => {
-        initAndPlayAudio(primaryUrl, true);
+        if (!isDestroyedRef.current) {
+          initAndPlayAudio(primaryUrl, true);
+        }
       }, 50);
     }
 
@@ -252,7 +276,7 @@ export function AiVoiceCardPlayer({
   }, [agentId, autoPlay, initAndPlayAudio, primaryUrl, cleanupAudio]);
 
   const handleTogglePlay = () => {
-    if (!audioRef.current) {
+    if (!audioRef.current || !audioRef.current.src) {
       initAndPlayAudio(primaryUrl, true);
       return;
     }
@@ -266,7 +290,7 @@ export function AiVoiceCardPlayer({
   };
 
   const handleReplay = () => {
-    if (audioRef.current) {
+    if (audioRef.current && audioRef.current.src) {
       audioRef.current.currentTime = 0;
       setCurrentTime(0);
       playAudio(audioRef.current);
@@ -285,9 +309,10 @@ export function AiVoiceCardPlayer({
 
   const handleToggleMute = () => {
     if (audioRef.current) {
-      const nextMuted = !audioRef.current.muted;
-      audioRef.current.muted = nextMuted;
-      setIsMuted(nextMuted);
+      audioRef.current.muted = !isMuted;
+      setIsMuted(!isMuted);
+    } else {
+      setIsMuted(!isMuted);
     }
   };
 
@@ -298,18 +323,21 @@ export function AiVoiceCardPlayer({
     return `${m}:${s < 10 ? "0" : ""}${s}`;
   };
 
-  const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
+  const progressPercent = duration > 0 ? Math.min(100, Math.max(0, (currentTime / duration) * 100)) : 0;
 
   return (
-    <div className="w-full rounded-2xl bg-gradient-to-br from-[#0F172A] via-[#131F37] to-[#0A101D] border border-cyan-500/30 p-4 sm:p-5 shadow-xl shadow-cyan-950/20 my-3">
-      {/* Top Header: Title, AI Badge, Regional Accent */}
-      <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-white/10">
-        <div className="flex items-center gap-2">
+    <div className="w-full rounded-2xl bg-slate-900/90 border border-cyan-500/30 p-4 sm:p-5 shadow-lg backdrop-blur-md relative overflow-hidden transition-all duration-300">
+      {/* Decorative top accent line */}
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500" />
+
+      {/* Header bar: Agent voice metadata badge */}
+      <div className="flex items-center justify-between pb-3 border-b border-white/10 gap-2">
+        <div className="flex items-center gap-2.5">
           <div
-            className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${
+            className={`w-8 h-8 rounded-xl flex items-center justify-center border ${
               isPlaying
-                ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-[0_0_15px_rgba(0,229,255,0.3)] animate-pulse"
-                : "bg-white/5 text-slate-400 border border-white/10"
+                ? "bg-cyan-500/20 text-[#00E5FF] border-cyan-500/50 shadow-md shadow-cyan-500/20 animate-pulse"
+                : "bg-white/5 text-slate-400 border-white/10"
             }`}
           >
             <Volume2 className="w-4 h-4" />
