@@ -36,6 +36,7 @@ export function AiWorkforceDirectory() {
   const [selectedDept, setSelectedDept] = useState<string>("ALL");
   const [sortBy, setSortBy] = useState<"DEFAULT" | "NAME" | "DEPT">("DEFAULT");
   const [selectedEmployee, setSelectedEmployee] = useState<AIEmployee | null>(null);
+  const [autoPlayVoice, setAutoPlayVoice] = useState(false);
   const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
 
   // Close modal on Escape and stop active audio
@@ -341,6 +342,7 @@ export function AiWorkforceDirectory() {
                   key={emp.id}
                   onClick={() => {
                     stopAnyActiveVoice();
+                    setAutoPlayVoice(false);
                     setSelectedEmployee(emp);
                   }}
                   className="rounded-2xl bg-[#0F172A]/90 border border-white/10 hover:border-white/25 p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_30px_rgba(0,0,0,0.5)] flex flex-col justify-between group cursor-pointer relative overflow-hidden"
@@ -429,6 +431,7 @@ export function AiWorkforceDirectory() {
                         onClick={(e) => {
                           e.stopPropagation();
                           stopAnyActiveVoice();
+                          setAutoPlayVoice(true);
                           setSelectedEmployee(emp);
                         }}
                         className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-cyan-500/10 text-cyan-300 hover:bg-cyan-500/20 border border-cyan-500/30 text-[11px] font-semibold transition-colors cursor-pointer"
@@ -465,6 +468,7 @@ export function AiWorkforceDirectory() {
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in"
           onClick={() => {
             stopAnyActiveVoice();
+            setAutoPlayVoice(false);
             setSelectedEmployee(null);
           }}
         >
@@ -481,6 +485,7 @@ export function AiWorkforceDirectory() {
               type="button"
               onClick={() => {
                 stopAnyActiveVoice();
+                setAutoPlayVoice(false);
                 setSelectedEmployee(null);
               }}
               className="absolute top-5 right-5 w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors cursor-pointer"
@@ -554,7 +559,7 @@ export function AiWorkforceDirectory() {
                 key={selectedEmployee.id}
                 agentId={selectedEmployee.id}
                 displayName={selectedEmployee.name}
-                autoPlay={true}
+                autoPlay={autoPlayVoice}
               />
             </div>
 
