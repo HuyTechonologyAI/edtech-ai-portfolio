@@ -36,6 +36,7 @@ async function dispatchAndAwaitNode01Task(params: {
   const { error: insertErr } = await supabase.from("ai_tasks").insert([
     {
       id: taskId,
+      conversation_id: randomUUID(),
       idempotency_key: `admincenter:${taskId}`,
       haip_version: "1.0",
       source_app: "admincenter",
