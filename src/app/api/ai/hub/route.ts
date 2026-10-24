@@ -3,6 +3,7 @@ import { getErrorMessage } from "@/lib/error-message";
 import { NextRequest, NextResponse } from "next/server";
 import { dispatchAiCompletion, AI_PROVIDERS, GatewayResult } from "@/lib/ai-gateway";
 import { OPEN_SOURCE_AI_TOOLS } from "@/lib/ai-tools-registry";
+import { verifyHubAuthInput } from "@/lib/hub-auth";
 
 // CORS configuration for cross-ecosystem calls
 const ALLOWED_ORIGINS = [
@@ -44,32 +45,14 @@ export function checkRateLimit(ip: string, limit = 30, windowMs = 60000): boolea
   return true;
 }
 
-// Server-side authentication check for AI Hub requests
+// Server-side authentication check for AI Hub requests.
+// Delegates to verifyHubAuthInput: API key / Bearer (constant-time) or HMAC-signed admin_session.
 export function verifyHubAuth(req: NextRequest): boolean {
-  const validApiKey = process.env.ECOSYSTEM_API_KEY || process.env.HUB_ADMIN_TOKEN || process.env.HUB_AGENT_TOKEN;
-
-  // 1. Check API Key header
-  const apiKey = req.headers.get("x-api-key");
-  if (apiKey && validApiKey && apiKey === validApiKey) {
-    return true;
-  }
-
-  // 2. Check Bearer token in Authorization header
-  const authHeader = req.headers.get("authorization");
-  if (authHeader && authHeader.toLowerCase().startsWith("bearer ")) {
-    const token = authHeader.substring(7).trim();
-    if (validApiKey && token === validApiKey) {
-      return true;
-    }
-  }
-
-  // 3. Check admin session cookie for first-party dashboard calls
-  const session = req.cookies.get("admin_session")?.value;
-  if (session && session.length > 8) {
-    return true;
-  }
-
-  return false;
+  return verifyHubAuthInput({
+    apiKeyHeader: req.headers.get("x-api-key"),
+    authorizationHeader: req.headers.get("authorization"),
+    adminSessionCookie: req.cookies.get("admin_session")?.value,
+  });
 }
 
 export async function OPTIONS(req: NextRequest) {
