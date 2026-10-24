@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 const assert = require("node:assert/strict");
 
 function isAllowedHost(hostname) {
@@ -12,7 +13,7 @@ function isPrivateIpOrHost(hostname) {
   if (h === "localhost" || h.endsWith(".local") || h.endsWith(".internal")) return true;
   const ipv4Match = h.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
   if (ipv4Match) {
-    const [_, o1, o2, o3, o4] = ipv4Match.map(Number);
+    const [, o1, o2] = ipv4Match.map(Number);
     if (o1 === 127 || o1 === 10 || o1 === 0) return true;
     if (o1 === 192 && o2 === 168) return true;
     if (o1 === 172 && o2 >= 16 && o2 <= 31) return true;
