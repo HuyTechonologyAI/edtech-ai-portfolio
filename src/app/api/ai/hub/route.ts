@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { getErrorMessage } from "@/lib/error-message";
 import { NextRequest, NextResponse } from "next/server";
 import { dispatchAiCompletion, AI_PROVIDERS, GatewayResult } from "@/lib/ai-gateway";
@@ -24,17 +25,22 @@ function getCorsHeaders(origin: string | null): Record<string, string> {
   return headers;
 }
 
-// In-memory rate limiting map (IP -> list of timestamps)
+// Rate limiting with hashed actor keys (SHA-256 hashed IP prefix) and TTL pruning
 const requestTimestamps = new Map<string, number[]>();
 
-function checkRateLimit(ip: string, limit = 30, windowMs = 60000): boolean {
+export function getActorKey(ip: string): string {
+  return crypto.createHash("sha256").update(ip || "unknown").digest("hex").slice(0, 16);
+}
+
+export function checkRateLimit(ip: string, limit = 30, windowMs = 60000): boolean {
+  const actorKey = getActorKey(ip);
   const now = Date.now();
-  const list = (requestTimestamps.get(ip) || []).filter(t => now - t < windowMs);
+  const list = (requestTimestamps.get(actorKey) || []).filter(t => now - t < windowMs);
   if (list.length >= limit) {
     return false;
   }
   list.push(now);
-  requestTimestamps.set(ip, list);
+  requestTimestamps.set(actorKey, list);
   return true;
 }
 
@@ -131,12 +137,14 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { action = "completion", prompt, systemPrompt, subject, duration, targetAudience, lessonTopic } = body;
 
-    // Request size constraint
-    if (prompt && typeof prompt === "string" && prompt.length > 10000) {
-      return NextResponse.json(
-        { error: "Prompt exceeds maximum allowed length of 10,000 characters." },
-        { status: 400, headers: getCorsHeaders(origin) }
-      );
+    // Request size constraint (character length <= 10,000 AND byte size <= 50,000)
+    if (prompt && typeof prompt === "string") {
+      if (prompt.length > 10000 || Buffer.byteLength(prompt, "utf8") > 50000) {
+        return NextResponse.json(
+          { error: "Prompt exceeds maximum allowed length of 10,000 characters or 50,000 bytes." },
+          { status: 400, headers: getCorsHeaders(origin) }
+        );
+      }
     }
 
     // --- Action 1: Generic Completion with Quota Failover ---

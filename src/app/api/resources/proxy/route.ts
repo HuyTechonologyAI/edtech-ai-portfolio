@@ -26,7 +26,7 @@ function isAllowedHost(hostname: string): boolean {
 }
 
 function isPrivateIpOrHost(hostname: string): boolean {
-  const h = hostname.toLowerCase();
+  const h = hostname.toLowerCase().replace(/^\[|\]$/g, "");
   if (h === "localhost" || h.endsWith(".local") || h.endsWith(".internal")) return true;
   // check ipv4
   const ipv4Match = h.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
@@ -38,8 +38,17 @@ function isPrivateIpOrHost(hostname: string): boolean {
     if (o1 === 169 && o2 === 254) return true; // link-local metadata (169.254.169.254)
     if (o1 >= 224) return true; // multicast / reserved
   }
-  // check ipv6
-  if (h === "::1" || h.startsWith("fe80:") || h.startsWith("fc00:") || h.startsWith("fd00:")) return true;
+  // check ipv6 and IPv4-mapped IPv6
+  if (
+    h === "::1" ||
+    h === "0:0:0:0:0:0:0:1" ||
+    h.startsWith("fe80:") ||
+    h.startsWith("fc00:") ||
+    h.startsWith("fd00:") ||
+    h.startsWith("::ffff:")
+  ) {
+    return true;
+  }
   return false;
 }
 
@@ -125,7 +134,9 @@ export async function GET(req: Request) {
       .update(`${id}:${expires}`)
       .digest("hex");
 
-    if (sigParam !== expectedSig) {
+    const sigBuf = Buffer.from(sigParam, "utf8");
+    const expectedBuf = Buffer.from(expectedSig, "utf8");
+    if (sigBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(sigBuf, expectedBuf)) {
       return NextResponse.json(
         { error: "?? Ch? k? x?c th?c (Cryptographic Signature) kh?ng h?p l? ho?c ?? b? gi? m?o." },
         { status: 403 }
