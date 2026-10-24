@@ -1,10 +1,9 @@
-
 import { getErrorMessage } from "@/lib/error-message";
 import { NextRequest, NextResponse } from "next/server";
 import { dispatchAiCompletion, AI_PROVIDERS, GatewayResult } from "@/lib/ai-gateway";
 import { OPEN_SOURCE_AI_TOOLS } from "@/lib/ai-tools-registry";
 
-// CORS configuration for cross-ecosystem calls from gvcncdsai.io.vn and smarttax-ai.vercel.app
+// CORS configuration for cross-ecosystem calls
 const ALLOWED_ORIGINS = [
   "https://gvcncdsai.io.vn",
   "https://smarttax-ai.vercel.app",
@@ -13,13 +12,58 @@ const ALLOWED_ORIGINS = [
   "http://localhost:5173"
 ];
 
-function getCorsHeaders(origin: string | null) {
+function getCorsHeaders(origin: string | null): Record<string, string> {
   const isAllowed = origin && ALLOWED_ORIGINS.includes(origin);
-  return {
-    "Access-Control-Allow-Origin": isAllowed ? origin : "*",
+  const headers: Record<string, string> = {
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization, x-ecosystem-source, x-api-key",
   };
+  if (isAllowed && origin) {
+    headers["Access-Control-Allow-Origin"] = origin;
+  }
+  return headers;
+}
+
+// In-memory rate limiting map (IP -> list of timestamps)
+const requestTimestamps = new Map<string, number[]>();
+
+function checkRateLimit(ip: string, limit = 30, windowMs = 60000): boolean {
+  const now = Date.now();
+  const list = (requestTimestamps.get(ip) || []).filter(t => now - t < windowMs);
+  if (list.length >= limit) {
+    return false;
+  }
+  list.push(now);
+  requestTimestamps.set(ip, list);
+  return true;
+}
+
+// Server-side authentication check for AI Hub requests
+export function verifyHubAuth(req: NextRequest): boolean {
+  const validApiKey = process.env.ECOSYSTEM_API_KEY || process.env.HUB_ADMIN_TOKEN || process.env.HUB_AGENT_TOKEN;
+
+  // 1. Check API Key header
+  const apiKey = req.headers.get("x-api-key");
+  if (apiKey && validApiKey && apiKey === validApiKey) {
+    return true;
+  }
+
+  // 2. Check Bearer token in Authorization header
+  const authHeader = req.headers.get("authorization");
+  if (authHeader && authHeader.toLowerCase().startsWith("bearer ")) {
+    const token = authHeader.substring(7).trim();
+    if (validApiKey && token === validApiKey) {
+      return true;
+    }
+  }
+
+  // 3. Check admin session cookie for first-party dashboard calls
+  const session = req.cookies.get("admin_session")?.value;
+  if (session && session.length > 8) {
+    return true;
+  }
+
+  return false;
 }
 
 export async function OPTIONS(req: NextRequest) {
@@ -65,10 +109,35 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const origin = req.headers.get("origin");
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "anonymous";
+
+  // Rate limit protection: 30 requests per minute
+  if (!checkRateLimit(ip, 30, 60000)) {
+    return NextResponse.json(
+      { error: "Rate limit exceeded. Maximum 30 requests per minute." },
+      { status: 429, headers: getCorsHeaders(origin) }
+    );
+  }
+
+  // HUB-001: Authentication gate
+  if (!verifyHubAuth(req)) {
+    return NextResponse.json(
+      { error: "Unauthorized: A valid API key (x-api-key) or authenticated session is required." },
+      { status: 401, headers: getCorsHeaders(origin) }
+    );
+  }
 
   try {
     const body = await req.json();
     const { action = "completion", prompt, systemPrompt, subject, duration, targetAudience, lessonTopic } = body;
+
+    // Request size constraint
+    if (prompt && typeof prompt === "string" && prompt.length > 10000) {
+      return NextResponse.json(
+        { error: "Prompt exceeds maximum allowed length of 10,000 characters." },
+        { status: 400, headers: getCorsHeaders(origin) }
+      );
+    }
 
     // --- Action 1: Generic Completion with Quota Failover ---
     if (action === "completion") {
@@ -77,7 +146,7 @@ export async function POST(req: NextRequest) {
       }
 
       const result: GatewayResult = await dispatchAiCompletion(prompt, {
-        systemPrompt: systemPrompt || "Bạn là AI Hub trung tâm của hệ sinh thái Huy Technology AI (Vạn Hỏa Long Tech). Trả lời chuyên nghiệp, đầy đủ, tiếng Việt chuẩn.",
+        systemPrompt: systemPrompt || "B?n l? AI Hub trung t?m c?a h? sinh th?i Huy Technology AI (V?n H?a Long Tech). Tr? l?i chuy?n nghi?p, ??y ??, ti?ng Vi?t chu?n.",
       });
 
       return NextResponse.json({
@@ -92,31 +161,31 @@ export async function POST(req: NextRequest) {
       }, { headers: getCorsHeaders(origin) });
     }
 
-    // --- Action 2: Studio Pipeline 1-Chạm (All-in-One Studio Package) ---
+    // --- Action 2: Studio Pipeline 1-Ch?m (All-in-One Studio Package) ---
     if (action === "generate_studio_package") {
-      const topic = lessonTopic || prompt || "Nguyên lý hoạt động của Động cơ Đốt trong 4 kỳ";
-      const dur = duration || "45 phút";
-      const audience = targetAudience || "Học sinh / Người học thực chiến";
-      const subj = subject || "Công nghệ - Kỹ thuật";
+      const topic = lessonTopic || prompt || "Nguy?n l? ho?t ??ng c?a ??ng c? ??t trong 4 k?";
+      const dur = duration || "45 ph?t";
+      const audience = targetAudience || "H?c sinh / Ng??i h?c th?c chi?n";
+      const subj = subject || "C?ng ngh? - K? thu?t";
 
-      const studioSystemPrompt = `Bạn là Trưởng nhóm Điều phối AI Studio của Huy Technology AI Hub (sáng lập bởi Chuyên gia AI Ngô Quốc Huy).
-Nhiệm vụ của bạn là nhận chủ đề bài học và xuất ra một cấu trúc JSON hợp lệ CHÍNH XÁC bao gồm:
-1. "lessonPlan": Tóm tắt kế hoạch bài dạy chuẩn CV 5512 (4 hoạt động: Khởi động, Hình thành kiến thức, Luyện tập, Vận dụng).
-2. "marpSlideCode": Mã nguồn Markdown chuẩn Marp để xuất PowerPoint .pptx đẹp mắt (gồm 4-6 slide, chia trang bằng "---", có style dark gaia, màu neon #00ff85).
-3. "comfyUiPrompts": Mảng 4 prompt tiếng Anh chi tiết cao cho ComfyUI/InvokeAI để sinh hình minh họa từng phần (VD: nạp, nén, nổ, xả hoặc sơ đồ khối kỹ thuật).
-4. "vietTtsScript": Đoạn kịch bản lời thoại đọc mẫu truyền cảm, chia từng câu rõ ràng để đưa vào VietTTS / Piper.
-5. "moneyPrinterTurboStoryboard": Mảng các phân cảnh cho MoneyPrinterTurbo gồm { scene: number, durationSec: number, script: string, visualKeyword: string } để tìm footage và render video MP4 tự động.
-6. "sadTalkerTeacherScript": Đoạn lời chào mở đầu 30 giây cho Avatar thầy giáo AI ảo giảng bài.
+      const studioSystemPrompt = `B?n l? Tr??ng nh?m ?i?u ph?i AI Studio c?a Huy Technology AI Hub (s?ng l?p b?i Chuy?n gia AI Ng? Qu?c Huy).
+Nhi?m v? c?a b?n l? nh?n ch? ?? b?i h?c v? xu?t ra m?t c?u tr?c JSON h?p l? CH?NH X?C bao g?m:
+1. "lessonPlan": T?m t?t k? ho?ch b?i d?y chu?n CV 5512 (4 ho?t ??ng: Kh?i ??ng, H?nh th?nh ki?n th?c, Luy?n t?p, V?n d?ng).
+2. "marpSlideCode": M? ngu?n Markdown chu?n Marp ?? xu?t PowerPoint .pptx ??p m?t (g?m 4-6 slide, chia trang b?ng "---", c? style dark gaia, m?u neon #00ff85).
+3. "comfyUiPrompts": M?ng 4 prompt ti?ng Anh chi ti?t cao cho ComfyUI/InvokeAI ?? sinh h?nh minh h?a t?ng ph?n (VD: n?p, n?n, n?, x? ho?c s? ?? kh?i k? thu?t).
+4. "vietTtsScript": ?o?n k?ch b?n l?i tho?i ??c m?u truy?n c?m, chia t?ng c?u r? r?ng ?? ??a v?o VietTTS / Piper.
+5. "moneyPrinterTurboStoryboard": M?ng c?c ph?n c?nh cho MoneyPrinterTurbo g?m { scene: number, durationSec: number, script: string, visualKeyword: string } ?? t?m footage v? render video MP4 t? ??ng.
+6. "sadTalkerTeacherScript": ?o?n l?i ch?o m? ??u 30 gi?y cho Avatar th?y gi?o AI ?o gi?ng b?i.
 
-LƯU Ý: Phản hồi thuần chuỗi JSON không có văn bản giải thích thừa bên ngoài. Bắt đầu bằng { và kết thúc bằng }.`;
+L?U ?: Ph?n h?i thu?n chu?i JSON kh?ng c? v?n b?n gi?i th?ch th?a b?n ngo?i. B?t ??u b?ng { v? k?t th?c b?ng }.`;
 
-      const studioUserPrompt = `Hãy tạo trọn bộ học liệu số cho bài học:
-- Tên bài: "${topic}"
-- Môn / Lĩnh vực: ${subj}
-- Thời lượng: ${dur}
-- Đối tượng: ${audience}
+      const studioUserPrompt = `H?y t?o tr?n b? h?c li?u s? cho b?i h?c:
+- T?n b?i: "${topic}"
+- M?n / L?nh v?c: ${subj}
+- Th?i l??ng: ${dur}
+- ??i t??ng: ${audience}
 
-Tạo trọn bộ: Slide Marp PPTX + Giáo án CV 5512 + 4 Prompt ảnh ComfyUI + Kịch bản VietTTS + Storyboard MoneyPrinterTurbo + Script Avatar SadTalker.`;
+T?o tr?n b?: Slide Marp PPTX + Gi?o ?n CV 5512 + 4 Prompt ?nh ComfyUI + K?ch b?n VietTTS + Storyboard MoneyPrinterTurbo + Script Avatar SadTalker.`;
 
       const result = await dispatchAiCompletion(studioUserPrompt, {
         systemPrompt: studioSystemPrompt,
@@ -133,7 +202,7 @@ Tạo trọn bộ: Slide Marp PPTX + Giáo án CV 5512 + 4 Prompt ảnh ComfyUI 
         }
         parsedPackage = JSON.parse(cleanJson);
       } catch {
-        // Fallback structured package nếu AI sinh chuỗi Markdown
+        // Fallback structured package n?u AI sinh chu?i Markdown
         parsedPackage = {
           topic,
           marpSlideCode: result.text.includes("marp: true") ? result.text : `---
@@ -146,34 +215,34 @@ color: #f8fafc
 ---
 
 # ${topic.toUpperCase()}
-## Hệ sinh thái Huy Technology AI Hub
-Chuyên gia AI: Ngô Quốc Huy
+## H? sinh th?i Huy Technology AI Hub
+Chuy?n gia AI: Ng? Qu?c Huy
 
 ---
 
-## 1. MỤC TIÊU BÀI HỌC
-- Nắm vững kiến thức trọng tâm về ${topic}
-- Ứng dụng quy trình tự động hóa giải quyết vấn đề
+## 1. M?C TI?U B?I H?C
+- N?m v?ng ki?n th?c tr?ng t?m v? ${topic}
+- ?ng d?ng quy tr?nh t? ??ng h?a gi?i quy?t v?n ??
 
 ---
 
-## 2. NỘI DUNG CHI TIẾT
-- Khái niệm và cấu tạo
-- Nguyên lý vận hành và ứng dụng thực tiễn`,
-          lessonPlan: `Kế hoạch bài dạy chuẩn CV 5512 cho bài: ${topic}. Thời lượng: ${dur}.`,
+## 2. N?I DUNG CHI TI?T
+- Kh?i ni?m v? c?u t?o
+- Nguy?n l? v?n h?nh v? ?ng d?ng th?c ti?n`,
+          lessonPlan: `K? ho?ch b?i d?y chu?n CV 5512 cho b?i: ${topic}. Th?i l??ng: ${dur}.`,
           comfyUiPrompts: [
             `Technical mechanical diagram of ${topic}, engineering blueprint, 8k resolution, photorealistic, octane render`,
             `Close-up high-tech components of ${topic}, volumetric studio lighting, clear details, 3d rendering`,
             `Cross section view explaining internal mechanism of ${topic}, informative illustration, crisp vector lines`,
             `Real world industrial application of ${topic} in smart automation factory, cinematic wide shot`
           ],
-          vietTtsScript: `Chào các bạn học viên, hôm nay Chuyên gia AI Ngô Quốc Huy và Huy Technology AI Hub sẽ cùng các bạn khám phá bài học: ${topic}. Chúng ta sẽ đi từ nguyên lý cơ bản đến các giải pháp ứng dụng thực tế.`,
+          vietTtsScript: `Ch?o c?c b?n h?c vi?n, h?m nay Chuy?n gia AI Ng? Qu?c Huy v? Huy Technology AI Hub s? c?ng c?c b?n kh?m ph? b?i h?c: ${topic}. Ch?ng ta s? ?i t? nguy?n l? c? b?n ??n c?c gi?i ph?p ?ng d?ng th?c t?.`,
           moneyPrinterTurboStoryboard: [
-            { scene: 1, durationSec: 5, script: `Giới thiệu bài học ${topic}`, visualKeyword: "engineering technology" },
-            { scene: 2, durationSec: 15, script: `Phân tích cấu tạo và nguyên lý chính`, visualKeyword: "robotics machine blueprint" },
-            { scene: 3, durationSec: 10, script: `Ứng dụng thực tiễn trong cuộc cách mạng số`, visualKeyword: "artificial intelligence factory" }
+            { scene: 1, durationSec: 5, script: `Gi?i thi?u b?i h?c ${topic}`, visualKeyword: "engineering technology" },
+            { scene: 2, durationSec: 15, script: `Ph?n t?ch c?u t?o v? nguy?n l? ch?nh`, visualKeyword: "robotics machine blueprint" },
+            { scene: 3, durationSec: 10, script: `?ng d?ng th?c ti?n trong cu?c c?ch m?ng s?`, visualKeyword: "artificial intelligence factory" }
           ],
-          sadTalkerTeacherScript: `Xin chào quý thầy cô và các bạn. Tôi là trợ lý AI đại diện cho Huy Technology AI Hub. Hôm nay chúng ta sẽ cùng tìm hiểu về ${topic}.`
+          sadTalkerTeacherScript: `Xin ch?o qu? th?y c? v? c?c b?n. T?i l? tr? l? AI ??i di?n cho Huy Technology AI Hub. H?m nay ch?ng ta s? c?ng t?m hi?u v? ${topic}.`
         };
       }
 

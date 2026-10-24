@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import crypto from "crypto";
 
-const SECRET = process.env.SIGNED_URL_SECRET || "zentratech_super_secret_key_2026";
+const SECRET = process.env.SIGNED_URL_SECRET;
 
 // Extract Google Drive file ID from various URL formats
 function extractFileId(url: string): string | null {
@@ -18,6 +18,84 @@ function extractFileId(url: string): string | null {
   return null;
 }
 
+function isAllowedHost(hostname: string): boolean {
+  const h = hostname.toLowerCase();
+  if (h === "drive.google.com" || h === "docs.google.com") return true;
+  if (h.endsWith(".googleusercontent.com")) return true;
+  return false;
+}
+
+function isPrivateIpOrHost(hostname: string): boolean {
+  const h = hostname.toLowerCase();
+  if (h === "localhost" || h.endsWith(".local") || h.endsWith(".internal")) return true;
+  // check ipv4
+  const ipv4Match = h.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (ipv4Match) {
+    const [_, o1, o2, o3, o4] = ipv4Match.map(Number);
+    if (o1 === 127 || o1 === 10 || o1 === 0) return true;
+    if (o1 === 192 && o2 === 168) return true;
+    if (o1 === 172 && o2 >= 16 && o2 <= 31) return true;
+    if (o1 === 169 && o2 === 254) return true; // link-local metadata (169.254.169.254)
+    if (o1 >= 224) return true; // multicast / reserved
+  }
+  // check ipv6
+  if (h === "::1" || h.startsWith("fe80:") || h.startsWith("fc00:") || h.startsWith("fd00:")) return true;
+  return false;
+}
+
+export function validateSafeUrl(urlStr: string): URL {
+  let parsed: URL;
+  try {
+    parsed = new URL(urlStr);
+  } catch {
+    throw new Error("Invalid target URL format");
+  }
+  if (parsed.protocol !== "https:") {
+    throw new Error(`Insecure protocol: ${parsed.protocol}. Only HTTPS permitted.`);
+  }
+  if (isPrivateIpOrHost(parsed.hostname)) {
+    throw new Error(`SSRF Protection: Private or metadata address rejected: ${parsed.hostname}`);
+  }
+  if (!isAllowedHost(parsed.hostname)) {
+    throw new Error(`SSRF Protection: Only verified Google Drive/Docs endpoints are permitted (${parsed.hostname}).`);
+  }
+  return parsed;
+}
+
+async function safeFetchWithRedirects(initialUrl: string, maxRedirects = 5, timeoutMs = 15000): Promise<Response> {
+  let currentUrl = initialUrl;
+  for (let hop = 0; hop <= maxRedirects; hop++) {
+    validateSafeUrl(currentUrl);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+      const res = await fetch(currentUrl, {
+        method: "GET",
+        headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" },
+        redirect: "manual",
+        signal: controller.signal,
+      });
+
+      // Handle redirects manually to re-validate destination at each hop
+      if (res.status >= 300 && res.status < 400) {
+        const location = res.headers.get("location");
+        if (!location) {
+          throw new Error("Redirect status received without Location header");
+        }
+        currentUrl = new URL(location, currentUrl).toString();
+        continue;
+      }
+
+      return res;
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  }
+  throw new Error(`Too many redirects (exceeded ${maxRedirects} hops)`);
+}
+
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id");
@@ -25,19 +103,23 @@ export async function GET(req: Request) {
   const sigParam = searchParams.get("sig");
   let url = searchParams.get("url");
 
-  // KỊCH BẢN BẢO MẬT SPRINT 3: XÁC THỰC MẬT MÃ SIGNED TEMPORARY URL NẾU CÓ CHỮ KÝ
+  // K?CH B?N B?O M?T SPRINT 3: X?C TH?C M?T M? SIGNED TEMPORARY URL N?U C? CH? K?
   if (id && expiresParam && sigParam) {
+    if (!SECRET) {
+      return NextResponse.json({ error: "Signed URL service is not configured" }, { status: 503 });
+    }
+
     const expires = parseInt(expiresParam, 10);
     
-    // Kiểm tra tính hiệu lực theo thời gian thực (TTL)
+    // Ki?m tra t?nh hi?u l?c theo th?i gian th?c (TTL)
     if (Date.now() > expires) {
       return NextResponse.json(
-        { error: "⏳ Liên kết tải Temporary URL đã hết hạn. Vui lòng quay lại thư viện tài liệu để lấy liên kết mới." },
+        { error: "? Li?n k?t t?i Temporary URL ?? h?t h?n. Vui l?ng quay l?i th? vi?n t?i li?u ?? l?y li?n k?t m?i." },
         { status: 403 }
       );
     }
 
-    // Xác minh toàn vẹn chữ ký HMAC-SHA256 nhằm chặn đứng nguy cơ sửa đổi tham số
+    // X?c minh to?n v?n ch? k? HMAC-SHA256 nh?m ch?n ??ng nguy c? s?a ??i tham s?
     const expectedSig = crypto
       .createHmac("sha256", SECRET)
       .update(`${id}:${expires}`)
@@ -45,15 +127,15 @@ export async function GET(req: Request) {
 
     if (sigParam !== expectedSig) {
       return NextResponse.json(
-        { error: "🚫 Chữ ký xác thực (Cryptographic Signature) không hợp lệ hoặc đã bị giả mạo." },
+        { error: "?? Ch? k? x?c th?c (Cryptographic Signature) kh?ng h?p l? ho?c ?? b? gi? m?o." },
         { status: 403 }
       );
     }
 
-    // Truy vấn đường dẫn gốc từ cơ sở dữ liệu Supabase nhằm giấu kín tuyệt đối link tải gốc khỏi trình duyệt
+    // Truy v?n ???ng d?n g?c t? c? s? d? li?u Supabase nh?m gi?u k?n tuy?t ??i link t?i g?c kh?i tr?nh duy?t
     const { data: resource } = await supabase.from("resources").select("link").eq("id", id).single();
     if (!resource || !resource.link) {
-      return NextResponse.json({ error: "Không tìm thấy liên kết gốc của tài nguyên trong hệ thống." }, { status: 404 });
+      return NextResponse.json({ error: "Kh?ng t?m th?y li?n k?t g?c c?a t?i nguy?n trong h? th?ng." }, { status: 404 });
     }
     url = resource.link;
   }
@@ -62,23 +144,15 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Missing required download parameters" }, { status: 400 });
   }
 
-  // SEC-01 Fix: Validate URL to prevent SSRF
-  let parsedUrl: URL;
+  // Pre-validate initial URL
   try {
-    parsedUrl = new URL(url);
-  } catch {
-    return NextResponse.json({ error: "Invalid target URL format" }, { status: 400 });
+    validateSafeUrl(url);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Invalid target URL format";
+    return NextResponse.json({ error: msg }, { status: 403 });
   }
 
-  const allowedHosts = ["drive.google.com", "docs.google.com"];
-  if (!allowedHosts.includes(parsedUrl.hostname)) {
-    return NextResponse.json(
-      { error: "SSRF Protection: Only external downloads from verified Google Drive endpoints are permitted." },
-      { status: 403 }
-    );
-  }
-
-  // SEC-10 Fix: Restrict CORS headers
+  // Restrict CORS headers
   const origin = req.headers.get("origin");
   const isAllowedOrigin = !origin || origin.startsWith("http://localhost") || origin.includes("vercel.app");
   const corsHeaders: Record<string, string> = {
@@ -94,24 +168,25 @@ export async function GET(req: Request) {
       ? `https://drive.google.com/uc?id=${fileId}&export=download`
       : url;
 
-    const response = await fetch(downloadUrl, {
-      redirect: "follow",
-      headers: { "User-Agent": "Mozilla/5.0" },
-    });
+    const response = await safeFetchWithRedirects(downloadUrl);
 
     if (!response.ok) {
       if (fileId) {
         const altUrl = `https://docs.google.com/document/d/${fileId}/export?format=pdf`;
-        const altRes = await fetch(altUrl, { redirect: "follow" });
-        if (altRes.ok) {
-          const buf = await altRes.arrayBuffer();
-          return new NextResponse(buf, {
-            headers: {
-              "Content-Type": "application/pdf",
-              "Content-Disposition": `attachment; filename="zentratech_document_${id || fileId}.pdf"`,
-              ...corsHeaders,
-            },
-          });
+        try {
+          const altRes = await safeFetchWithRedirects(altUrl);
+          if (altRes.ok) {
+            const buf = await altRes.arrayBuffer();
+            return new NextResponse(buf, {
+              headers: {
+                "Content-Type": "application/pdf",
+                "Content-Disposition": `attachment; filename="zentratech_document_${id || fileId}.pdf"`,
+                ...corsHeaders,
+              },
+            });
+          }
+        } catch {
+          // Fall through to error below
         }
       }
       throw new Error(`Upstream fetch failure: ${response.status}`);
@@ -125,7 +200,7 @@ export async function GET(req: Request) {
       const confirmMatch = html.match(/confirm=([a-zA-Z0-9_-]+)/);
       if (confirmMatch) {
         const confirmUrl = `https://drive.google.com/uc?id=${fileId}&export=download&confirm=${confirmMatch[1]}`;
-        const confirmRes = await fetch(confirmUrl, { redirect: "follow" });
+        const confirmRes = await safeFetchWithRedirects(confirmUrl);
         if (confirmRes.ok) {
           const buf = await confirmRes.arrayBuffer();
           return new NextResponse(buf, {
@@ -137,7 +212,7 @@ export async function GET(req: Request) {
           });
         }
       }
-      throw new Error("Tệp lưu trữ vượt quá giới hạn quét công khai hoặc yêu cầu phân quyền tài khoản Google.");
+      throw new Error("T?p l?u tr? v??t qu? gi?i h?n qu?t c?ng khai ho?c y?u c?u ph?n quy?n t?i kho?n Google.");
     }
 
     const buffer = await response.arrayBuffer();

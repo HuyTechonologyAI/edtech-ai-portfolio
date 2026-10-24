@@ -5,13 +5,17 @@ import { supabase } from "@/lib/supabase";
 import crypto from "crypto";
 
 // Khóa bí mật dùng để băm chữ ký (Nên đồng bộ cấu hình biến môi trường trên Vercel)
-const SECRET = process.env.SIGNED_URL_SECRET || "zentratech_super_secret_key_2026";
+const SECRET = process.env.SIGNED_URL_SECRET;
 
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
     if (!id) return NextResponse.json({ error: "Missing resource ID parameter" }, { status: 400 });
+    if (!SECRET) {
+      return NextResponse.json({ error: "Signed URL service is not configured" }, { status: 503 });
+    }
+
 
     // Truy vấn thông tin tài liệu từ cơ sở dữ liệu Supabase
     const { data: resource, error } = await supabase
