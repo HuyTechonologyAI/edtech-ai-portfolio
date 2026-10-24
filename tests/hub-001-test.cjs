@@ -20,10 +20,17 @@ function verifyHubAuth(headers, cookies, env) {
     }
   }
 
-  // 3. Admin session cookie
+  // 3. Admin session cookie: must be an HMAC-signed token (mirrors src/lib/hub-auth.ts).
+  //    Authoritative tests for the real implementation live in src/lib/hub-auth.test.ts.
   const session = cookies["admin_session"];
-  if (session && session.length > 8) {
-    return true;
+  if (session && env.SESSION_SECRET) {
+    const idx = session.indexOf(".");
+    if (idx > 0) {
+      const body = session.slice(0, idx);
+      const sig = Buffer.from(session.slice(idx + 1));
+      const expected = Buffer.from(crypto.createHmac("sha256", env.SESSION_SECRET).update(body).digest("base64url"));
+      if (sig.length === expected.length && crypto.timingSafeEqual(sig, expected)) return true;
+    }
   }
 
   return false;
@@ -74,7 +81,7 @@ class SharedAtomicRateLimiter {
   }
 }
 
-const env = { ECOSYSTEM_API_KEY: "secret_eco_token_2026" };
+const env = { ECOSYSTEM_API_KEY: "secret_eco_token_2026", SESSION_SECRET: "unit-test-session-secret-0123456789" };
 
 // 1. Auth Negative Tests
 assert.equal(verifyHubAuth({}, {}, env), false, "Anonymous request must be denied");
@@ -85,7 +92,12 @@ assert.equal(verifyHubAuth({}, { "admin_session": "short" }, env), false, "Short
 // 2. Auth Positive Tests
 assert.equal(verifyHubAuth({ "x-api-key": "secret_eco_token_2026" }, {}, env), true, "Valid API key must be allowed");
 assert.equal(verifyHubAuth({ "authorization": "Bearer secret_eco_token_2026" }, {}, env), true, "Valid Bearer token must be allowed");
-assert.equal(verifyHubAuth({}, { "admin_session": "authenticated_admin_session_val" }, env), true, "Admin session cookie must be allowed");
+assert.equal(verifyHubAuth({}, { "admin_session": "authenticated_admin_session_val" }, env), false, "REGRESSION: forged unsigned admin session must be denied");
+{
+  const body = Buffer.from(JSON.stringify({ scope: "admin" })).toString("base64url");
+  const sig = crypto.createHmac("sha256", env.SESSION_SECRET).update(body).digest("base64url");
+  assert.equal(verifyHubAuth({}, { "admin_session": body + "." + sig }, env), true, "Signed admin session must be allowed");
+}
 
 // 3. CORS origin reflection & wildcard rejection
 const offListCors = getCorsHeaders("https://malicious-site.com");
