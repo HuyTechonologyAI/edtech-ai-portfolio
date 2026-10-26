@@ -3,9 +3,10 @@ import type { NextRequest } from "next/server";
 import { verifySession, verifyWorkerToken } from "@/lib/admincenter-session";
 
 /**
- * Central fail-closed guard for AdminCenter / Admin APIs.
+ * Central fail-closed guard for AdminCenter, Admin, and Protected Resource APIs.
  *  - /api/admincenter/auth is the only unauthenticated AdminCenter endpoint (login handles its own throttle).
  *  - Node-01 workers may call /supervisor and /telemetry with header `x-node01-worker-token`.
+ *  - /api/resources/* restricts state-changing operations and enforces strict origin checks.
  *  - State-changing requests with a foreign Origin are rejected (CSRF defence in depth; cookies are SameSite=Strict).
  */
 
@@ -34,6 +35,14 @@ export function proxy(req: NextRequest) {
     }
   }
 
+  // Fail-closed enforcement for resources gateway
+  if (pathname.startsWith("/api/resources/")) {
+    if (!SAFE_METHODS.has(req.method)) {
+      return deny(405, "METHOD_NOT_ALLOWED");
+    }
+    return NextResponse.next();
+  }
+
   if (pathname.startsWith("/api/admincenter/")) {
     if (pathname === "/api/admincenter/auth") return NextResponse.next();
 
@@ -53,5 +62,5 @@ export function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/api/admincenter/:path*", "/api/admin/:path*"],
+  matcher: ["/api/admincenter/:path*", "/api/admin/:path*", "/api/resources/:path*"],
 };
