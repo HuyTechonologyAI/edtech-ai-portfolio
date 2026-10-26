@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
-import crypto from "crypto";
+import {
+  validateSafeUrl,
+  isAllowedOrigin,
+  verifySignedUrlSignature,
+} from "@/lib/resources-security";
 
 const SECRET = process.env.SIGNED_URL_SECRET;
 
@@ -16,59 +20,6 @@ function extractFileId(url: string): string | null {
     if (m) return m[1];
   }
   return null;
-}
-
-function isAllowedHost(hostname: string): boolean {
-  const h = hostname.toLowerCase();
-  if (h === "drive.google.com" || h === "docs.google.com") return true;
-  if (h.endsWith(".googleusercontent.com")) return true;
-  return false;
-}
-
-function isPrivateIpOrHost(hostname: string): boolean {
-  const h = hostname.toLowerCase().replace(/^\[|\]$/g, "");
-  if (h === "localhost" || h.endsWith(".local") || h.endsWith(".internal")) return true;
-  // check ipv4
-  const ipv4Match = h.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
-  if (ipv4Match) {
-    const [, o1, o2] = ipv4Match.map(Number);
-    if (o1 === 127 || o1 === 10 || o1 === 0) return true;
-    if (o1 === 192 && o2 === 168) return true;
-    if (o1 === 172 && o2 >= 16 && o2 <= 31) return true;
-    if (o1 === 169 && o2 === 254) return true; // link-local metadata (169.254.169.254)
-    if (o1 >= 224) return true; // multicast / reserved
-  }
-  // check ipv6 and IPv4-mapped IPv6
-  if (
-    h === "::1" ||
-    h === "0:0:0:0:0:0:0:1" ||
-    h.startsWith("fe80:") ||
-    h.startsWith("fc00:") ||
-    h.startsWith("fd00:") ||
-    h.startsWith("::ffff:")
-  ) {
-    return true;
-  }
-  return false;
-}
-
-export function validateSafeUrl(urlStr: string): URL {
-  let parsed: URL;
-  try {
-    parsed = new URL(urlStr);
-  } catch {
-    throw new Error("Invalid target URL format");
-  }
-  if (parsed.protocol !== "https:") {
-    throw new Error(`Insecure protocol: ${parsed.protocol}. Only HTTPS permitted.`);
-  }
-  if (isPrivateIpOrHost(parsed.hostname)) {
-    throw new Error(`SSRF Protection: Private or metadata address rejected: ${parsed.hostname}`);
-  }
-  if (!isAllowedHost(parsed.hostname)) {
-    throw new Error(`SSRF Protection: Only verified Google Drive/Docs endpoints are permitted (${parsed.hostname}).`);
-  }
-  return parsed;
 }
 
 async function safeFetchWithRedirects(initialUrl: string, maxRedirects = 5, timeoutMs = 15000): Promise<Response> {
@@ -110,52 +61,44 @@ export async function GET(req: Request) {
   const id = searchParams.get("id");
   const expiresParam = searchParams.get("expires");
   const sigParam = searchParams.get("sig");
-  let url = searchParams.get("url");
 
-  // K?CH B?N B?O M?T SPRINT 3: X?C TH?C M?T M? SIGNED TEMPORARY URL N?U C? CH? K?
-  if (id && expiresParam && sigParam) {
-    if (!SECRET) {
-      return NextResponse.json({ error: "Signed URL service is not configured" }, { status: 503 });
-    }
-
-    const expires = parseInt(expiresParam, 10);
-    
-    // Ki?m tra t?nh hi?u l?c theo th?i gian th?c (TTL)
-    if (Date.now() > expires) {
-      return NextResponse.json(
-        { error: "? Li?n k?t t?i Temporary URL ?? h?t h?n. Vui l?ng quay l?i th? vi?n t?i li?u ?? l?y li?n k?t m?i." },
-        { status: 403 }
-      );
-    }
-
-    // X?c minh to?n v?n ch? k? HMAC-SHA256 nh?m ch?n ??ng nguy c? s?a ??i tham s?
-    const expectedSig = crypto
-      .createHmac("sha256", SECRET)
-      .update(`${id}:${expires}`)
-      .digest("hex");
-
-    const sigBuf = Buffer.from(sigParam, "utf8");
-    const expectedBuf = Buffer.from(expectedSig, "utf8");
-    if (sigBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(sigBuf, expectedBuf)) {
-      return NextResponse.json(
-        { error: "?? Ch? k? x?c th?c (Cryptographic Signature) kh?ng h?p l? ho?c ?? b? gi? m?o." },
-        { status: 403 }
-      );
-    }
-
-    // Truy v?n ???ng d?n g?c t? c? s? d? li?u Supabase nh?m gi?u k?n tuy?t ??i link t?i g?c kh?i tr?nh duy?t
-    const { data: resource } = await supabase.from("resources").select("link").eq("id", id).single();
-    if (!resource || !resource.link) {
-      return NextResponse.json({ error: "Kh?ng t?m th?y li?n k?t g?c c?a t?i nguy?n trong h? th?ng." }, { status: 404 });
-    }
-    url = resource.link;
+  // YÊU CẦU BẮT BUỘC CHỮ KÝ XÁC THỰC MẬT MÃ (SIGNED TEMPORARY URL)
+  if (!id || !expiresParam || !sigParam) {
+    return NextResponse.json(
+      { error: "Missing required cryptographic signature parameters (id, expires, sig)." },
+      { status: 403 }
+    );
   }
 
-  if (!url) {
-    return NextResponse.json({ error: "Missing required download parameters" }, { status: 400 });
+  if (!SECRET) {
+    return NextResponse.json({ error: "Signed URL service is not configured" }, { status: 503 });
   }
 
-  // Pre-validate initial URL
+  const expires = parseInt(expiresParam, 10);
+  
+  // Xác minh toàn vẹn chữ ký HMAC-SHA256 & thời hạn TTL (5 phút)
+  const isSigValid = verifySignedUrlSignature(id, expires, sigParam, SECRET);
+  if (!isSigValid) {
+    return NextResponse.json(
+      { error: "Chữ ký xác thực (Cryptographic Signature) không hợp lệ, đã bị sửa đổi hoặc đã hết hạn." },
+      { status: 403 }
+    );
+  }
+
+  // Truy vấn đường dẫn gốc từ cơ sở dữ liệu Supabase
+  const { data: resource, error: dbErr } = await supabase
+    .from("resources")
+    .select("link, is_premium, is_private")
+    .eq("id", id)
+    .single();
+
+  if (dbErr || !resource || !resource.link) {
+    return NextResponse.json({ error: "Không tìm thấy liên kết gốc của tài nguyên trong hệ thống." }, { status: 404 });
+  }
+
+  const url = resource.link;
+
+  // Pre-validate initial URL against SSRF
   try {
     validateSafeUrl(url);
   } catch (err: unknown) {
@@ -163,14 +106,19 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: msg }, { status: 403 });
   }
 
-  // Restrict CORS headers
+  // Strict CORS and Cache-Control Headers
   const origin = req.headers.get("origin");
-  const isAllowedOrigin = !origin || origin.startsWith("http://localhost") || origin.includes("vercel.app");
-  const corsHeaders: Record<string, string> = {
-    "Cache-Control": "public, max-age=3600",
+  const corsAllowed = isAllowedOrigin(origin);
+  
+  // Ngăn chặn hoàn toàn việc public cache kéo dài quá thời hạn chữ ký 5 phút
+  const responseHeaders: Record<string, string> = {
+    "Cache-Control": "private, no-cache, no-store, must-revalidate",
+    "Pragma": "no-cache",
+    "Expires": "0",
   };
-  if (origin && isAllowedOrigin) {
-    corsHeaders["Access-Control-Allow-Origin"] = origin;
+  if (origin && corsAllowed) {
+    responseHeaders["Access-Control-Allow-Origin"] = origin;
+    responseHeaders["Vary"] = "Origin";
   }
 
   try {
@@ -192,7 +140,7 @@ export async function GET(req: Request) {
               headers: {
                 "Content-Type": "application/pdf",
                 "Content-Disposition": `attachment; filename="zentratech_document_${id || fileId}.pdf"`,
-                ...corsHeaders,
+                ...responseHeaders,
               },
             });
           }
@@ -218,12 +166,12 @@ export async function GET(req: Request) {
             headers: {
               "Content-Type": "application/pdf",
               "Content-Disposition": `attachment; filename="zentratech_document_${id || fileId}.pdf"`,
-              ...corsHeaders,
+              ...responseHeaders,
             },
           });
         }
       }
-      throw new Error("T?p l?u tr? v??t qu? gi?i h?n qu?t c?ng khai ho?c y?u c?u ph?n quy?n t?i kho?n Google.");
+      throw new Error("Tệp lưu trữ vượt quá giới hạn quét công khai hoặc yêu cầu phân quyền tài khoản Google.");
     }
 
     const buffer = await response.arrayBuffer();
@@ -232,7 +180,7 @@ export async function GET(req: Request) {
       headers: {
         "Content-Type": isPdf ? "application/pdf" : contentType,
         "Content-Disposition": `attachment; filename="zentratech_document_${id || fileId || 'download'}.${isPdf ? 'pdf' : 'bin'}"`,
-        ...corsHeaders,
+        ...responseHeaders,
       },
     });
   } catch (error) {
